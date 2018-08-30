@@ -65,7 +65,7 @@ local function timeSync()
         LogUtil.d(TAG," timeSync abort because count exceed,now reboot")
 
         if Consts.gTimerId and sys.timerIsActive(Consts.gTimerId) then
-            sys.timer_stop(Consts.gTimerId)
+            sys.timerStop(Consts.gTimerId)
         end
         
         return
@@ -157,7 +157,7 @@ function MQTTManager.loopFeedDog()
                     return
                 end
 
-                sys.timer_stop(fdTimerId)--停止看门狗喂狗，等待重启
+                sys.timerStop(fdTimerId)--停止看门狗喂狗，等待重启
                 fdTimerId = nil
 
                 LogUtil.d(TAG,"............softReboot when mainloop stop,timeOffset="..timeOffset.." os.time()="..os.time().." mainLoopTime="..mainLoopTime)
@@ -214,7 +214,7 @@ function MQTTManager.checkNetwork()
 
             if nil ~= fdTimerId then
                 LogUtil.d(TAG,"............wdReboot when not link.isReady")
-                sys.timer_stop(fdTimerId)--停止看门狗喂狗，等待重启
+                sys.timerStop(fdTimerId)--停止看门狗喂狗，等待重启
                 fdTimerId = nil
                 break
             end

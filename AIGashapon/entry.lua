@@ -104,7 +104,7 @@ function allInfoCallback( ids )
 
 	--取消定时器 
 	if timerId and  sys.timerIsActive(timerId) then
-		sys.timer_stop(timerId)
+		sys.timerStop(timerId)
 		LogUtil.d(TAG,"init slaves done")
 	end 
 
@@ -124,7 +124,7 @@ function entry.retryIdentify()
 	end
 
 	if timerId and  sys.timerIsActive(timerId) then
-		sys.timer_stop(timerId)
+		sys.timerStop(timerId)
 	end 
 
 	-- 发起识别请求，并进行超时处理
@@ -143,7 +143,7 @@ function entry.retryIdentify()
 	sys.timerStart(function()
 		LogUtil.d(TAG,"retry timeout in retrieving slaves")
 		if timerId and  sys.timerIsActive(timerId) then
-			sys.timer_stop(timerId)
+			sys.timerStop(timerId)
 		end
 
 		if boardIdentified < RETRY_BOARD_COUNT  then

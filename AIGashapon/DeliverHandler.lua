@@ -408,7 +408,7 @@ end
 function TimerFunc(id)
     if 0 == getTableLen(gBusyMap) then
         LogUtil.d(TAG,TAG.." in TimerFunc gBusyMap len="..getTableLen(gBusyMap).." stop timer and return")
-        sys.timer_stop(mTimerId)
+        sys.timerStop(mTimerId)
         return
     end
 
