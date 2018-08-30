@@ -11,7 +11,7 @@ require "CloudConsts"
 require "ReplyMachineVars"
 require "ReplyConfigHandler"
 require "ReplyDeliverHandler"
-require "ReplyLatestSaleLog"
+
 local jsonex = require "jsonex"
 
 local TAG = "MqttReplyHandlerMgr"
@@ -54,7 +54,6 @@ function MqttReplyHandlerMgr.makesureInit()
 	MqttReplyHandlerMgr.registerHandler(ReplyMachineVars:new(nil))
 	MqttReplyHandlerMgr.registerHandler(ReplyConfigHandler:new(nil))
 	MqttReplyHandlerMgr.registerHandler(ReplyDeliverHandler:new(nil))
-	MqttReplyHandlerMgr.registerHandler(ReplyLatestSaleLog:new(nil))
 end
 
 function MqttReplyHandlerMgr.replyWith(topic,payload)

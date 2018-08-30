@@ -26,7 +26,6 @@ require "DeliverHandler"
 require "GetTimeHandler"
 require "ReplyTimeHandler"
 require "SetConfigHandler"
-require "GetLatestSaleLog"
 
 local jsonex = require "jsonex"
 
@@ -264,7 +263,6 @@ function MQTTManager.startmqtt()
         mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=ReplyTimeHandler:new(nil)
         mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=SetConfigHandler:new(nil)
         mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=GetMachineVars:new(nil)
-        mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=GetLatestSaleLog:new(nil)
         mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=DeliverHandler:new(nil)
         mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=Lightup:new(nil)
 

@@ -3,7 +3,7 @@
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.21
--- tested 2017.12.26
+-- tested 2018.8.30
 
 require "CloudBaseHandler"
 require "CloudConsts"
