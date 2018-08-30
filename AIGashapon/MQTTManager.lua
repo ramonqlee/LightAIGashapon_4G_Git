@@ -105,7 +105,7 @@ MQTTManager={}
 function MQTTManager.getNodeIdAndPasswordFromServer()
     nodeId,password="",""
     -- TODO 
-    imei = misc.getimei()
+    imei = misc.getImei()
     sn = crypto.md5(imei,#imei)
 
     url = string.format(Consts.MQTT_CONFIG_NODEID_URL_FORMATTER,imei,sn)

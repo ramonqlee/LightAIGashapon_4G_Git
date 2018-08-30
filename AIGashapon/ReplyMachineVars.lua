@@ -39,8 +39,8 @@ function ReplyMachineVars:addExtraPayloadContent( content )
 	end
 
 	-- FIXME 待赋值
-	content["mac"]= misc.getimei()
-	content["imei"]=misc.getimei()
+	content["mac"]= misc.getImei()
+	content["imei"]=misc.getImei()
 
 	local t = Consts.LAST_REBOOT
 	if not t then
