@@ -62,6 +62,15 @@ local function packSUBSCRIBE(dup, packetId, topics)
     return pack.pack(">bAA", header, encodeLen(#data), data)
 end
 
+local function packUNSUBSCRIBE( dup, packetId, topics )
+    local header = UNSUBSCRIBE * 16 + dup * 8 + 2
+    local data = pack.pack(">H", packetId)
+    for topic,_ in pairs(topics) do
+        data = data .. pack.pack(">P", topic)
+    end
+    return pack.pack(">bAA", header, encodeLen(#data), data)
+end
+
 local function packPUBLISH(dup, qos, retain, packetId, topic, payload)
     local header = PUBLISH * 16 + dup * 8 + qos * 2 + retain
     local len = 2 + #topic + #payload
