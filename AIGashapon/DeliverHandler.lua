@@ -277,18 +277,18 @@ function DeliverHandler:handleContent( content )
 
         if Consts.DEVICE_ENV then
             --start timer monitor already
-            if sys.timer_is_active(mTimerId) then
+            if sys.timerIsActive(mTimerId) then
                 LogUtil.d(TAG,TAG.." timer_is_active id ="..mTimerId)
             else
-                mTimerId = sys.timer_loop_start(TimerFunc,self.LOOP_TIME_IN_MS)
+                mTimerId = sys.timerLoopStart(TimerFunc,self.LOOP_TIME_IN_MS)
                 LogUtil.d(TAG,TAG.." timer_loop_start id ="..mTimerId)
             end
             
             -- 待增加最近一次出货的id
             -- Config.saveValue(CloudConsts.LAST_ID,orderId)
 
-            audio.setVolume(7)
-            audio.play(Consts.LOCK_AUDIO)
+            -- audio.setVolume(7)
+            -- audio.play(Consts.LOCK_AUDIO)
         end
 end 
 

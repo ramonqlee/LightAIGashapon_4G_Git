@@ -40,12 +40,12 @@ local boardIdentified = 0
 local retryCount = 0
 
 function startTimedTask()
-    if timedTaskId and sys.timer_is_active(timedTaskId) then
+    if timedTaskId and sys.timerIsActive(timedTaskId) then
         LogUtil.d(TAG," startTimedTask running,return")
         return
     end
 
-    timedTaskId = sys.timer_loop_start(function()
+    timedTaskId = sys.timerLoopStart(function()
             if MQTTManager.hasMessage() then
             	return
             end
@@ -103,7 +103,7 @@ function allInfoCallback( ids )
 	end
 
 	--取消定时器 
-	if timerId and  sys.timer_is_active(timerId) then
+	if timerId and  sys.timerIsActive(timerId) then
 		sys.timer_stop(timerId)
 		LogUtil.d(TAG,"init slaves done")
 	end 
@@ -123,12 +123,12 @@ function entry.retryIdentify()
 		return
 	end
 
-	if timerId and  sys.timer_is_active(timerId) then
+	if timerId and  sys.timerIsActive(timerId) then
 		sys.timer_stop(timerId)
 	end 
 
 	-- 发起识别请求，并进行超时处理
-	timerId=sys.timer_start(function()
+	timerId=sys.timerStart(function()
 		LogUtil.d(TAG,"start to retry identify slaves")
 		sys.taskInit(function()
 			--首先初始化本地环境，然后成功后，启动mqtt
@@ -140,9 +140,9 @@ function entry.retryIdentify()
 	end,5*1000)
 
 
-	sys.timer_start(function()
+	sys.timerStart(function()
 		LogUtil.d(TAG,"retry timeout in retrieving slaves")
-		if timerId and  sys.timer_is_active(timerId) then
+		if timerId and  sys.timerIsActive(timerId) then
 			sys.timer_stop(timerId)
 		end
 
@@ -158,7 +158,7 @@ end
 function entry.run()
 	startTimedTask()
 	-- 启动一个延时定时器, 获取板子id
-	timerId=sys.timer_start(function()
+	timerId=sys.timerStart(function()
 		LogUtil.d(TAG,"start to retrieve slaves")
 		sys.taskInit(function()
 			--首先初始化本地环境，然后成功后，启动mqtt
@@ -171,7 +171,7 @@ function entry.run()
 
 	
 	-- 启动一个延时定时器，防止没有回调时无法正常启动
-	sys.timer_start(function()
+	sys.timerStart(function()
 		LogUtil.d(TAG,"start after timeout in retrieving slaves")
 		if  boardIdentified < RETRY_BOARD_COUNT then 
 			entry.retryIdentify()
@@ -244,7 +244,7 @@ end
 
 function entry.startTwinkleTask( )
 	-- 启动一个定时器，负责闪灯，当出货时停止闪灯
-	sys.timer_loop_start(function()
+	sys.timerLoopStart(function()
 			--出货中，不集体闪灯
 			if DeliverHandler.isDelivering() or Lightup.isLightuping() then
 				LogUtil.d(TAG,TAG.." DeliverHandler.isDelivering or Lightup.isLightuping")

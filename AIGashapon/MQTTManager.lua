@@ -64,18 +64,18 @@ local function timeSync()
     if Consts.timeSyncCount > Consts.MAX_TIME_SYNC_COUNT then
         LogUtil.d(TAG," timeSync abort because count exceed,now reboot")
 
-        if Consts.gTimerId and sys.timer_is_active(Consts.gTimerId) then
+        if Consts.gTimerId and sys.timerIsActive(Consts.gTimerId) then
             sys.timer_stop(Consts.gTimerId)
         end
         
         return
     end
 
-    if Consts.gTimerId and sys.timer_is_active(Consts.gTimerId) then
+    if Consts.gTimerId and sys.timerIsActive(Consts.gTimerId) then
         return
     end
 
-    Consts.gTimerId=sys.timer_loop_start(function()
+    Consts.gTimerId=sys.timerLoopStart(function()
             Consts.timeSyncCount = Consts.timeSyncCount+1
 
             local handle = GetTimeHandler:new()
@@ -140,7 +140,7 @@ end
 
 function MQTTManager.loopFeedDog()
     if not fdTimerId then
-        fdTimerId = sys.timer_loop_start(function()
+        fdTimerId = sys.timerLoopStart(function()
 
             LogUtil.d(TAG,"feeddog started")
 

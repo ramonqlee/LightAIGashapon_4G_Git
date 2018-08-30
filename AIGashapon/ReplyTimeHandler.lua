@@ -71,7 +71,7 @@ function ReplyTimeHandler:handleContent( timestampInSec,content )
         misc.setClock(ntpTime)
         LogUtil.d(TAG," timeSync ntpTime="..jsonex.encode(ntpTime).." changed to now ="..jsonex.encode(os.date("*t",os.time())))
     else
-        if Consts.gTimerId and sys.timer_is_active(Consts.gTimerId) then
+        if Consts.gTimerId and sys.timerIsActive(Consts.gTimerId) then
             sys.timer_stop(Consts.gTimerId)
             Consts.timeSynced = true
             Consts.LAST_REBOOT = timestampInSec
