@@ -361,6 +361,32 @@ function mqttc:subscribe(topic, qos)
     return true
 end
 
+function mqttc:unsubscribe(topic)
+    if not self.connected then
+        log.info("mqtt.client:unsubscribe", "not connected")
+        return false
+    end
+
+    local topics
+    if type(topic) == "string" then
+        topics = { [topic] = 0 }
+    else
+        topics = topic
+    end
+
+    if not self:write(packUNSUBSCRIBE(0, self.getNextPacketId(), topics)) then
+        log.info("mqtt.client:unsubscribe", "send failed")
+        return false
+    end
+
+    if not self:waitfor(UNSUBACK, self.commandTimeout) then
+        log.info("mqtt.client:unsubscribe", "wait ack failed")
+        return false
+    end
+
+    return true
+end
+
 --- 发布一条消息
 -- @string topic UTF8编码的字符串
 -- @string payload 用户自己控制payload的编码，mqtt.lua不会对payload做任何编码转换
