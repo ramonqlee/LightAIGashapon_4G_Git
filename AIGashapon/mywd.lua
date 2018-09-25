@@ -17,8 +17,8 @@ local function init()
 	if wd and "function"== type(wd) then
 		return
 	end
-
-	wd = pins.setup(pio.P0_30,wd_val)
+-- FIXME 暂时注释掉
+	-- wd = pins.setup(pio.P0_30,wd_val)
 	LogUtil.d(TAG,"feeddog init type(wd) ="..type(wd))
 end
 
