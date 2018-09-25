@@ -131,3 +131,7 @@ function request(cbFnc,url,period,redir)
         sys.taskInit(clientTask)
     end
 end
+
+function isDownloading()
+    return sUpdating
+end

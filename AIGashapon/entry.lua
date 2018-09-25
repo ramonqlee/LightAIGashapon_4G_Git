@@ -64,6 +64,9 @@ function startTimedTask()
         end,Consts.TIMED_TASK_INTERVAL_MS)
 end
 
+local function cbFnc(downloadResult)
+    sys.publish('FOTA_DOWNLOAD_FINISH')
+end
 -- 自动升级检测
 function checkUpdate()
     if DeliverHandler.isDelivering() then
@@ -76,7 +79,7 @@ function checkUpdate()
         return 
     end
 
-    update.run() -- 检测是否有更新包
+    update.request(cbFnc) -- 检测是否有更新包
     LogUtil.d(TAG,"start checkUpdate now")
 end
 
