@@ -100,7 +100,7 @@ function uart_write(s)
 		return
 	end
 	uart.write(UartMgr.devicePath,s)
-	LogUtil.d(TAG,"uart write = "..string.tohex(s))
+	-- LogUtil.d(TAG,"uart write = "..string.tohex(s))
 end
 
 local readDataCache=""

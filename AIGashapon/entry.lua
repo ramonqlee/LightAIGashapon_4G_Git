@@ -65,7 +65,7 @@ function startTimedTask()
 end
 
 local function cbFnc(downloadResult)
-    sys.publish('FOTA_DOWNLOAD_FINISH')
+    -- sys.publish('FOTA_DOWNLOAD_FINISH')
 end
 -- 自动升级检测
 function checkUpdate()

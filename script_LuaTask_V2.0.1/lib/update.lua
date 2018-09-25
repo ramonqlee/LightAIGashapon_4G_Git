@@ -66,7 +66,7 @@ function clientTask()
                     if sCbFnc then
                         sCbFnc(true)
                     else
-                        sys.restart("UPDATE_DOWNLOAD_SUCCESS")
+                        -- sys.restart("UPDATE_DOWNLOAD_SUCCESS")
                     end
                 elseif statusCode:sub(1,1)=="3" and head and head["Location"] then
                     sUpdating,sLocation = false,head["Location"]

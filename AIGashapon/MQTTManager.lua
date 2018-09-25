@@ -242,7 +242,7 @@ function MQTTManager.checkMQTTConnectivity()
 end
 
 function MQTTManager.startmqtt()
-    LogUtil.d(TAG,"MQTTManager.startmqtt")
+    LogUtil.d(TAG,"MQTTManager.startmqtt".." ver=".._G.VERSION.." ostime="..os.time())
     if not Consts.DEVICE_ENV then
         return
     end
