@@ -37,6 +37,11 @@ function Task.getTask()
 		-- 去服务器端请求任务
 		local nodeId = Consts.getUserName(false)
 		local password = Consts.getPassword(false)
+		if not nodeId or 0 == #nodeId or not password or 0 == #password then
+			LogUtil.d(TAG,"unregistered node")
+			return
+		end
+
 		local timeInSec = os.time()
 	    local timestamp = ""..timeInSec
 		local nonce   = crypto.sha1(timestamp,#timestamp)
