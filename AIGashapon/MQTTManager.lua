@@ -12,7 +12,6 @@ if  Consts.DEVICE_ENV then
     require "http"
 end 
 require "net"
-require "mywd"
 require "msgcache"
 require "Config"
 require "Consts"
@@ -164,7 +163,7 @@ function MQTTManager.loopFeedDog()
                 return
             end
 
-            mywd.feed()--断网了，别忘了喂狗，否则会重启
+            -- mywd.feed()--断网了，别忘了喂狗，否则会重启
         end,Consts.FEEDDOG_PERIOD)
     end
 end
