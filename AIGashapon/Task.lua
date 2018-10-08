@@ -57,47 +57,34 @@ function Task.getTask()
 
 		url = string.format(Consts.MQTT_TASK_URL_FORMATTER,nodeId, nonce, timestamp, sign)
 	    LogUtil.d(TAG,"url = "..url)
-	    local code, header, body = http.request("GET", url, 15000)
-	    isRunning = false
-	    
-	    if not code then
-	        LogUtil.d(TAG,"http empty code,return")
-	        return
-	    end
 
-	    LogUtil.d(TAG,"http code = "..code)
-	    if "200" ~= code then
-	        return
-	    end
+    	http.request("GET",url,nil,nil,nil,nil,function(result,prompt,head,body )
+	        if result and body then
+	            LogUtil.d(TAG,"http config body="..body)
+			    bodyJson = jsonex.decode(body)
 
-	    if not body then
-	        LogUtil.d(TAG,"http empty body,return")
-	        return
-	    end
+			    if not bodyJson then
+			        return
+			    end
 
-	    LogUtil.d(TAG,"http config body="..body)
-	    bodyJson = jsonex.decode(body)
+			    bodyVal = bodyJson[BODY_KEY]
+			    if not bodyVal or "table"~=type(bodyVal) then
+			    	return
+			    end
 
-	    if not bodyJson then
-	        return
-	    end
+			    task = bodyVal[TASK_KEY]
+			    -- 任务分发(目前仅仅支持重启，后续待完善框架，支持更多任务)
+			    -- FIXME 待增加从板子支持
+			    if task == REBOOT_TYPE then 
+			    	r = UARTBroadcastSlave.encode()
+					UartMgr.publishMessage(r)
 
-	    bodyVal = bodyJson[BODY_KEY]
-	    if not bodyVal or "table"~=type(bodyVal) then
-	    	return
-	    end
-
-	    task = bodyVal[TASK_KEY]
-	    -- 任务分发(目前仅仅支持重启，后续待完善框架，支持更多任务)
-	    -- FIXME 待增加从板子支持
-	    if task == REBOOT_TYPE then 
-	    	r = UARTBroadcastSlave.encode()
-			UartMgr.publishMessage(r)
-
-			sys.wait(5000)--等待大板子发送消息完毕，目前大板子发送消息的间隔是500ms
-	    	LogUtil.d(TAG,"publish cmd = "..Consts.REBOOT_DEVICE_CMD)
-	    	sys.publish(Consts.REBOOT_DEVICE_CMD)
-	    end
+					sys.wait(5000)--等待大板子发送消息完毕，目前大板子发送消息的间隔是500ms
+			    	LogUtil.d(TAG,"publish cmd = "..Consts.REBOOT_DEVICE_CMD)
+			    	sys.publish(Consts.REBOOT_DEVICE_CMD)
+			    end
+	        end
+    	end)
 
 	end)
 

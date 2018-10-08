@@ -107,33 +107,32 @@ function MQTTManager.getNodeIdAndPasswordFromServer()
     sn = crypto.md5(imei,#imei)
 
     url = string.format(Consts.MQTT_CONFIG_NODEID_URL_FORMATTER,imei,sn)
-    --LogUtil.d(TAG,"url = "..url)
-    local code, header, body = http.request("GET", url, 15000)
-    -- local code, header, body = http.request(url, "POST")
-    if not code then
-        --LogUtil.d(TAG,"http empty code,return")
-        return nodeId,password
-    end
+    LogUtil.d(TAG,"url = "..url)
+    http.request("GET",url,nil,nil,nil,nil,function(result,prompt,head,body )
+        log.info("http cbFnc",result,prompt)
+        if result and head then
+            for k,v in pairs(head) do
+                log.info("http cbFnc",k..": "..v)
+            end
+        end
 
-    --LogUtil.d(TAG,"http code = "..code)
-    if "200" ~= code then
-        return nodeId,password
-    end
+        if result and body then
+            LogUtil.d(TAG,"http config body="..body)
+            bodyJson = jsonex.decode(body)
 
-    if not body then
-        --LogUtil.d(TAG,"http empty body,return")
-        return nodeId,password
-    end
+            if bodyJson then
+                nodeId = bodyJson['node_id']
+                password = bodyJson['password']
+            end
 
-    --LogUtil.d(TAG,"http config body="..body)
-    bodyJson = jsonex.decode(body)
+            if password and nodeId then
+                LogUtil.d(TAG,"http config nodeId="..nodeId)
 
-    if bodyJson then
-        nodeId = bodyJson['node_id']
-        password = bodyJson['password']
-    end
-
-    return nodeId,password
+                NodeIdConfig.saveValue(CloudConsts.NODE_ID,USERNAME)
+                NodeIdConfig.saveValue(CloudConsts.PASSWORD,PASSWORD)
+            end 
+        end
+    end)
 end
 
 function MQTTManager.loopFeedDog()
@@ -174,10 +173,17 @@ function MQTTManager.checkMQTTUser()
     while not username or 0==#username or not password or 0==#password do
         mainLoopTime =os.time()
          -- mywd.feed()--获取配置中，别忘了喂狗，否则会重启
-        username,password = MQTTManager.getNodeIdAndPasswordFromServer()
-         -- mywd.feed()--获取配置中，别忘了喂狗，否则会重启
-        LogUtil.d(TAG,".............................startmqtt retry to username="..username.." and ver=".._G.VERSION)
+        MQTTManager.getNodeIdAndPasswordFromServer()
+        
         sys.wait(RETRY_TIME)
+        username = Consts.getUserName(false)
+        password = Consts.getPassword(false)
+
+         -- mywd.feed()--获取配置中，别忘了喂狗，否则会重启
+        if username and password then
+            LogUtil.d(TAG,".............................startmqtt retry to username="..username.." and ver=".._G.VERSION)
+            return username,password
+        end
     end
     return username,password
 end
@@ -257,6 +263,9 @@ function MQTTManager.startmqtt()
         --检查网络，网络不可用时，会重启机器
         MQTTManager.checkNetwork()
         local USERNAME,PASSWORD = MQTTManager.checkMQTTUser()
+        while not USERNAME or not PASSWORD do 
+            USERNAME,PASSWORD = MQTTManager.checkMQTTUser()
+        end
         
         local mMqttProtocolHandlerPool={}
         mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=ReplyTimeHandler:new(nil)
@@ -359,6 +368,7 @@ end
 function MQTTManager.hasMessage()
     return toPublishMessages and  0~= getTableLen(toPublishMessages)
 end
+
 --控制每次调用，发送的消息数，防止发送消息，影响了收取消息
 function MQTTManager.publishMessageQueue(maxMsgPerRequest)
     -- 在此发送消息,避免在不同coroutine中发送的bug
@@ -471,15 +481,5 @@ function MQTTManager.disconnect()
 
     toHandleRequests[#toHandleRequests+1] = MQTT_DISCONNECT_REQUEST
     LogUtil.d(TAG,"add to request queur,request="..MQTT_DISCONNECT_REQUEST.." #toHandleRequests="..#toHandleRequests)
-end    
-
-
-
-
-
-
-
-
-
-
+end  
 
