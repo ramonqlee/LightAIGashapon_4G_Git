@@ -118,7 +118,7 @@ function  uart_read()
 	while true do	
 		-- 将协议数据进行缓存，然后逐步处理	
 		LogUtil.d(TAG,"uart start to read from uart")
-		data = uart.read(UartMgr.devicePath,"*l",0)
+		data = uart.read(UartMgr.devicePath,"*l")
 		if not data or string.len(data) == 0 then 
 			LogUtil.d(TAG,"empty data")
 			break
