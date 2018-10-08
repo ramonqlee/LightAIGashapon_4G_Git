@@ -128,7 +128,7 @@ function MQTTManager.getNodeIdAndPasswordFromServer()
             if password and nodeId then
                 LogUtil.d(TAG,"http config nodeId="..nodeId)
 
-                NodeIdConfig.saveValue(CloudConsts.NODE_ID,username)
+                NodeIdConfig.saveValue(CloudConsts.NODE_ID,nodeId)
                 NodeIdConfig.saveValue(CloudConsts.PASSWORD,password)
             end 
         end
@@ -280,7 +280,7 @@ function MQTTManager.startmqtt()
             topics[string.format("%s/%s", USERNAME,v:name())]=QOS
         end
 
-        LogUtil.d(TAG,".............................startmqtt username="..USERNAME.." PASSWORD="..PASSWORD)
+        LogUtil.d(TAG,".............................startmqtt USERNAME="..USERNAME.." PASSWORD="..PASSWORD)
         if mqttc then
             mqttc:disconnect()
         end
