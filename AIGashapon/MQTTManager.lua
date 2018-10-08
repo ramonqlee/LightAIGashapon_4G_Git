@@ -29,7 +29,7 @@ require "SetConfigHandler"
 local jsonex = require "jsonex"
 
 local MAX_MQTT_FAIL_COUNT = 2--mqtt连接失败2次
-local MAX_NET_FAIL_COUNT = 3*5--断网3分钟，会重启
+local MAX_NET_FAIL_COUNT = Consts.TEST_MODE and 6 or 3*5--断网3分钟，会重启
 local RETRY_TIME=10000
 local DISCONNECT_WAIT_TIME=5000
 local KEEPALIVE,CLEANSESSION=60,0
@@ -204,9 +204,8 @@ function MQTTManager.checkNetwork()
     Config.saveValue(CloudConsts.REBOOT_METHOD,nextRebootMethod)
     LogUtil.d(TAG,"rebootMethod ="..rebootMethod.." nextRebootMethod = "..nextRebootMethod)
 
-    rebootMethod = CloudConsts.SOFT_REBOOT-- only soft reboot now
     local netFailCount = 0
-    while not socket.isReady() do
+    while not link.isReady() do
         LogUtil.d(TAG,".............................socket not ready.............................")
         mainLoopTime =os.time()
 
@@ -216,13 +215,13 @@ function MQTTManager.checkNetwork()
                 LogUtil.d(TAG,"............softReboot when not link.isReady")
                 sys.restart("netFailTooLong")--重启更新包生效
                 break
-            end
-
-            if nil ~= fdTimerId then
-                LogUtil.d(TAG,"............wdReboot when not link.isReady")
-                sys.timerStop(fdTimerId)--停止看门狗喂狗，等待重启
-                fdTimerId = nil
-                break
+            else
+                LogUtil.d(TAG,"............switchFly when not link.isReady")
+                --进入飞行模式，20秒之后，退出飞行模式
+                net.switchFly(true)
+                sys.wait(20000)
+                net.switchFly(false)
+                netFailCount = 0--reset count and wait for network recovery
             end
         end
 
@@ -247,6 +246,7 @@ function MQTTManager.checkMQTTConnectivity()
         mqttFailCount = mqttFailCount+1
         sys.wait(RETRY_TIME)
     end
+
 end
 
 function MQTTManager.startmqtt()
