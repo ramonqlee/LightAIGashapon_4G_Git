@@ -204,8 +204,9 @@ function MQTTManager.checkNetwork()
     Config.saveValue(CloudConsts.REBOOT_METHOD,nextRebootMethod)
     LogUtil.d(TAG,"rebootMethod ="..rebootMethod.." nextRebootMethod = "..nextRebootMethod)
 
+    rebootMethod = CloudConsts.SOFT_REBOOT-- only soft reboot now
     local netFailCount = 0
-    while not link.isReady() do
+    while not socket.isReady() do
         LogUtil.d(TAG,".............................socket not ready.............................")
         mainLoopTime =os.time()
 
