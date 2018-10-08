@@ -128,8 +128,8 @@ function MQTTManager.getNodeIdAndPasswordFromServer()
             if password and nodeId then
                 LogUtil.d(TAG,"http config nodeId="..nodeId)
 
-                NodeIdConfig.saveValue(CloudConsts.NODE_ID,USERNAME)
-                NodeIdConfig.saveValue(CloudConsts.PASSWORD,PASSWORD)
+                NodeIdConfig.saveValue(CloudConsts.NODE_ID,username)
+                NodeIdConfig.saveValue(CloudConsts.PASSWORD,password)
             end 
         end
     end)
@@ -168,6 +168,7 @@ function MQTTManager.loopFeedDog()
 end
 
 function MQTTManager.checkMQTTUser()
+    LogUtil.d(TAG,".............................checkMQTTUser ver=".._G.VERSION)
     username = Consts.getUserName(false)
     password = Consts.getPassword(false)
     while not username or 0==#username or not password or 0==#password do
