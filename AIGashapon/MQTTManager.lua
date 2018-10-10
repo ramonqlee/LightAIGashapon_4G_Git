@@ -65,6 +65,8 @@ local function timeSync()
         if Consts.gTimerId and sys.timerIsActive(Consts.gTimerId) then
             sys.timerStop(Consts.gTimerId)
         end
+
+        sys.restart("timeSyncFail")--重启更新包生效
         
         return
     end
