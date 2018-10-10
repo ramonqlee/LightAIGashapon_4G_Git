@@ -281,7 +281,7 @@ function MQTTManager.startmqtt()
             topics[string.format("%s/%s", USERNAME,v:name())]=QOS
         end
 
-        LogUtil.d(TAG,".............................startmqtt USERNAME="..USERNAME.." PASSWORD="..PASSWORD)
+        LogUtil.d(TAG,".............................startmqtt USERNAME="..USERNAME)
         if mqttc then
             mqttc:disconnect()
         end
