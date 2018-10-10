@@ -109,15 +109,15 @@ function MQTTManager.getNodeIdAndPasswordFromServer()
     url = string.format(Consts.MQTT_CONFIG_NODEID_URL_FORMATTER,imei,sn)
     LogUtil.d(TAG,"url = "..url)
     http.request("GET",url,nil,nil,nil,nil,function(result,prompt,head,body )
-        log.info("http cbFnc",result,prompt)
-        if result and head then
-            for k,v in pairs(head) do
-                log.info("http cbFnc",k..": "..v)
-            end
-        end
+        -- log.info("http cbFnc",result,prompt)
+        -- if result and head then
+        --     for k,v in pairs(head) do
+        --         log.info("http cbFnc",k..": "..v)
+        --     end
+        -- end
 
         if result and body then
-            LogUtil.d(TAG,"http config body="..body)
+            -- LogUtil.d(TAG,"http config body="..body)
             bodyJson = jsonex.decode(body)
 
             if bodyJson then
