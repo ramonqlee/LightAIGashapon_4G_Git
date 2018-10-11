@@ -40,6 +40,8 @@ local boardIdentified = 0
 local retryCount = 0
 
 function startTimedTask()
+	LogUtil.d(TAG,"startTimedTask.....in")
+
     if timedTaskId and sys.timerIsActive(timedTaskId) then
         LogUtil.d(TAG," startTimedTask running,return")
         return
@@ -62,6 +64,8 @@ function startTimedTask()
             
             LogUtil.d(TAG,"publish message queue is empty,startTimedTask")
         end,Consts.TIMED_TASK_INTERVAL_MS)
+
+   LogUtil.d(TAG,"startTimedTask.....out")
 end
 
 local function cbFnc(downloadResult)
@@ -159,18 +163,24 @@ end
 
 
 function entry.run()
-	startTimedTask()
-	-- 启动一个延时定时器, 获取板子id
-	timerId=sys.timerStart(function()
-		LogUtil.d(TAG,"start to retrieve slaves")
-		sys.taskInit(function()
-			--首先初始化本地环境，然后成功后，启动mqtt
-			UartMgr.init(Consts.UART_ID,Consts.baudRate)
-			--获取所有板子id
-			UartMgr.initSlaves(allInfoCallback,false)    
-		end)
+	LogUtil.d(TAG,"entry.run.....in")
 
-	end,10*1000)
+	startTimedTask()
+
+	-- 启动一个延时定时器, 获取板子id
+	if not timerId or  false==sys.timerIsActive(timerId) then
+		LogUtil.d(TAG,"entry.run.....111")
+		timerId = sys.timerStart(function()
+			LogUtil.d(TAG,"start to retrieve slaves")
+			sys.taskInit(function()
+				--首先初始化本地环境，然后成功后，启动mqtt
+				UartMgr.init(Consts.UART_ID,Consts.baudRate)
+				--获取所有板子id
+				UartMgr.initSlaves(allInfoCallback,false)    
+			end)
+
+		end,10*1000)
+	end 
 
 	
 	-- 启动一个延时定时器，防止没有回调时无法正常启动
@@ -190,6 +200,7 @@ function entry.run()
 
 	end,Consts.TEST_MODE and 15*1000 or 180*1000)  
 
+	LogUtil.d(TAG,"entry.run.....out")
 end
 
 
