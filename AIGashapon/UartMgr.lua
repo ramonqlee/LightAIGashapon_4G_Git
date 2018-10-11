@@ -204,7 +204,7 @@ function UartMgr.init( devicePath, baudRate)
  	--保持系统处于唤醒状态，此处只是为了测试需要，所以此模块没有地方调用pm.sleep("test")休眠，不会进入低功耗休眠状态
 	--在开发“要求功耗低”的项目时，一定要想办法保证pm.wake("test")后，在不需要串口时调用pm.sleep("test")
 	UartMgr.devicePath = devicePath
-	pm.wake("testUart")
+	-- pm.wake("testUart")
 	--注册串口的数据接收函数，串口收到数据后，会以中断方式，调用read接口读取数据
 	uart.on(UartMgr.devicePath, "receive", uart_read)
 	--配置并且打开串口

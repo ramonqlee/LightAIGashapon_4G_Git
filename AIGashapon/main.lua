@@ -3,7 +3,7 @@
 --VERSION：ascii string类型，如果使用Luat物联云平台固件升级的功能，必须按照"X.X.X"定义，X表示1位数字；否则可随便定义
 PROJECT = "AIGashapon"
 
-VERSION = "1.1.140"
+VERSION = "1.1.142"
 
 --[[
 使用Luat物联云平台固件升级的功能，必须按照以下步骤操作：
@@ -22,6 +22,7 @@ require "sys"
 require "Config"
 require "update"
 require "Task"
+
 
 local TAG = "TimeSync"
 
@@ -53,13 +54,12 @@ require "console"
 console.setup(Consts.CONSOLE_UART_ID, 115200)--默认为1，和现有app冲突，修改为2
 -- 系统工具
 require "misc"
-
 require "http"
--- require "audio"
 
 -- FIXME 暂时注释掉，测试用
 require "entry"
 entry.run()
+-- require "testUart"
 
 -- 启动系统框架
 sys.init(0, 0)
