@@ -13,7 +13,7 @@ function UARTGetAllInfo.encode()
 -- TODO待根据格式组装报文
  	data = pack.pack("b",0)--type=0
 
- 	-- --LogUtil.d(TAG,"UARTGetAllInfo pack data = "..string.tohex(data))
+ 	-- --LogUtil.d(TAG,"UARTGetAllInfo pack data = "..string.toHex(data))
  	
  	-- function  UARTUtils.encode( sf,addr,mt,data )
  	sf = pack.pack("b",UARTUtils.SEND)

@@ -33,7 +33,7 @@ function  UARTUtils.encode( sf,addr,mt,data )
 	end
 	
 	r = sf..len..addr..mt..data
-	-- --LogUtil.d(TAG,"UARTUtils.encode to chk = "..string.tohex(r))
+	-- --LogUtil.d(TAG,"UARTUtils.encode to chk = "..string.toHex(r))
 
 	chk = UARTUtils.chk(r)
 
@@ -42,7 +42,7 @@ function  UARTUtils.encode( sf,addr,mt,data )
 	chk = pack.pack(">h",chk)
 	r = r..chk
 
-	-- --LogUtil.d(TAG,"UARTUtils.encode = "..string.tohex(r))
+	-- --LogUtil.d(TAG,"UARTUtils.encode = "..string.toHex(r))
 	return r
 end            
 
@@ -87,7 +87,7 @@ function UARTUtils.chk( msg )
 		return bit.band(crc,0xffff)--确保是short类型的数据
 	end
 
-	-- --LogUtil.d(TAG,"UARTUtils.checking= "..string.tohex(msg))
+	-- --LogUtil.d(TAG,"UARTUtils.checking= "..string.toHex(msg))
 	for i=1,string.len(msg) do
 		v = string.byte(msg,i)
 		-- --LogUtil.d(TAG,"UARTUtils.chk v= "..v.." for i = "..i)

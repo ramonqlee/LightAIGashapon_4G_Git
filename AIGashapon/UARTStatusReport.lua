@@ -141,23 +141,23 @@ function UARTStatusReport.handle(bins)
 	chkInBin = string.sub(bins,chkPos,chkPos+1)
 	temp = string.sub(bins,startPos+2,chkPos-1)
 
-	-- LogUtil.d(TAG,"to chk ="..string.tohex(temp) .." chkPos ="..chkPos)
+	-- LogUtil.d(TAG,"to chk ="..string.toHex(temp) .." chkPos ="..chkPos)
 
 	chk = UARTUtils.chk(temp)
 	chkInHex = string.format("%04X",chk)
 
-	if chkInHex ~= string.tohex(chkInBin) then
-		-- LogUtil.d(TAG,"illegal chk,calculate chkInHex ="..chkInHex.." chkInBin="..string.tohex(chkInBin))
+	if chkInHex ~= string.toHex(chkInBin) then
+		-- LogUtil.d(TAG,"illegal chk,calculate chkInHex ="..chkInHex.." chkInBin="..string.toHex(chkInBin))
 		return noMatch,startPos
 	end
 
 	status = string.sub(bins,dataPos+4)--直接读取状态，跳过运行时间
 
 	address = string.sub(bins,boardIdAddressPos,boardIdAddressPos+2)
-	LogUtil.d(TAG,"address = "..string.tohex(address).." status = "..string.tohex(status))
+	LogUtil.d(TAG,"address = "..string.toHex(address).." status = "..string.toHex(status))
 	
 	if mCallback then
-		mCallback(string.tohex(address),status)
+		mCallback(string.toHex(address),status)
 	end
 
 	return chkPos+1,startPos

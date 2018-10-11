@@ -268,7 +268,7 @@ function DeliverHandler:handleContent( content )
 
         UartMgr.publishMessage(r)
 
-        LogUtil.d(TAG,TAG.." Deliver openLock,addr = "..string.tohex(addr))
+        LogUtil.d(TAG,TAG.." Deliver openLock,addr = "..string.toHex(addr))
         
         local key = device_seq.."_"..location
         gBusyMap[key]=saleLogMap

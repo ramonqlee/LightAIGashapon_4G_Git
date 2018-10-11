@@ -81,10 +81,10 @@ function UARTBoardInfo.handle(bins)
 
 	chk = UARTUtils.chk(temp)
 	chkInHex = string.format("%04X",chk)
-	-- --LogUtil.d(TAG,"to chk ="..string.tohex(temp) .." chkPos ="..chkPos.." chk="..chkInHex)
+	-- --LogUtil.d(TAG,"to chk ="..string.toHex(temp) .." chkPos ="..chkPos.." chk="..chkInHex)
 
-	if chkInHex ~= string.tohex(chkInBin) then
-		-- --LogUtil.d(TAG,"illegal chk,calculate chkInHex ="..chkInHex.." chkInBin="..string.tohex(chkInBin))
+	if chkInHex ~= string.toHex(chkInBin) then
+		-- --LogUtil.d(TAG,"illegal chk,calculate chkInHex ="..chkInHex.." chkInBin="..string.toHex(chkInBin))
 		return noMatch,startPos
 	end
 
@@ -99,7 +99,7 @@ function UARTBoardInfo.handle(bins)
 	end
 
 	masterBoardId = string.sub(bins,idPos,idPos+idLen-1)
-	--LogUtil.d(TAG,"masterBoardId = "..string.tohex(masterBoardId))
+	--LogUtil.d(TAG,"masterBoardId = "..string.toHex(masterBoardId))
 	-- softi d ignore
 	if myCallback then
 		myCallback(masterBoardId)

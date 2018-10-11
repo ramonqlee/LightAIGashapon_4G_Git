@@ -84,8 +84,8 @@ function UARTAllInfoReport.handle(bins)
 	chk = UARTUtils.chk(temp)
 	chkInHex = string.format("%04X",chk)
 
-	if chkInHex ~= string.tohex(chkInBin) then
-		--LogUtil.d(TAG,"illegal chk,calculate chkInHex ="..chkInHex.." chkInBin="..string.tohex(chkInBin))
+	if chkInHex ~= string.toHex(chkInBin) then
+		--LogUtil.d(TAG,"illegal chk,calculate chkInHex ="..chkInHex.." chkInBin="..string.toHex(chkInBin))
 		return noMatch,startPos
 	end
 
@@ -100,7 +100,7 @@ function UARTAllInfoReport.handle(bins)
 	end
 
 	ids=string.sub(bins,idsPos)
-	-- --LogUtil.d(TAG,"ids ="..string.tohex(ids))
+	-- --LogUtil.d(TAG,"ids ="..string.toHex(ids))
 	j = 1
 	id1,id2,id3=0,0,0
 	for i=1,idsLen do
