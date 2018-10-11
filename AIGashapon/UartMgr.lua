@@ -196,8 +196,32 @@ function UartMgr.init( devicePath, baudRate)
 	LogUtil.d(TAG,"UartMgr.init done")
 end 
 
+local uartMsgQueueLooping = false
+
 function UartMgr.publishMessage( msg )
 	UartMgr.toWriteMessages[#UartMgr.toWriteMessages+1]=msg
+
+	if uartMsgQueueLooping then
+		return
+	end
+
+	-- start message queue loop
+	sys.taskInit(function()
+		while true do
+			uartMsgQueueLooping = true
+
+			UartMgr.init(Consts.UART_ID,Consts.baudRate)
+			
+			-- send msg one by one
+			for key,msg in pairs(UartMgr.toWriteMessages) do
+				uart_write(msg)
+				UartMgr.toWriteMessages[key] = nil
+				break
+			end
+
+			sys.wait(Consts.WAIT_UART_INTERVAL)--两次写入消息之间停留一段时间
+		end
+	end)    
 end
 
 function UartMgr.close( devicePath )
@@ -247,17 +271,6 @@ function UartMgr.initSlaves( callback ,retry)
 	UartMgr.publishMessage(r)
 end
 
-sys.taskInit(function()
-	while true do
-		UartMgr.init(Consts.UART_ID,Consts.baudRate)
-		-- 发送消息
-		for _,msg in pairs(UartMgr.toWriteMessages) do
-			uart_write(msg)
-		end
-		UartMgr.toWriteMessages = {}
 
-		sys.wait(Consts.WAIT_UART_INTERVAL)--两次写入消息之间停留一段时间
-	end
-end)      
 
 
