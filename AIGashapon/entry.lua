@@ -226,7 +226,7 @@ function entry.twinkle( addrs,pos,times )
 		for _,addr in pairs(addrs) do
 			-- device["seq"]=v
 			item = {}
-			item["id"] = string.fromhex(addr)
+			item["id"] = string.fromHex(addr)
 			item["group"] = pack.pack("b",pos)--1byte
 			item["color"] = pack.pack("b",nextColor)--1bye
 			item["time"] = pack.pack(">h",times)

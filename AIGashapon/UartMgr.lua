@@ -49,13 +49,13 @@ end
 local function dispatch( data )
 	initProtocalStack(false)
 
-	for _,handler in pairs(protocalStack) do
-		-- TODO 处理协议数据
-		-- --LogUtil.d(TAG,"try indexed "..i.." handler")
+	for i,handler in pairs(protocalStack) do
+		-- 处理协议数据
+		LogUtil.d(TAG,"uart dispatch handler index ="..i)
 		if handler then
 			pos = handler(data)
 			if pos and pos>=0 then
-				-- --LogUtil.d(TAG,"find hander")
+				LogUtil.d(TAG,"find hander")
 				return pos
 			end
 		end
@@ -118,16 +118,16 @@ function  uart_read()
 	local MAX_CACHE_SIZE=256
 	while true do
 		-- 将协议数据进行缓存，然后逐步处理	
-		LogUtil.d(TAG,"uart start to read from uart")
+		LogUtil.d(TAG,"uart start to read from uart_id ="..UartMgr.devicePath)
 		data = uart.read(UartMgr.devicePath,"*l")
-
-		if not data or string.len(data) == 0 then 
+		-- TODO 
+		if not data or #data == 0 then 
 			LogUtil.d(TAG,"empty data")
 			break
 		end
 
 		--trim
-		if readDataCache and string.len(readDataCache)>=MAX_CACHE_SIZE then
+		if readDataCache and #readDataCache>=MAX_CACHE_SIZE then
 			LogUtil.d(TAG,"uart data trimmed")
 			readDataCache = string.sub(readDataCache,MAX_CACHE_SIZE-MIN_CACHE_SIZE) 
 		end
@@ -153,14 +153,23 @@ function  uart_read()
 				end
 			else
 				--上面的数据没有匹配的处理器
-				--1. 有多个rcv，尝试跳过第一个，因为可能第一个有可能数据不合法
-				--2. 不多于1个rcv，保留下数据，等待后续的处理
-				if countFrame(readDataCache)>1 then
+				--0. 没有的话，说明数据无效，清理
+				--1. 只有1个rcv，保留下数据，等待后续的处理
+				--2. 有多个rcv，尝试跳过第一个，因为可能第一个有可能数据不合法
+				
+				local cnt = countFrame(readDataCache)
+				if 0 == cnt then 
+					readDataCache=""
+					LogUtil.d(TAG,"uart junk data")
+					break
+				end
+
+				if cnt>1 then
 					readDataCache = string.sub(readDataCache,startFrame(readDataCache)+1)
 					if readDataCache then
 						LogUtil.d(TAG,"uart jump to next frame readDataCache = "..string.toHex(readDataCache))
 					end
-				else
+				else 
 					if readDataCache then
 						LogUtil.d(TAG,"uart wait for new stream readDataCache = "..string.toHex(readDataCache))
 					end
@@ -195,7 +204,7 @@ function UartMgr.init( devicePath, baudRate)
  	--保持系统处于唤醒状态，此处只是为了测试需要，所以此模块没有地方调用pm.sleep("test")休眠，不会进入低功耗休眠状态
 	--在开发“要求功耗低”的项目时，一定要想办法保证pm.wake("test")后，在不需要串口时调用pm.sleep("test")
 	UartMgr.devicePath = devicePath
-	-- pm.wake("testUart")
+	pm.wake("testUart")
 	--注册串口的数据接收函数，串口收到数据后，会以中断方式，调用read接口读取数据
 	uart.on(UartMgr.devicePath, "receive", uart_read)
 	--配置并且打开串口
@@ -266,7 +275,7 @@ function UartMgr.initSlaves( callback ,retry)
 			ids = UARTAllInfoReport.getAllBoardIds(true)
 			for _,v in pairs(ids) do
 				if v then
-					addr = addr.." "..string.fromhex(v)
+					addr = addr.." "..string.fromHex(v)
 				end
 			end
 

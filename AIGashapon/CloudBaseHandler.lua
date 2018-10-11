@@ -25,8 +25,8 @@ end
 function CloudBaseHandler:handle( obj )
 
   if Consts.LOG_ENABLED then
-    collectgarbage("collect")
-    c = collectgarbage("count")
+    -- collectgarbage("collect")
+    -- c = collectgarbage("count")
     --LogUtil.d("Mem","CloudBaseHandler:handle memory count ="..c)
   end
 

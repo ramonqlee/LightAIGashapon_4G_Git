@@ -54,7 +54,7 @@ function allInfoCallback( ids )
 	-- 获取第一个从板id，进行开锁操作
 	addr=""
 	for _,v in ipairs(UARTAllInfoReport.getAllBoardIds(true)) do
-		--LogUtil.d(TAG,"parse UARTAllInfoReport allId val = "..v)
+		LogUtil.d(TAG,"parse UARTAllInfoReport allId val = "..v)
 		if v then
 			addr = v
 			break
@@ -69,10 +69,10 @@ function allInfoCallback( ids )
 	--LogUtil.d(TAG,"addr = "..addr)
 -- 开锁
 -- addr = pack.pack("b3",0x00,0x00,0x06) 
-loc = 1 
-timeoutInSec =2
-UARTStatusReport.setCallback(openLockCallback)
-r = UARTControlInd.encode(addr,loc,timeoutInSec)
+-- loc = 1 
+-- timeoutInSec =2
+-- UARTStatusReport.setCallback(openLockCallback)
+-- r = UARTControlInd.encode(addr,loc,timeoutInSec)
 
 -- UartMgr.publishMessage(r)
 end
@@ -97,6 +97,18 @@ uart.on (UART_ID, "sent", txdone)
 	-- r = UARTBroadcastLightup.encode(msgArray)
 	-- UartMgr.publishMessage(r)
 
+sys.timerStart(function()
+		LogUtil.d(TAG,"start to retry identify slaves")
+		sys.taskInit(function()
+			--首先初始化本地环境，然后成功后，启动mqtt
+			UartMgr.init(Consts.UART_ID,Consts.baudRate)
+			--获取所有板子id
+			UartMgr.initSlaves(allInfoCallback,true)    
+		end)
+
+	end,125*1000)
+
+
 -- r = UARTGetBoardInfo.encode() 
 -- r = UARTGetAllInfo.encode()--获取所有板子id
 -- UARTAllInfoReport.setCallback(allInfoCallback)
@@ -118,25 +130,25 @@ uart.on (UART_ID, "sent", txdone)
 -- FIXME 测试用
 -- sys.taskInit(MQTTManager.startmqtt)
 
-sys.taskInit(function()
-	while true do
-		UartMgr.init(Consts.UART_ID,Consts.baudRate)
-		local addr = pack.pack("b3",0x00,0x00,0x02) 
-		local loc = 1 
-		local timeoutInSec =120
-		callback = nil
-		UARTStatusReport.setCallback = callback
-	-- 发送开锁报文
-		r = UARTControlInd.encode(addr,loc,timeoutInSec)
- 		UartMgr.publishMessage(r)
+-- sys.taskInit(function()
+-- 	while true do
+-- 		UartMgr.init(Consts.UART_ID,Consts.baudRate)
+-- 		local addr = pack.pack("b3",0x00,0x00,0x02) 
+-- 		local loc = 1 
+-- 		local timeoutInSec =120
+-- 		callback = nil
+-- 		UARTStatusReport.setCallback = callback
+-- 	-- 发送开锁报文
+-- 		r = UARTControlInd.encode(addr,loc,timeoutInSec)
+--  		UartMgr.publishMessage(r)
 
- 		--发送另外一个
- 		addr = pack.pack("b3",0x00,0x00,0x03) 
-		r = UARTControlInd.encode(addr,loc,timeoutInSec)
-		UartMgr.publishMessage(r)
+--  		--发送另外一个
+--  		addr = pack.pack("b3",0x00,0x00,0x03) 
+-- 		r = UARTControlInd.encode(addr,loc,timeoutInSec)
+-- 		UartMgr.publishMessage(r)
 
-		-- sys.wait(30000)--两次写入消息之间停留一段时间
-		break
-	end
-	end)  
+-- 		-- sys.wait(30000)--两次写入消息之间停留一段时间
+-- 		break
+-- 	end
+-- 	end)  
 

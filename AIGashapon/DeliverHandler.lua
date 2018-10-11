@@ -248,7 +248,7 @@ function DeliverHandler:handleContent( content )
     -- 开锁
     local addr = nil
     if "string" == type(device_seq) then
-        addr = string.fromhex(device_seq)--pack.pack("b3",0x00,0x00,0x06)  
+        addr = string.fromHex(device_seq)--pack.pack("b3",0x00,0x00,0x06)  
     elseif "number"==type(device_seq) then
         addr = string.format("%2X",device_seq)
     end
@@ -433,7 +433,7 @@ function TimerFunc(id)
                     -- 开锁
                     local addr = nil
                     if "string" == type(seq) then
-                        addr = string.fromhex(seq)--pack.pack("b3",0x00,0x00,0x06)  
+                        addr = string.fromHex(seq)--pack.pack("b3",0x00,0x00,0x06)  
                     elseif "number"==type(seq) then
                         addr = string.format("%2X",seq)
                     end

@@ -66,7 +66,7 @@ function Lightup:handleContent( content )
 
 	addr=nil
 	if "string" == type(device_seq) then
-        addr = string.fromhex(device_seq)
+        addr = string.fromHex(device_seq)
 	elseif "number"==type(device_seq) then
         addr = string.format("%2X",device_seq)
     end
