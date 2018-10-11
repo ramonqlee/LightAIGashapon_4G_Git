@@ -100,12 +100,13 @@ function uart_write(s)
 		return
 	end
 	uart.write(UartMgr.devicePath,s)
-	-- LogUtil.d(TAG,"uart write = "..string.tohex(s))
+	LogUtil.d(TAG,"uart write = "..string.toHex(s))
 end
 
 local readDataCache=""
 -- uart读取函数
 function  uart_read()
+
 	-- TODO 待根据具体的协议数据，进行解析
 	local data = ""
 	--底层core中，串口收到数据时：
@@ -113,27 +114,34 @@ function  uart_read()
 	--如果接收缓冲器不为空，则不会通知Lua脚本
 	--所以Lua脚本中收到中断读串口数据时，每次都要把接收缓冲区中的数据全部读出，这样才能保证底层core中的新数据中断上来，此read函数中的while语句中就保证了这一点
 	
-	local MIN_CACHE_SIZE=100
+	local MIN_CACHE_SIZE=32
 	local MAX_CACHE_SIZE=256
-	while true do	
+	while true do
 		-- 将协议数据进行缓存，然后逐步处理	
 		LogUtil.d(TAG,"uart start to read from uart")
 		data = uart.read(UartMgr.devicePath,"*l")
+
 		if not data or string.len(data) == 0 then 
 			LogUtil.d(TAG,"empty data")
 			break
 		end
-		
-		LogUtil.d(TAG,"uart read = "..string.tohex(data))
+
+		--trim
+		if readDataCache and string.len(readDataCache)>=MAX_CACHE_SIZE then
+			LogUtil.d(TAG,"uart data trimmed")
+			readDataCache = string.sub(readDataCache,MAX_CACHE_SIZE-MIN_CACHE_SIZE) 
+		end
+
+		LogUtil.d(TAG,"uart read = "..string.toHex(data))
 		readDataCache = readDataCache..data
 
 		-- 循环处理数据，防止出现无法处理的情况，导致阻塞
 		while true do
 			--打开下面的打印会耗时
 			if readDataCache then
-				LogUtil.d(TAG,"uart before dispatch = "..string.tohex(readDataCache))
+				LogUtil.d(TAG,"uart before dispatch = "..string.toHex(readDataCache))
 			end
-			
+
 			endPos,startPos = dispatch(readDataCache)
 
 			-- 跳过处理过的数据
@@ -141,7 +149,7 @@ function  uart_read()
 				readDataCache = string.sub(readDataCache,endPos+1)
 				
 				if readDataCache then
-					LogUtil.d(TAG,"uart after dispatch = "..string.tohex(readDataCache))
+					LogUtil.d(TAG,"uart after dispatch = "..string.toHex(readDataCache))
 				end
 			else
 				--上面的数据没有匹配的处理器
@@ -150,17 +158,18 @@ function  uart_read()
 				if countFrame(readDataCache)>1 then
 					readDataCache = string.sub(readDataCache,startFrame(readDataCache)+1)
 					if readDataCache then
-						LogUtil.d(TAG,"uart jump to next frame readDataCache = "..string.tohex(readDataCache))
+						LogUtil.d(TAG,"uart jump to next frame readDataCache = "..string.toHex(readDataCache))
 					end
 				else
 					if readDataCache then
-						LogUtil.d(TAG,"uart wait for new stream readDataCache = "..string.tohex(readDataCache))
+						LogUtil.d(TAG,"uart wait for new stream readDataCache = "..string.toHex(readDataCache))
 					end
 					break
 				end
 			end
-
 		end
+
+
 	end
 end
 
