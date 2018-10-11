@@ -20,5 +20,5 @@ function LogUtil.d(tag,log)
 		log = ""
 	end
 
-	_G.print("<"..tag..">\t"..log)
+	print("<"..tag..">\t"..log)
 end
