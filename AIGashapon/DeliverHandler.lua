@@ -21,7 +21,7 @@ require "UploadDetection"
 local TAG = "DeliverHandler"
 local gBusyMap={}--是否在占用的记录
 local ORDER_EXPIRED_SPAN = 5*60--订单超期时间和系统当前当前时间的偏差
-local mTimerId
+local mTimerId = nil
 DeliverHandler = CloudBaseHandler:new{
     MY_TOPIC = "deliver",
     ORDER_TIMEOUT_TIME_IN_SEC = "orderTimeOutTime",
@@ -277,7 +277,7 @@ function DeliverHandler:handleContent( content )
 
         if Consts.DEVICE_ENV then
             --start timer monitor already
-            if sys.timerIsActive(mTimerId) then
+            if mTimerId and sys.timerIsActive(mTimerId) then
                 LogUtil.d(TAG,TAG.." timer_is_active id ="..mTimerId)
             else
                 mTimerId = sys.timerLoopStart(TimerFunc,self.LOOP_TIME_IN_MS)
@@ -406,9 +406,10 @@ function  openLockCallback(addr,flagsTable)
 end
 
 function TimerFunc(id)
-    if 0 == getTableLen(gBusyMap) then
+    if mTimerId and sys.timerIsActive(mTimerId) and 0 == getTableLen(gBusyMap) then
         LogUtil.d(TAG,TAG.." in TimerFunc gBusyMap len="..getTableLen(gBusyMap).." stop timer and return")
         sys.timerStop(mTimerId)
+        mTimerId = nil
         return
     end
 

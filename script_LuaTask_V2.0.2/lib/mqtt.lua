@@ -62,6 +62,7 @@ local function packSUBSCRIBE(dup, packetId, topics)
     return pack.pack(">bAA", header, encodeLen(#data), data)
 end
 
+
 local function packUNSUBSCRIBE( dup, packetId, topics )
     local header = UNSUBSCRIBE * 16 + dup * 8 + 2
     local data = pack.pack(">H", packetId)
@@ -370,32 +371,6 @@ function mqttc:subscribe(topic, qos)
     return true
 end
 
-function mqttc:unsubscribe(topic)
-    if not self.connected then
-        log.info("mqtt.client:unsubscribe", "not connected")
-        return false
-    end
-
-    local topics
-    if type(topic) == "string" then
-        topics = { [topic] = 0 }
-    else
-        topics = topic
-    end
-
-    if not self:write(packUNSUBSCRIBE(0, self.getNextPacketId(), topics)) then
-        log.info("mqtt.client:unsubscribe", "send failed")
-        return false
-    end
-
-    if not self:waitfor(UNSUBACK, self.commandTimeout) then
-        log.info("mqtt.client:unsubscribe", "wait ack failed")
-        return false
-    end
-
-    return true
-end
-
 --- 发布一条消息
 -- @string topic UTF8编码的字符串
 -- @string payload 用户自己控制payload的编码，mqtt.lua不会对payload做任何编码转换
@@ -424,6 +399,33 @@ function mqttc:publish(topic, payload, qos, retain)
 
     if not self:waitfor(qos == 1 and PUBACK or PUBCOMP, self.commandTimeout) then
         log.warn("mqtt.client:publish", "wait ack timeout")
+        return false
+    end
+
+    return true
+end
+
+
+function mqttc:unsubscribe(topic)
+    if not self.connected then
+        log.info("mqtt.client:unsubscribe", "not connected")
+        return false
+    end
+
+    local topics
+    if type(topic) == "string" then
+        topics = { [topic] = 0 }
+    else
+        topics = topic
+    end
+
+    if not self:write(packUNSUBSCRIBE(0, self.getNextPacketId(), topics)) then
+        log.info("mqtt.client:unsubscribe", "send failed")
+        return false
+    end
+
+    if not self:waitfor(UNSUBACK, self.commandTimeout) then
+        log.info("mqtt.client:unsubscribe", "wait ack failed")
         return false
     end
 
