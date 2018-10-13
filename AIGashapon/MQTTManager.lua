@@ -64,6 +64,7 @@ local function timeSync()
 
         if Consts.gTimerId and sys.timerIsActive(Consts.gTimerId) then
             sys.timerStop(Consts.gTimerId)
+            Consts.gTimerId = nil
         end
 
         sys.restart("timeSyncFail")--重启更新包生效
@@ -138,10 +139,12 @@ function MQTTManager.getNodeIdAndPasswordFromServer()
 end
 
 function MQTTManager.loopFeedDog()
-    if not fdTimerId then
-        fdTimerId = sys.timerLoopStart(function()
+    if fdTimerId and sys.timerIsActive(fdTimerId) then 
+        return
+    end
 
-            LogUtil.d(TAG,"feeddog started")
+        fdTimerId = sys.timerLoopStart(function()
+            LogUtil.d(TAG,"feeddogging")
 
             -- 如果主玄循环停止超过一定时间，，则认为程序出问题了，重启
             local timeOffset = os.time()-mainLoopTime
@@ -152,21 +155,21 @@ function MQTTManager.loopFeedDog()
             if Consts.timeSynced and timeOffset > Consts.MAX_LOOP_INTERVAL then
                 -- 如果在出货中，则不重启，防止出现数据丢失
                 if DeliverHandler.isDelivering() then
-                    LogUtil.d(TAG,TAG.." DeliverHandler.isDelivering,ignore reboot")
+                    LogUtil.d(TAG,TAG.."isDelivering,ignore reboot")
                     return
                 end
 
-                sys.timerStop(fdTimerId)--停止看门狗喂狗，等待重启
-                fdTimerId = nil
+                if fdTimerId and sys.timerIsActive(fdTimerId) then
+                    sys.timerStop(fdTimerId)--停止看门狗喂狗，等待重启
+                    fdTimerId = nil
+                end
 
-                LogUtil.d(TAG,"............softReboot when mainloop stop,timeOffset="..timeOffset.." os.time()="..os.time().." mainLoopTime="..mainLoopTime)
                 sys.restart("deadMainLoop")--重启更新包生效
                 return
             end
 
             -- mywd.feed()--断网了，别忘了喂狗，否则会重启
         end,Consts.FEEDDOG_PERIOD)
-    end
 end
 
 function MQTTManager.checkMQTTUser()
@@ -350,7 +353,7 @@ function MQTTManager.loopMessage(mqttProtocolHandlerPool)
             end
         else
             if data then
-                log.info(TAG, "msg = "..data.." reconnectCount="..reconnectCount.." ver=".._G.VERSION.." ostime="..os.time())
+                log.info(TAG, "msg = "..data.." reconn="..reconnectCount.." ver=".._G.VERSION.." ostime="..os.time())
             end
             -- 发送待发送的消息，设定条数，防止出现多条带发送时，出现消息堆积
             MQTTManager.publishMessageQueue(MAX_MSG_CNT_PER_REQ)
