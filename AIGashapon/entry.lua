@@ -17,6 +17,8 @@ require "UARTBroadcastLightup"
 
 local TAG="Entry"
 local timerId=nil
+local retryIdentifyTimerId=nil
+local candidateRunTimerId=nil
 
 entry = {}
 local mqttStarted=false
@@ -110,8 +112,9 @@ function allInfoCallback( ids )
 	end
 
 	--取消定时器 
-	if timerId and  sys.timerIsActive(timerId) then
+	if timerId and sys.timerIsActive(timerId) then
 		sys.timerStop(timerId)
+		timerId = nil
 		LogUtil.d(TAG,"init slaves done")
 	end 
 
@@ -130,13 +133,14 @@ function entry.retryIdentify()
 		return
 	end
 
-	if timerId and  sys.timerIsActive(timerId) then
-		sys.timerStop(timerId)
-	end 
-
 	-- 发起识别请求，并进行超时处理
 	timerId=sys.timerStart(function()
 		LogUtil.d(TAG,"start to retry identify slaves")
+		if timerId and sys.timerIsActive(timerId) then
+			sys.timerStop(timerId)
+			timerId = nil
+		end
+
 		sys.taskInit(function()
 			--首先初始化本地环境，然后成功后，启动mqtt
 			UartMgr.init(Consts.UART_ID,Consts.baudRate)
@@ -147,17 +151,19 @@ function entry.retryIdentify()
 	end,5*1000)
 
 
-	sys.timerStart(function()
+	retryIdentifyTimerId = sys.timerStart(function()
 		LogUtil.d(TAG,"retry timeout in retrieving slaves")
-		if timerId and  sys.timerIsActive(timerId) then
-			sys.timerStop(timerId)
+
+		if retryIdentifyTimerId and sys.timerIsActive(retryIdentifyTimerId) then
+			sys.timerStop(retryIdentifyTimerId)
+			retryIdentifyTimerId = nil
 		end
 
 		if boardIdentified < RETRY_BOARD_COUNT  then
 			entry.retryIdentify()
 		end
 
-	end,180*1000)  
+	end,60*1000)  
 
 end
 
@@ -168,24 +174,33 @@ function entry.run()
 	startTimedTask()
 
 	-- 启动一个延时定时器, 获取板子id
-	if not timerId or  false==sys.timerIsActive(timerId) then
-		LogUtil.d(TAG,"entry.run.....111")
-		timerId = sys.timerStart(function()
-			LogUtil.d(TAG,"start to retrieve slaves")
-			sys.taskInit(function()
-				--首先初始化本地环境，然后成功后，启动mqtt
-				UartMgr.init(Consts.UART_ID,Consts.baudRate)
+	LogUtil.d(TAG,"entry.run.....111")
+	timerId = sys.timerStart(function()
+		LogUtil.d(TAG,"start to retrieve slaves")
+		if timerId and sys.timerIsActive(timerId) then
+			sys.timerStop(timerId)
+			timerId = nil
+		end
+
+		sys.taskInit(function()
+			--首先初始化本地环境，然后成功后，启动mqtt
+			UartMgr.init(Consts.UART_ID,Consts.baudRate)
 				--获取所有板子id
-				UartMgr.initSlaves(allInfoCallback,false)    
-			end)
+			UartMgr.initSlaves(allInfoCallback,false)    
+		end)
 
-		end,10*1000)
-	end 
-
+	end,60*1000)
+		
 	
 	-- 启动一个延时定时器，防止没有回调时无法正常启动
-	sys.timerStart(function()
+	candidateRunTimerId=sys.timerStart(function()
 		LogUtil.d(TAG,"start after timeout in retrieving slaves")
+
+		if candidateRunTimerId and sys.timerIsActive(candidateRunTimerId) then
+			sys.timerStop(candidateRunTimerId)
+			candidateRunTimerId = nil
+		end
+
 		if  boardIdentified < RETRY_BOARD_COUNT then 
 			entry.retryIdentify()
 		end
@@ -198,7 +213,7 @@ function entry.run()
 		LogUtil.d(TAG,"start twinkle task")
 		entry.startTwinkleTask()
 
-	end,Consts.TEST_MODE and 15*1000 or 180*1000)  
+	end,Consts.TEST_MODE and 15*1000 or 120*1000)  
 
 	LogUtil.d(TAG,"entry.run.....out")
 end
@@ -256,9 +271,16 @@ function entry.twinkle( addrs,pos,times )
 	end
 end
 
+local twinkleTimerId = nil
+
 function entry.startTwinkleTask( )
+	if twinkleTimerId and sys.timerIsActive(twinkleTimerId) then
+		LogUtil.d(TAG,"twinkle started")
+		return
+	end
+
 	-- 启动一个定时器，负责闪灯，当出货时停止闪灯
-	sys.timerLoopStart(function()
+	twinkleTimerId = sys.timerLoopStart(function()
 			--出货中，不集体闪灯
 			if DeliverHandler.isDelivering() or Lightup.isLightuping() then
 				LogUtil.d(TAG,TAG.." DeliverHandler.isDelivering or Lightup.isLightuping")
