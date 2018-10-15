@@ -73,10 +73,10 @@ function ReplyTimeHandler:handleContent( timestampInSec,content )
     else
         if Consts.gTimerId and sys.timerIsActive(Consts.gTimerId) then
             sys.timerStop(Consts.gTimerId)
-            Consts.timeSynced = true
-            Consts.LAST_REBOOT = timestampInSec
-            LogUtil.d(TAG," timeSync finished")
         end
+        Consts.timeSynced = true
+        Consts.LAST_REBOOT = timestampInSec
+        LogUtil.d(TAG," timeSync finished")
     end
 
     return r

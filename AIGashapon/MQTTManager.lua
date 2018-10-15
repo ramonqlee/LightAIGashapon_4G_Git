@@ -60,14 +60,12 @@ local function timeSync()
 
     -- 如果超时过了重试次数，则停止，防止消息过多导致服务端消息堵塞
     if Consts.timeSyncCount > Consts.MAX_TIME_SYNC_COUNT then
-        LogUtil.d(TAG," timeSync abort because count exceed,now reboot")
+        LogUtil.d(TAG," timeSync abort because count exceed,ignore this request")
 
         if Consts.gTimerId and sys.timerIsActive(Consts.gTimerId) then
             sys.timerStop(Consts.gTimerId)
             Consts.gTimerId = nil
         end
-
-        sys.restart("timeSyncFail")--重启更新包生效
         
         return
     end
@@ -78,6 +76,16 @@ local function timeSync()
 
     Consts.gTimerId=sys.timerLoopStart(function()
             Consts.timeSyncCount = Consts.timeSyncCount+1
+            if Consts.timeSyncCount > Consts.MAX_TIME_SYNC_COUNT then
+                LogUtil.d(TAG," timeSync abort because count exceed,stop timer")
+
+                if Consts.gTimerId and sys.timerIsActive(Consts.gTimerId) then
+                    sys.timerStop(Consts.gTimerId)
+                    Consts.gTimerId = nil
+                end
+                
+                return
+            end
 
             local handle = GetTimeHandler:new()
             handle:sendGetTime(os.time())
