@@ -28,7 +28,7 @@ require "SetConfigHandler"
 
 local jsonex = require "jsonex"
 
-local MAX_MQTT_FAIL_COUNT = 2--mqtt连接失败2次
+local MAX_MQTT_FAIL_COUNT = 1--mqtt连接失败2次
 local MAX_NET_FAIL_COUNT = Consts.TEST_MODE and 6 or 2*5--断网3分钟，会重启
 local RETRY_TIME=10000
 local DISCONNECT_WAIT_TIME=5000
@@ -244,17 +244,23 @@ function MQTTManager.checkMQTTConnectivity()
         mqttc:disconnect()
         mainLoopTime =os.time()
 
+        mqttFailCount = mqttFailCount+1
         if mqttFailCount >= MAX_MQTT_FAIL_COUNT then
             break
         end
 
-        mqttFailCount = mqttFailCount+1
         sys.wait(RETRY_TIME)
     end
 
 end
 
+local startmqtted = false
 function MQTTManager.startmqtt()
+    if startmqtt then
+        return
+    end
+    startmqtt = true
+
     LogUtil.d(TAG,"MQTTManager.startmqtt".." ver=".._G.VERSION.." ostime="..os.time())
     if not Consts.DEVICE_ENV then
         return
@@ -289,11 +295,14 @@ function MQTTManager.startmqtt()
         LogUtil.d(TAG,".............................startmqtt USERNAME="..USERNAME)
         if mqttc then
             mqttc:disconnect()
+            sys.wait(RETRY_TIME)
         end
         mqttc = mqtt.client(USERNAME,KEEPALIVE,USERNAME,PASSWORD,CLEANSESSION)
 
         MQTTManager.checkMQTTConnectivity()
 
+        MQTTManager.loopPreviousMessage(mMqttProtocolHandlerPool)
+        
         --先取消之前的订阅
         unsubscribe = Config.getValue(Consts.UNSUBSCRIBE_KEY)
         if mqttc.connected and not unsubscribe then
@@ -320,6 +329,50 @@ function MQTTManager.startmqtt()
             MQTTManager.loopMessage(mMqttProtocolHandlerPool)
         end
     end
+end
+
+function MQTTManager.loopPreviousMessage( mqttProtocolHandlerPool )
+    log.info(TAG, "loopPreviousMessage now")
+
+    while true do
+        if not mqttc.connected then
+            break
+        end
+
+        local r, data = mqttc:receive(CLIENT_COMMAND_TIMEOUT)
+
+        if not data then
+            break
+        end
+
+        mainLoopTime =os.time()
+
+        if r and data then
+            -- 去除重复的sn消息
+            if msgcache.addMsg2Cache(data) then
+                for k,v in pairs(mqttProtocolHandlerPool) do
+                    if v:handle(data) then
+                        log.info(TAG, "loopPreviousMessage reconnectCount="..reconnectCount.." ver=".._G.VERSION.." ostime="..os.time())
+                        mainLoopTime =os.time()
+                        break
+                    end
+                end
+            end
+        else
+            if data then
+                log.info(TAG, "loopPreviousMessage msg = "..data.." reconnectCount="..reconnectCount.." ver=".._G.VERSION.." ostime="..os.time())
+            end
+            -- 发送待发送的消息，设定条数，防止出现多条带发送时，出现消息堆积
+            MQTTManager.publishMessageQueue(MAX_MSG_CNT_PER_REQ)
+            MQTTManager.handleRequst()
+
+            if not MQTTManager.hasMessage() then
+                break
+            end
+        end
+    end
+
+    log.info(TAG, "loopPreviousMessage done")
 end
 
 function MQTTManager.loopMessage(mqttProtocolHandlerPool)
