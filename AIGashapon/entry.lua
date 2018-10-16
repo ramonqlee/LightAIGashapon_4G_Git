@@ -213,7 +213,7 @@ function entry.run()
 		LogUtil.d(TAG,"start twinkle task")
 		entry.startTwinkleTask()
 
-	end,Consts.TEST_MODE and 15*1000 or 120*1000)  
+	end,Consts.TEST_MODE and 5*1000 or 120*1000)  
 
 	LogUtil.d(TAG,"entry.run.....out")
 end
