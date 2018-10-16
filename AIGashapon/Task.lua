@@ -59,6 +59,8 @@ function Task.getTask()
 	    LogUtil.d(TAG,"url = "..url)
 
     	http.request("GET",url,nil,nil,nil,nil,function(result,prompt,head,body )
+    		isRunning = false
+    		
 	        if result and body then
 	            LogUtil.d(TAG,"http config body="..body)
 			    bodyJson = jsonex.decode(body)
