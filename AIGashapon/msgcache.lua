@@ -16,8 +16,42 @@ local TAG = "MSGCACHE"
 msgcache={}
 function msgcache.clear()
     Config.saveValue(SN_SET_PERSISTENCE_KEY,"")
+    LogUtil.d(TAG,"clear msgcache")
 end
 
+
+function msgcache.remove(sn)
+    if not sn or "string"~=type(sn) then
+        return
+    end
+
+    LogUtil.d(TAG,"start to remove msg,sn ="..sn)
+    --从文件中提取历史消息，然后进行追加
+    local mqttMsgSet = {}
+    local allset = Config.getValue(SN_SET_PERSISTENCE_KEY)
+    if allset and "string"==type(allset) and #allset>0 then
+        mqttMsgSet = jsonex.decode(allset)
+    end 
+
+    if not mqttMsgSet then
+        return
+    end  
+
+    local existed = false
+    for i=#mqttMsgSet,1,-1 do
+        if mqttMsgSet[i] == sn then
+            table.remove(mqttMsgSet, i)
+            existed = true
+        end
+    end
+    
+    if not existed then
+        return
+    end
+
+    Config.saveValue(SN_SET_PERSISTENCE_KEY,jsonex.encode(mqttMsgSet))
+    LogUtil.d(TAG,sn.."reduce queue's sn = "..sn.." new size="..#mqttMsgSet)
+end
 
 --添加到msg缓存,如果不存在，则返回true；如果已经存在，则返回false
 function msgcache.addMsg2Cache(msg)
@@ -68,7 +102,6 @@ function msgcache.addMsg2Cache(msg)
     if not mqttMsgSet then
         mqttMsgSet = {}
     end  
-    LogUtil.d(TAG,sn.." checking if new sn is in queue,queue size = "..#mqttMsgSet)
 
     local existed = false
     for _,value in pairs(mqttMsgSet) do
@@ -78,6 +111,7 @@ function msgcache.addMsg2Cache(msg)
          break
         end
     end
+    LogUtil.d(TAG,jsonex.encode(content).."added, queue size = "..#mqttMsgSet)
 
     local updated = false
     --不存在的话，则记录下

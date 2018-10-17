@@ -28,7 +28,7 @@ require "SetConfigHandler"
 
 local jsonex = require "jsonex"
 
-local MAX_MQTT_FAIL_COUNT = 1--mqtt连接失败2次
+local MAX_MQTT_FAIL_COUNT = 2--mqtt连接失败2次
 local MAX_NET_FAIL_COUNT = Consts.TEST_MODE and 6 or 2*5--断网3分钟，会重启
 local RETRY_TIME=10000
 local DISCONNECT_WAIT_TIME=5000
@@ -141,9 +141,6 @@ function MQTTManager.getNodeIdAndPasswordFromServer()
 
             if password and nodeId then
                 LogUtil.d(TAG,"http config nodeId="..nodeId)
-
-                NodeIdConfig.saveValue(CloudConsts.NODE_ID,nodeId)
-                NodeIdConfig.saveValue(CloudConsts.PASSWORD,password)
             end 
         end
     end)
@@ -199,6 +196,8 @@ function MQTTManager.checkMQTTUser()
          -- mywd.feed()--获取配置中，别忘了喂狗，否则会重启
         if username and password then
             LogUtil.d(TAG,".............................startmqtt retry to username="..username.." and ver=".._G.VERSION)
+            Consts.saveUserName(username)
+            Consts.savePassword(password)
             return username,password
         end
     end
@@ -244,10 +243,9 @@ function MQTTManager.checkNetwork()
         netFailCount = netFailCount+1
         sys.wait(RETRY_TIME)
     end
-    sys.wait(RETRY_TIME)--wait for next loop
 end
 
-function MQTTManager.checkMQTTConnectivity()
+function MQTTManager.connectMQTT()
     local mqttFailCount = 0
     while not mqttc:connect(ADDR,PORT) do
         -- mywd.feed()--获取配置中，别忘了喂狗，否则会重启
@@ -257,12 +255,11 @@ function MQTTManager.checkMQTTConnectivity()
 
         mqttFailCount = mqttFailCount+1
         if mqttFailCount >= MAX_MQTT_FAIL_COUNT then
+            Consts.clearUserName()
+            Consts.clearPassword()
             break
         end
-
-        sys.wait(RETRY_TIME)
     end
-
 end
 
 local startmqtted = false
@@ -282,6 +279,7 @@ function MQTTManager.startmqtt()
 
     -- 定时喂狗
     MQTTManager.loopFeedDog()
+    msgcache.clear()--清理缓存的消息数据
 
     while true do
         --检查网络，网络不可用时，会重启机器
@@ -311,9 +309,10 @@ function MQTTManager.startmqtt()
          --清理服务端的消息
         if reconnectCount>=MAX_RETRY_SESSION_COUNT then
             mqttc = mqtt.client(USERNAME,KEEPALIVE,USERNAME,PASSWORD,CLEANSESSION_TRUE)
-            MQTTManager.checkMQTTConnectivity()
+            MQTTManager.connectMQTT()
             mqttc:disconnect()
 
+            msgcache.clear()
             MQTTManager.emptyMessageQueue()
             MQTTManager.emptyExtraRequest()
             reconnectCount = 0
@@ -322,8 +321,7 @@ function MQTTManager.startmqtt()
 
         mqttc = mqtt.client(USERNAME,KEEPALIVE,USERNAME,PASSWORD,CLEANSESSION)
 
-        MQTTManager.checkMQTTConnectivity()
-
+        MQTTManager.connectMQTT()
         MQTTManager.loopPreviousMessage(mMqttProtocolHandlerPool)
         
         --先取消之前的订阅
@@ -340,13 +338,6 @@ function MQTTManager.startmqtt()
         if mqttc.connected and mqttc:subscribe(topics) then
             unsubscribe = false
             LogUtil.d(TAG,".............................subscribe topic ="..jsonex.encode(topics))
-
-            -- 迁移到新的文件中，单独保存用户名和密码
-            NodeIdConfig.saveValue(CloudConsts.NODE_ID,USERNAME)
-            NodeIdConfig.saveValue(CloudConsts.PASSWORD,PASSWORD)
-            
-            Config.saveValue(CloudConsts.NODE_ID,USERNAME)
-            Config.saveValue(CloudConsts.PASSWORD,PASSWORD)
 
             MQTTManager.loopMessage(mMqttProtocolHandlerPool)
         end
@@ -492,6 +483,14 @@ function MQTTManager.publishMessageQueue(maxMsgPerRequest)
             -- 添加到待删除队列
             if r then
                 toRemove[key]=1
+
+                LogUtil.d(TAG,"publish payload= "..payload)
+                payload = jsonex.decode(payload)
+                local content = payload[CloudConsts.CONTENT]
+                if content or "table" == type(content) then
+                    local sn = content[CloudConsts.SN]
+                    msgcache.remove(sn)
+                end
             end
 
             count = count+1
