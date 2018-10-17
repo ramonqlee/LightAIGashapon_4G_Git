@@ -67,4 +67,7 @@ function Config.saveValue(key,value)
 	-- LogUtil.d(TAG,TAG.." config saveValue = "..content)
 
 	FileUtil.writevalw(Config.CONFIG_FILE,content)
-end   
+end 
+
+
+  

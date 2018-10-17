@@ -1,5 +1,5 @@
 
--- @module MqttReplyHandlerMgr
+-- @module MQTTReplyMgr
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.23
@@ -8,15 +8,15 @@
 require "Consts"
 require "LogUtil"
 require "CloudConsts"
-require "ReplyMachineVars"
-require "ReplyConfigHandler"
-require "ReplyDeliverHandler"
+require "RepMachVars"
+require "RepConfig"
+require "RepDeliver"
 
 local jsonex = require "jsonex"
 
-local TAG = "MqttReplyHandlerMgr"
+local TAG = "MQTTReplyMgr"
 local handlerTable={}
-MqttReplyHandlerMgr ={
+MQTTReplyMgr ={
 }
 
 local function getTableLen( tab )
@@ -34,7 +34,7 @@ local function getTableLen( tab )
 end
 
 --注册处理器，如果已经注册过，直接覆盖
-function MqttReplyHandlerMgr.registerHandler( handler )
+function MQTTReplyMgr.registerHandler( handler )
 	if not handler then
 		return
 	end
@@ -46,18 +46,18 @@ function MqttReplyHandlerMgr.registerHandler( handler )
 	handlerTable[handler:name()]=handler
 end
 
-function MqttReplyHandlerMgr.makesureInit()
+function MQTTReplyMgr.makesureInit()
 	if getTableLen(handlerTable)>0 then
 		return
 	end
 
-	MqttReplyHandlerMgr.registerHandler(ReplyMachineVars:new(nil))
-	MqttReplyHandlerMgr.registerHandler(ReplyConfigHandler:new(nil))
-	MqttReplyHandlerMgr.registerHandler(ReplyDeliverHandler:new(nil))
+	MQTTReplyMgr.registerHandler(RepMachVars:new(nil))
+	MQTTReplyMgr.registerHandler(RepConfig:new(nil))
+	MQTTReplyMgr.registerHandler(RepDeliver:new(nil))
 end
 
-function MqttReplyHandlerMgr.replyWith(topic,payload)
-	MqttReplyHandlerMgr.makesureInit()
+function MQTTReplyMgr.replyWith(topic,payload)
+	MQTTReplyMgr.makesureInit()
 	if nil == handlerTable then
 		return
 	end
@@ -68,7 +68,7 @@ function MqttReplyHandlerMgr.replyWith(topic,payload)
 	end
 
 	-- if Consts.LOG_ENABLED then
-	LogUtil.d(TAG,"MqttReplyHandlerMgr payload "..jsonex.encode(payload))
+	LogUtil.d(TAG,"MQTTReplyMgr payload "..jsonex.encode(payload))
 	-- end
 
 	local inObject={}
@@ -81,4 +81,7 @@ function MqttReplyHandlerMgr.replyWith(topic,payload)
 	-- end
 	
 	return object:handle(inObject)
-end     
+end  
+
+
+   

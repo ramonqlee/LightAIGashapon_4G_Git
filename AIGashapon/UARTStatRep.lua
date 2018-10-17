@@ -1,18 +1,18 @@
--- @module UARTStatusReport
+-- @module UARTStatRep
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.29
 -- @tested 2018.2.3
 
 require "LogUtil"
-UARTStatusReport = {
+UARTStatRep = {
 MT=0x91
 }
 
 local mCallback = nil
 local status=""
 local address=""
-local TAG = "UARTStatusReport"
+local TAG = "UARTStatRep"
 
 -- 旋扭锁控制状态(S1):
 --     指示当前的旋钮锁，是处于打开还是关闭状态:0 = 关闭;1=打开 
@@ -25,38 +25,38 @@ local DELIVER_STATE_INIT = 0
 local DELIVER_STATE_OK = 1
 local DELIVER_STATE_TIMEOUT = 2
 
-function  UARTStatusReport.setCallback( callback )
+function  UARTStatRep.setCallback( callback )
 	mCallback = callback	
 end
 
-function UARTStatusReport.getMyAddress( )
+function UARTStatRep.getMyAddress( )
 	return address
 end 
 
-function UARTStatusReport.isLockOpen( group )
-	s1,_=UARTStatusReport.getStates(group)
+function UARTStatRep.isLockOpen( group )
+	s1,_=UARTStatRep.getStates(group)
 	return LOCK_STATE_OPEN==s1
 end
 
-function UARTStatusReport.isLockClose( group )
-	s1,_=UARTStatusReport.getStates(group)
+function UARTStatRep.isLockClose( group )
+	s1,_=UARTStatRep.getStates(group)
 	return LOCK_STATE_CLOSE==s1
 end
 
-function UARTStatusReport.isDeliverOK( group )
-	_,s2=UARTStatusReport.getStates(group)
+function UARTStatRep.isDeliverOK( group )
+	_,s2=UARTStatRep.getStates(group)
 	return DELIVER_STATE_OK==s2
 end
 
-function UARTStatusReport.isDeliverTimeout( group )
-	_,s2=UARTStatusReport.getStates(group)
+function UARTStatRep.isDeliverTimeout( group )
+	_,s2=UARTStatRep.getStates(group)
 	return DELIVER_STATE_TIMEOUT==s2
 end
 
 
 --返回第几组,group start from 1
 -- 形如：01 02 00 00 00 00 
-function UARTStatusReport.getStates(group)
+function UARTStatRep.getStates(group)
 	s1,s2=-1,-1
 	if not group or not status or #status<6 then
 		LogUtil.d(TAG,"illegal status")
@@ -79,11 +79,11 @@ function UARTStatusReport.getStates(group)
 	 	s2 = string.byte(status,6)
 	end
 
-	-- LogUtil.d(TAG,"UARTStatusReport.getStates group ="..group.." s1 = "..s1.." s2 = "..s2)
+	-- LogUtil.d(TAG,"UARTStatRep.getStates group ="..group.." s1 = "..s1.." s2 = "..s2)
 	return s1,s2
 end
 
-function UARTStatusReport.handle(bins)
+function UARTStatRep.handle(bins)
 	local noMatch=-1
 	-- 回调
 	-- 返回协议数据，上报机器状态用
@@ -118,8 +118,8 @@ function UARTStatusReport.handle(bins)
 		end
 
 		mt = string.byte(bins,messageTypePos)
-		if mt ~= UARTStatusReport.MT then
-			-- LogUtil.d(TAG,"illegal MT,mt = "..mt.." my MT = "..UARTStatusReport.MT)
+		if mt ~= UARTStatRep.MT then
+			-- LogUtil.d(TAG,"illegal MT,mt = "..mt.." my MT = "..UARTStatRep.MT)
 			return noMatch,startPos
 		end
 

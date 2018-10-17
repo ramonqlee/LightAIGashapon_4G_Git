@@ -1,31 +1,31 @@
 
--- @module GetTimeHandler
+-- @module GetTime
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.23
 -- tested 2018.8.30
 
-require "CloudBaseHandler"
+require "CBase"
 require "CloudConsts"
 require "LogUtil"
 require "Consts"
 
-local TAG = "GetTimeHandler"
+local TAG = "GetTime"
 
-GetTimeHandler = CloudBaseHandler:new{MY_TOPIC="get_time"}
+GetTime = CBase:new{MY_TOPIC="get_time"}
 
-function GetTimeHandler:new (o)
-    o = o or CloudBaseHandler:new(o)
+function GetTime:new (o)
+    o = o or CBase:new(o)
     setmetatable(o, self)
     self.__index = self
     return o
 end
 
-function GetTimeHandler:name()
+function GetTime:name()
     return self.MY_TOPIC
 end
 
-function GetTimeHandler:handle( object )
+function GetTime:handle( object )
 
     local r = false
     if (not object) then
@@ -39,7 +39,7 @@ function GetTimeHandler:handle( object )
     return r
 end
 
-function GetTimeHandler:sendGetTime(lastReboot)
+function GetTime:sendGetTime(lastReboot)
     local topic = string.format("%s/%s",Consts.getUserName(),self:name())
 
     local msg = {}

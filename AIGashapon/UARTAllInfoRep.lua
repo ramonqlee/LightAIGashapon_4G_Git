@@ -1,4 +1,4 @@
--- @module UARTAllInfoReport
+-- @module UARTAllInfoRep
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.29
@@ -8,22 +8,22 @@ require "LogUtil"
 require "jsonex"
 require "Config"
 
-local TAG = "UARTAllInfoReport"
+local TAG = "UARTAllInfoRep"
 local ALL_INFO_CACHE_KEY = "allInfos"
 
-UARTAllInfoReport = {
+UARTAllInfoRep = {
 MT = 0x93
 }
 
 local mAllBoardIds = {}
 local myCallback = nil
 
-function  UARTAllInfoReport.setCallback( callback )
+function  UARTAllInfoRep.setCallback( callback )
 	myCallback = callback
 end
 
 --返回最后匹配的一个字节位置
-function UARTAllInfoReport.handle(bins)
+function UARTAllInfoRep.handle(bins)
 	local noMatch=-1
 	-- 回调
 	-- 返回协议数据，上报机器状态用
@@ -58,8 +58,8 @@ function UARTAllInfoReport.handle(bins)
 		end
 		
 		mt = string.byte(bins,messageTypePos)
-		if mt ~= UARTAllInfoReport.MT then
-			-- --LogUtil.d(TAG,"illegal MT,mt = "..mt.." my MT = "..UARTAllInfoReport.MT)
+		if mt ~= UARTAllInfoRep.MT then
+			-- --LogUtil.d(TAG,"illegal MT,mt = "..mt.." my MT = "..UARTAllInfoRep.MT)
 			return noMatch,startPos
 		end
 
@@ -95,7 +95,7 @@ function UARTAllInfoReport.handle(bins)
 
 	if 0 == idsLen then
 		LogUtil.d(TAG,"no ids returned")
-		UARTAllInfoReport.notifiyCallback()
+		UARTAllInfoRep.notifiyCallback()
 		return chkPos+1,startPos
 	end
 
@@ -133,12 +133,12 @@ function UARTAllInfoReport.handle(bins)
 		end
 	end
 
-	UARTAllInfoReport.notifiyCallback()
+	UARTAllInfoRep.notifiyCallback()
 
 	return chkPos+1,startPos
 end
 
-function UARTAllInfoReport.getAllBoardIds(returnCacheIfEmpty)
+function UARTAllInfoRep.getAllBoardIds(returnCacheIfEmpty)
 	-- 查看内存，如果为空，则尝试返回本地的；否则直接返回内存中的
 	if mAllBoardIds and #mAllBoardIds>0 then
 		-- LogUtil.d(TAG,"getAllBoardIds size = "..#mAllBoardIds)
@@ -156,7 +156,7 @@ function UARTAllInfoReport.getAllBoardIds(returnCacheIfEmpty)
 	return mAllBoardIds
 end
 
-function UARTAllInfoReport.notifiyCallback()
+function UARTAllInfoRep.notifiyCallback()
 	-- 是否保留之前获得的id
 	if Consts.EANBLE_MERGE_BOARD_ID then
 		tmp = Config.getValue(ALL_INFO_CACHE_KEY)
@@ -164,7 +164,7 @@ function UARTAllInfoReport.notifiyCallback()
 			local existAllBoardIds = jsonex.decode(tmp)
 			if existAllBoardIds and #existAllBoardIds >0 then
 				for _,addr in pairs(existAllBoardIds) do
-					if not UARTAllInfoReport.hasIds(addr) then
+					if not UARTAllInfoRep.hasIds(addr) then
 						mAllBoardIds[#mAllBoardIds+1]=addr
 					end
 				end
@@ -184,7 +184,7 @@ function UARTAllInfoReport.notifiyCallback()
 end
 
 -- 当前内存中返回的id是否已经包含
-function UARTAllInfoReport.hasIds(id)
+function UARTAllInfoRep.hasIds(id)
 	if not mAllBoardIds or 0 == #mAllBoardIds then
 		return false
 	end

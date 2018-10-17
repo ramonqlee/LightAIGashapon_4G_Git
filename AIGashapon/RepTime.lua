@@ -1,33 +1,33 @@
 
--- @module ReplyTimeHandler
+-- @module RepTime
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.21
 -- tested 2018.8.30
 
-require "CloudBaseHandler"
+require "CBase"
 require "CloudConsts"
 require "LogUtil"
 require "misc"
 local json = require "jsonex"
 -- module(...,package.seeall)
 
-local TAG = "ReplyTimeHandler"
+local TAG = "RepTime"
 
-ReplyTimeHandler = CloudBaseHandler:new{
+RepTime = CBase:new{
 mServerTimestamp=0,
 MY_TOPIC="reply_time",
 TIME_OUT_IN_MILLS = 10 * 1000
 }
 
-function ReplyTimeHandler:new (o)
-    o = o or CloudBaseHandler:new(o)
+function RepTime:new (o)
+    o = o or CBase:new(o)
     setmetatable(o, self)
     self.__index = self
     return o
 end
 
-function ReplyTimeHandler:name()
+function RepTime:name()
     return self.MY_TOPIC
 end
 
@@ -42,7 +42,7 @@ end
 --     }
 -- }
 -- ]]
-function ReplyTimeHandler:handleContent( timestampInSec,content )
+function RepTime:handleContent( timestampInSec,content )
     local r = false
     if (timestampInSec<=0) then
         LogUtil.d(TAG," illegal content or timestamp,handleContent return")
@@ -80,4 +80,6 @@ function ReplyTimeHandler:handleContent( timestampInSec,content )
     end
 
     return r
-end                     
+end   
+
+                  

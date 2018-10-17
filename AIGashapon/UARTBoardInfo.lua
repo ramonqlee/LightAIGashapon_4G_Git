@@ -108,7 +108,7 @@ function UARTBoardInfo.handle(bins)
 	return chkPos+1,startPos
 end
 
-function UARTAllInfoReport.getMasterBoardId()
+function UARTAllInfoRep.getMasterBoardId()
 	return masterBoardId
 end
 

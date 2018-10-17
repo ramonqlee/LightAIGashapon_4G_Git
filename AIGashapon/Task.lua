@@ -8,7 +8,7 @@
 require "Consts"
 require "LogUtil"
 require "UartMgr"
-require "UARTBroadcastSlave"
+require "UARTSlave"
 
 if Consts.DEVICE_ENV then
 	require "sys"
@@ -78,7 +78,7 @@ function Task.getTask()
 			    -- 任务分发(目前仅仅支持重启，后续待完善框架，支持更多任务)
 			    -- FIXME 待增加从板子支持
 			    if task == REBOOT_TYPE then 
-			    	r = UARTBroadcastSlave.encode()
+			    	r = UARTSlave.encode()
 					UartMgr.publishMessage(r)
 
 					sys.wait(5000)--等待大板子发送消息完毕，目前大板子发送消息的间隔是500ms

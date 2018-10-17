@@ -1,4 +1,4 @@
--- @module CloudBaseHandler
+-- @module CBase
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.21
@@ -9,25 +9,25 @@ require "LogUtil"
 require "CloudConsts"
 require "Consts"
 
-CloudBaseHandler = {
+CBase = {
 mTimestampInSec=0
 }
 
-local TAG = "CloudBaseHandler"
+local TAG = "CBase"
 
-function CloudBaseHandler:new (o)
+function CBase:new (o)
 	o = o or {}
 	setmetatable(o, self)
 	self.__index = self
 	return o
 end
 
-function CloudBaseHandler:handle( obj )
+function CBase:handle( obj )
 
   if Consts.LOG_ENABLED then
     -- collectgarbage("collect")
     -- c = collectgarbage("count")
-    --LogUtil.d("Mem","CloudBaseHandler:handle memory count ="..c)
+    --LogUtil.d("Mem","CBase:handle memory count ="..c)
   end
 
   -- --LogUtil.d(TAG,TAG.." handle now")
@@ -63,7 +63,7 @@ function CloudBaseHandler:handle( obj )
     self.mTimestampInSec = 0
   end
 
-  -- if ( string.upper(self:name()) == string.upper(ReplyTimeHandler.MY_TOPIC) ) then
+  -- if ( string.upper(self:name()) == string.upper(RepTime.MY_TOPIC) ) then
   local mycontent=payloadJson[CloudConsts.CONTENT]
   local arriveTime = tableObj[CloudConsts.ARRIVE_TIME]--指令到达的时间
   if arriveTime then
@@ -78,15 +78,15 @@ function CloudBaseHandler:handle( obj )
   return self:handleContent(mycontent)
 end
 
-function CloudBaseHandler:handleContent( contentJson )
+function CBase:handleContent( contentJson )
   --LogUtil.d(TAG,TAG.." handleContent,content = "..contentJson)
 end 
 
-function CloudBaseHandler:handleContent( timestamp,contentJson )
+function CBase:handleContent( timestamp,contentJson )
   --LogUtil.d(TAG,TAG.." handleContent,content = "..contentJson.." timestamp="..timestamp)
 end 
 
-function CloudBaseHandler:match(topic,object)
+function CBase:match(topic,object)
  if not topic or not object then
   return nil
 end
@@ -94,7 +94,7 @@ end
 r = object[CloudConsts.TOPIC]
 
 if not r then
-  --LogUtil.d(TAG,TAG.." CloudBaseHandler:match, empty object,return false")
+  --LogUtil.d(TAG,TAG.." CBase:match, empty object,return false")
   return nil
 end
 
@@ -109,4 +109,6 @@ end
     return r
   end
   return nil
-end     
+end    
+
+ 

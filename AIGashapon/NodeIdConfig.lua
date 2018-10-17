@@ -65,4 +65,6 @@ function NodeIdConfig.saveValue(key,value)
 	-- LogUtil.d(TAG,TAG.." config saveValue = "..content)
 
 	FileUtil.writevalw(NodeIdConfig.CONFIG_FILE,content)
-end   
+end  
+
+ 

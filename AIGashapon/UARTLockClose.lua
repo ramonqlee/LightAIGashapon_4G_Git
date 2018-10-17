@@ -1,16 +1,16 @@
 
--- @module UARTControlIndClose
+-- @module UARTLockClose
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.29
 
 require "UARTUtils"
 
-UARTControlIndClose={
+UARTLockClose={
 	MT = 0x12
 }
 
-function UARTControlIndClose.encode( addr,loc )
+function UARTLockClose.encode( addr,loc )
 	-- TODO待根据格式组装报文
  	data = pack.pack("b2",1,loc)
  	

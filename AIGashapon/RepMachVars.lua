@@ -1,39 +1,39 @@
 
--- @module ReplyMachineVars
+-- @module RepMachVars
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.23
 -- tested 2018.8.30
 
 require "CloudConsts"
-require "CloudReplyBaseHandler"
+require "CRBase"
 require "Location"
-require "UARTAllInfoReport"
+require "UARTAllInfoRep"
 
-local TAG = "ReplyMachineVars"
+local TAG = "RepMachVars"
 local DEFAULT_JS_VERSION = "1"
 
-ReplyMachineVars = CloudReplyBaseHandler:new{
+RepMachVars = CRBase:new{
 MY_TOPIC = "reply_machine_variables",
 -- mState=0
 }
 
-function ReplyMachineVars:new (o)
-	o = o or CloudReplyBaseHandler:new(o)
+function RepMachVars:new (o)
+	o = o or CRBase:new(o)
 	setmetatable(o, self)
 	self.__index = self
 	return o
 end
 
-function ReplyMachineVars:name()
+function RepMachVars:name()
 	return self.MY_TOPIC
 end
 
-function ReplyMachineVars:setState(state)
+function RepMachVars:setState(state)
 	self.mState=state
 end
 
-function ReplyMachineVars:addExtraPayloadContent( content )
+function RepMachVars:addExtraPayloadContent( content )
 	if not content then 
 		return
 	end
@@ -54,7 +54,7 @@ function ReplyMachineVars:addExtraPayloadContent( content )
 	local devices={}
 
 	local CATEGORY = "sem"
-	bds = UARTAllInfoReport.getAllBoardIds(true)
+	bds = UARTAllInfoRep.getAllBoardIds(true)
 	if bds and #bds >0 then
 		for _,v in pairs(bds) do
 			local device ={}
@@ -70,7 +70,7 @@ function ReplyMachineVars:addExtraPayloadContent( content )
 
 			devices[#devices+1]=device
 
-			--LogUtil.d(TAG,"ReplyMachineVars device = "..v)
+			--LogUtil.d(TAG,"RepMachVars device = "..v)
 		end
 	end
 
@@ -90,4 +90,6 @@ function ReplyMachineVars:addExtraPayloadContent( content )
 	end
 
 	content["devices"]=devices
-end        
+end  
+
+      

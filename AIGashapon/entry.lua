@@ -14,7 +14,7 @@ require "LogUtil"
 require "UartMgr"
 require "update"
 require "MQTTManager"
-require "UARTBroadcastLightup"
+require "UARTLightup"
 
 local TAG="Entry"
 local timerId=nil
@@ -74,8 +74,8 @@ end
 
 -- 自动升级检测
 function checkUpdate()
-    if DeliverHandler.isDelivering() then
-        LogUtil.d(TAG,TAG.." DeliverHandler.isDelivering or Lightup.isLightuping,delay update")
+    if Deliver.isDelivering() then
+        LogUtil.d(TAG,TAG.." Deliver.isDelivering or Lightup.isLightuping,delay update")
         return
     end
 
@@ -86,8 +86,8 @@ end
 
 --任务检测
 function checkTask()
-    if DeliverHandler.isDelivering() then
-        LogUtil.d(TAG,TAG.." DeliverHandler.isDelivering or Lightup.isLightuping,delay taskCheck")
+    if Deliver.isDelivering() then
+        LogUtil.d(TAG,TAG.." Deliver.isDelivering or Lightup.isLightuping,delay taskCheck")
         return
     end
     
@@ -221,7 +221,7 @@ function entry.twinkle( addrs,pos,times )
 	-- 闪灯协议
 	local msgArray = {}
 
-	-- bds = UARTAllInfoReport.getAllBoardIds(true)
+	-- bds = UARTAllInfoRep.getAllBoardIds(true)
 	local nextColor = topNextColor
 	if TWINKLE_POS_1 == pos then
 		nextColor = topNextColor
@@ -247,7 +247,7 @@ function entry.twinkle( addrs,pos,times )
 		return
 	end
 
-	r = UARTBroadcastLightup.encode(msgArray)
+	r = UARTLightup.encode(msgArray)
 	UartMgr.publishMessage(r)      
 	
 	-- 切换颜色
@@ -276,12 +276,12 @@ function entry.startTwinkleTask( )
 	-- 启动一个定时器，负责闪灯，当出货时停止闪灯
 	twinkleTimerId = sys.timerLoopStart(function()
 			--出货中，不集体闪灯
-			if DeliverHandler.isDelivering() or Lightup.isLightuping() then
-				LogUtil.d(TAG,TAG.." DeliverHandler.isDelivering or Lightup.isLightuping")
+			if Deliver.isDelivering() or Lightup.isLightuping() then
+				LogUtil.d(TAG,TAG.." Deliver.isDelivering or Lightup.isLightuping")
 				return
 			end
 
-			addrs = UARTAllInfoReport.getAllBoardIds(true)
+			addrs = UARTAllInfoRep.getAllBoardIds(true)
 
 			if not addrs or 0 == #addrs then
 				-- LogUtil.d(TAG,TAG.." no slaves found,ignore twinkle")
@@ -308,6 +308,7 @@ function entry.startTwinkleTask( )
 
         end,Consts.TWINKLE_INTERVAL)
 end
+
 
 
 

@@ -21,3 +21,5 @@ function UARTGetAllInfo.encode()
  	mt = pack.pack("b",UARTGetAllInfo.MT)
  	return UARTUtils.encode(sf,addr,mt,data)
 end 
+
+

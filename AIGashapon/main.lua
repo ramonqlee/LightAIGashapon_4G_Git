@@ -16,50 +16,47 @@ PRODUCT_KEY = "WbMTLT8KVFC2VRel181eWa7JOfBAOddk"
 
 -- FIXME 暂时注释掉
 -- 日志级别
-require "Consts"
 require "log"
 require "sys"
-require "Config"
-require "Task"
+require "net"
+require "ntp"
+require "console"
+-- require "errDump"
 
+require "entry"
+-- require "Config"
+-- require "Task"
+-- require "Consts"
 
-local TAG = "TimeSync"
 
 LOG_LEVEL=log.LOGLEVEL_TRACE
 
-local function restart()
-	print("receive restart cmd ")
-	sys.restart("restart")--重启更新包生效
-end
+-- local TAG = "TimeSync"
+-- local function restart()
+-- 	print("receive restart cmd ")
+-- 	sys.restart("restart")--重启更新包生效
+-- end
 
-sys.subscribe("FOTA_DOWNLOAD_FINISH",restart)	--升级完成会发布FOTA_DOWNLOAD_FINISH消息
-sys.subscribe(Consts.REBOOT_DEVICE_CMD,restart)	--重启设备命令
-sys.subscribe("TIME_SYNC_FINISH",function()
-	LogUtil.d(TAG," timeSynced by ntp".." now ="..jsonex.encode(os.date("*t",os.time())))--只设置时间，不更改标识，用自有服务器的时间，进行校准一次
-end)
+-- sys.subscribe("FOTA_DOWNLOAD_FINISH",restart)	--升级完成会发布FOTA_DOWNLOAD_FINISH消息
+-- sys.subscribe(Consts.REBOOT_DEVICE_CMD,restart)	--重启设备命令
+-- sys.subscribe("TIME_SYNC_FINISH",function()
+-- 	LogUtil.d(TAG," timeSynced by ntp".." now ="..jsonex.encode(os.date("*t",os.time())))--只设置时间，不更改标识，用自有服务器的时间，进行校准一次
+-- end)
 
-require "ntp"
-ntp.timeSync()
-
-require "utils"
--- 加载GSM
-require "net"
 --每1分钟查询一次GSM信号强度
 --每1分钟查询一次基站信息
 net.startQueryAll(60000, 60000)
 
--- 控制台
-require "console"
-console.setup(Consts.CONSOLE_UART_ID, 115200)--默认为1，和现有app冲突，修改为2
--- 系统工具
-require "misc"
-require "http"
+-- errDump.request("udp://ota.airm2m.com:9072")
+ntp.timeSync()
 
--- FIXME 暂时注释掉，测试用
-require "entry"
+console.setup(Consts.CONSOLE_UART_ID, 115200)--默认为1，和现有app冲突，修改为2
 entry.run()
 -- require "testUart"
 
 -- 启动系统框架
 sys.init(0, 0)
 sys.run()
+
+
+

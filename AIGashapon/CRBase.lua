@@ -1,4 +1,4 @@
--- @module CloudReplyBaseHandler
+-- @module CRBase
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.21
@@ -10,7 +10,7 @@ require "CloudConsts"
 require "Consts"
 local jsonex = require "jsonex"
 
-CloudReplyBaseHandler = {
+CRBase = {
     --状态定义:“state”: 1, //1成功，2收到并处理指令时已超时，3硬件出货失败，4硬件繁忙，5币量不足，6币售空，13未旋转,99状态未知
     SUCCESS = 1,
     TIMEOUT_WHEN_ARRIVE=2,
@@ -23,16 +23,16 @@ CloudReplyBaseHandler = {
     UNKNOWN = 99,
 }
 
-local TAG = "CloudReplyBaseHandler"
+local TAG = "CRBase"
 -- Derived class method new
-function CloudReplyBaseHandler:new (o)
+function CRBase:new (o)
 	o = o or {}
 	setmetatable(o, self)
 	self.__index = self
 	return o
 end
 
-function CloudReplyBaseHandler:getTopic(  )
+function CRBase:getTopic(  )
 	local nodeId = Consts.getUserName()
 	if not nodeId or  0 == #nodeId then
 		return ""
@@ -41,7 +41,7 @@ function CloudReplyBaseHandler:getTopic(  )
 	return string.format("%s/%s", nodeId, self:name())
 end
 
-function CloudReplyBaseHandler:handle( object )
+function CRBase:handle( object )
 
 	-- --LogUtil.d(TAG,TAG.." handle now")
 
@@ -68,8 +68,8 @@ function CloudReplyBaseHandler:handle( object )
 	return self:handleContent(object[CloudConsts.PAYLOAD])
 end
 
-function CloudReplyBaseHandler:handleContent( payloadJsons )
-	-- --LogUtil.d(TAG,TAG.." CloudReplyBaseHandler:handleContent now")
+function CRBase:handleContent( payloadJsons )
+	-- --LogUtil.d(TAG,TAG.." CRBase:handleContent now")
 
 	local myPayload = {}
 	local myContent = payloadJsons or {}
@@ -87,4 +87,6 @@ function CloudReplyBaseHandler:handleContent( payloadJsons )
 
 	MQTTManager.publish(myTopic,tmp)
 	return true
-end    
+end
+
+    

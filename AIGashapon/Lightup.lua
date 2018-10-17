@@ -10,17 +10,17 @@ require "UartMgr"
 require "jsonex"
 require "CloudConsts"
 require "UARTBroadcast"
-require "CloudBaseHandler"
+require "CBase"
 
 local lastLightUpTime = 0
 
 local TAG = "Lightup"
-Lightup = CloudBaseHandler:new{
+Lightup = CBase:new{
     MY_TOPIC = "light_up",
 }
 
 function Lightup:new (o)
-    o = o or CloudBaseHandler:new(o)
+    o = o or CBase:new(o)
     setmetatable(o, self)
     self.__index = self
     return o
@@ -101,4 +101,7 @@ function Lightup:handleContent( content )
 	UartMgr.publishMessage(r)
 
 	lastLightUpTime = os.time()
-end   
+end  
+
+
+ 

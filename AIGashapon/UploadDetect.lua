@@ -1,46 +1,48 @@
 
--- @module UploadSaleLogHandler
+-- @module UploadDetect
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.23
 -- @test 2018.1.7
 
 require "CloudConsts"
-require "CloudReplyBaseHandler"
+require "CRBase"
 jsonex = require "jsonex"
 
-local TAG = "UploadSaleLogHandler"
-UploadSaleLogHandler = CloudReplyBaseHandler:new{
-    MY_TOPIC = "upload_sale_log",
+local TAG = "UploadDetect"
+UploadDetect = CRBase:new{
+    MY_TOPIC = "upload_deliver_detection",
     mPayload ={}
 }
 
-function UploadSaleLogHandler:new (o)
-    o = o or CloudReplyBaseHandler:new(o)
+function UploadDetect:new (o)
+    o = o or CRBase:new(o)
     setmetatable(o, self)
     self.__index = self
     return o
 end
 
-function UploadSaleLogHandler:name()
+function UploadDetect:name()
     return self.MY_TOPIC
 end
 
-function UploadSaleLogHandler:setMap( payload )
+function UploadDetect:setMap( payload )
 	self.mPayload = payload
 end
 
-function UploadSaleLogHandler:addExtraPayloadContent( content )
+function UploadDetect:addExtraPayloadContent( content )
 end
 
-function UploadSaleLogHandler:send( state )
+function UploadDetect:send()
 	local myContent = {}
  	for k,v in pairs(self.mPayload) do
  		myContent[k]=v
  	end
- 	myContent[CloudConsts.STATE]=state
+
  	local myPayload = {}
  	myPayload[CloudConsts.TIMESTAMP]=os.time()
  	myPayload[CloudConsts.CONTENT]=myContent
  	MQTTManager.publish(self:getTopic(),jsonex.encode(myPayload))
-end         
+end
+
+         

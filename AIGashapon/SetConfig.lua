@@ -1,33 +1,33 @@
 
--- @module SetConfigHandler
+-- @module SetConfig
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.23
 -- tested 2018.8.30
 
 require "CloudConsts"
-require "CloudBaseHandler"
+require "CBase"
 require "Config"
 require "LogUtil"
-require "MqttReplyHandlerMgr"
-require "ReplyConfigHandler"
+require "MQTTReplyMgr"
+require "RepConfig"
 
-local TAG = "SetConfigHandler"
+local TAG = "SetConfig"
 
 local STATE_INIT = "INIT"
 
-SetConfigHandler = CloudBaseHandler:new{
+SetConfig = CBase:new{
     MY_TOPIC = "set_config",
 }
 
-function SetConfigHandler:new (o)
-    o = o or CloudBaseHandler:new(o)
+function SetConfig:new (o)
+    o = o or CBase:new(o)
     setmetatable(o, self)
     self.__index = self
     return o
 end
 
-function SetConfigHandler:name()
+function SetConfig:name()
     return self.MY_TOPIC
 end
 
@@ -47,7 +47,7 @@ end
 --     }
 -- }
 -- ]]
-function SetConfigHandler:handleContent( content )
+function SetConfig:handleContent( content )
 	local r = false
  	if (not content) then
  		return
@@ -82,8 +82,8 @@ function SetConfigHandler:handleContent( content )
         map[CloudConsts.ARRIVE_TIME]= arriveTime    
     end
 
- 	-- print(ReplyConfigHandler.MY_TOPIC)
- 	MqttReplyHandlerMgr.replyWith(ReplyConfigHandler.MY_TOPIC,map)
+ 	-- print(RepConfig.MY_TOPIC)
+ 	MQTTReplyMgr.replyWith(RepConfig.MY_TOPIC,map)
 
  	-- 恢复初始状态
  	if STATE_INIT==state then
@@ -94,5 +94,5 @@ function SetConfigHandler:handleContent( content )
     	MQTTManager.disconnect()
     	return
     end
-end   
+end 
 

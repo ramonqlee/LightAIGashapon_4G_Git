@@ -14,10 +14,10 @@ require"utils"
 require "LogUtil"
 require "UartMgr"
 require "UARTBroadcast"
-require "UARTGetBoardInfo"
+require "UARTBoardInfo"
 require "UARTGetAllInfo"
 require "UARTControlInd"
-require "UARTStatusReport"
+require "UARTStatRep"
 require "MQTTManager"
 
 
@@ -28,21 +28,21 @@ function openLockCallback( addr, status )
 		--LogUtil.d(TAG,"openLockCallback addr ="..addr)
 	end
 
-	s1,s2=UARTStatusReport.getStates(1)
+	s1,s2=UARTStatRep.getStates(1)
 	if s1 and s2 then
 		--LogUtil.d(TAG,"openLockCallback group1 s1 ="..s1.." s2 = "..s2)
 	else
 		--LogUtil.d(TAG,"openLockCallback group1 s1,s2 unknown")
 	end
 
-	s1,s2=UARTStatusReport.getStates(2)
+	s1,s2=UARTStatRep.getStates(2)
 	if s1 and s2 then
 		--LogUtil.d(TAG,"openLockCallback group2 s1 ="..s1.." s2 = "..s2)
 	else
 		--LogUtil.d(TAG,"openLockCallback group2 s1,s2 unknown")
 	end
 
-	s1,s2=UARTStatusReport.getStates(3)
+	s1,s2=UARTStatRep.getStates(3)
 	if s1 and s2 then
 		--LogUtil.d(TAG,"openLockCallback group3 s1 ="..s1.." s2 = "..s2)
 	else
@@ -53,8 +53,8 @@ end
 function allInfoCallback( ids )
 	-- 获取第一个从板id，进行开锁操作
 	addr=""
-	for _,v in ipairs(UARTAllInfoReport.getAllBoardIds(true)) do
-		LogUtil.d(TAG,"parse UARTAllInfoReport allId val = "..v)
+	for _,v in ipairs(UARTAllInfoRep.getAllBoardIds(true)) do
+		LogUtil.d(TAG,"parse UARTAllInfoRep allId val = "..v)
 		if v then
 			addr = v
 			break
@@ -71,7 +71,7 @@ function allInfoCallback( ids )
 -- addr = pack.pack("b3",0x00,0x00,0x06) 
 -- loc = 1 
 -- timeoutInSec =2
--- UARTStatusReport.setCallback(openLockCallback)
+-- UARTStatRep.setCallback(openLockCallback)
 -- r = UARTControlInd.encode(addr,loc,timeoutInSec)
 
 -- UartMgr.publishMessage(r)
@@ -94,7 +94,7 @@ uart.on (UART_ID, "sent", txdone)
 	-- v["time"] = pack.pack(">h",10)
 	-- msgArray[#msgArray+1]=v
 
-	-- r = UARTBroadcastLightup.encode(msgArray)
+	-- r = UARTLightup.encode(msgArray)
 	-- UartMgr.publishMessage(r)
 
 sys.timerStart(function()
@@ -109,16 +109,16 @@ sys.timerStart(function()
 	end,125*1000)
 
 
--- r = UARTGetBoardInfo.encode() 
+-- r = UARTBoardInfo.encode() 
 -- r = UARTGetAllInfo.encode()--获取所有板子id
--- UARTAllInfoReport.setCallback(allInfoCallback)
+-- UARTAllInfoRep.setCallback(allInfoCallback)
 
 -- 开锁
 -- addr = pack.pack("b3",0x00,0x00,0x02) 
 -- loc = 1 
 -- timeoutInSec = 60
 -- callback = nil
--- UARTStatusReport.setCallback = callback
+-- UARTStatRep.setCallback = callback
 -- r = UARTControlInd.encode(addr,loc,timeoutInSec)
 -- UartMgr.publishMessage(r)
 
@@ -137,7 +137,7 @@ sys.timerStart(function()
 -- 		local loc = 1 
 -- 		local timeoutInSec =120
 -- 		callback = nil
--- 		UARTStatusReport.setCallback = callback
+-- 		UARTStatRep.setCallback = callback
 -- 	-- 发送开锁报文
 -- 		r = UARTControlInd.encode(addr,loc,timeoutInSec)
 --  		UartMgr.publishMessage(r)

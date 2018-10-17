@@ -10,8 +10,8 @@ if Consts.DEVICE_ENV then
 	require "sys"
 end
 
-require "UARTStatusReport"
-require "UARTAllInfoReport"
+require "UARTStatRep"
+require "UARTAllInfoRep"
 require "UARTBoardInfo"
 require "UARTGetAllInfo"
 
@@ -39,8 +39,8 @@ local function initProtocalStack(clear)
 	end
 
 	-- TODO 在此注册串口处理协议
-	protocalStack[#protocalStack+1]=UARTStatusReport.handle
-	protocalStack[#protocalStack+1]=UARTAllInfoReport.handle
+	protocalStack[#protocalStack+1]=UARTStatRep.handle
+	protocalStack[#protocalStack+1]=UARTAllInfoRep.handle
 	protocalStack[#protocalStack+1]=UARTBoardInfo.handle
 	
 end
@@ -258,7 +258,7 @@ end
 function UartMgr.initSlaves( callback ,retry)
 
 	if not retry then
-		ids = UARTAllInfoReport.getAllBoardIds(false)
+		ids = UARTAllInfoRep.getAllBoardIds(false)
 		if ids and #ids > 0 then
 			LogUtil.d(TAG,"UartMgr.initSlaves done,size = "..#ids)
 			return
@@ -268,11 +268,11 @@ function UartMgr.initSlaves( callback ,retry)
 
 	r = UARTGetAllInfo.encode()--获取所有板子id
 	if callback then
-		UARTAllInfoReport.setCallback(callback)
+		UARTAllInfoRep.setCallback(callback)
 	else
-		UARTAllInfoReport.setCallback(function( ids )
+		UARTAllInfoRep.setCallback(function( ids )
 			addr=""
-			ids = UARTAllInfoReport.getAllBoardIds(true)
+			ids = UARTAllInfoRep.getAllBoardIds(true)
 			for _,v in pairs(ids) do
 				if v then
 					addr = addr.." "..string.fromHex(v)

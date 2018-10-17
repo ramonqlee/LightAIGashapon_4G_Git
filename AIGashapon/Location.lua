@@ -20,3 +20,5 @@ end
 function Location.getBusAddress() 
 	return Location.mBusAddress
 end      
+
+

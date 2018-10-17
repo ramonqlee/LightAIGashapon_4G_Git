@@ -1,4 +1,4 @@
--- @module DeliverHandler
+-- @module Deliver
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.23
@@ -11,18 +11,18 @@ require "UartMgr"
 require "UARTUtils"
 require "CloudConsts"
 require "UARTControlInd"
-require "CloudBaseHandler"
-require "ReplyDeliverHandler"
-require "UploadSaleLogHandler"
-require "CloudReplyBaseHandler"
-require "UARTControlIndClose"
-require "UploadDetection"
+require "CBase"
+require "RepDeliver"
+require "UploadSaleLog"
+require "CRBase"
+require "UARTLockClose"
+require "UploadDetect"
 
-local TAG = "DeliverHandler"
+local TAG = "Deliver"
 local gBusyMap={}--是否在占用的记录
 local ORDER_EXPIRED_SPAN = 5*60--订单超期时间和系统当前当前时间的偏差
 local mTimerId = nil
-DeliverHandler = CloudBaseHandler:new{
+Deliver = CBase:new{
     MY_TOPIC = "deliver",
     ORDER_TIMEOUT_TIME_IN_SEC = "orderTimeOutTime",
     --支付方式
@@ -77,7 +77,7 @@ local function getTableLen( tab )
     return count
 end
 
-function DeliverHandler.isDelivering()
+function Deliver.isDelivering()
     if  getTableLen(gBusyMap)>0 then
         return true
     end
@@ -89,18 +89,18 @@ function DeliverHandler.isDelivering()
     return false
 end
 
-function DeliverHandler:new (o)
-    o = o or CloudBaseHandler:new(o)
+function Deliver:new (o)
+    o = o or CBase:new(o)
     setmetatable(o, self)
     self.__index = self
     return o
 end
 
-function DeliverHandler:getDeliveringSize()
+function Deliver:getDeliveringSize()
 	return #mOrderVectors
 end
 
-function DeliverHandler:name()
+function Deliver:name()
     return self.MY_TOPIC
 end
 
@@ -125,7 +125,7 @@ end
 -- }
 -- ]]
 
-function DeliverHandler:handleContent( content )
+function Deliver:handleContent( content )
  	-- TODO to be coded
     -- 出货
     -- 监听出货情况
@@ -176,7 +176,7 @@ function DeliverHandler:handleContent( content )
     saleLogMap[CloudConsts.PAYER]= self.PAY_ONLINE
     saleLogMap[CloudConsts.PAID_AMOUNT]= 1
     saleLogMap[CloudConsts.VM_S2STATE]= "0"
-    saleLogMap[DeliverHandler.ORDER_TIMEOUT_TIME_IN_SEC]= expired
+    saleLogMap[Deliver.ORDER_TIMEOUT_TIME_IN_SEC]= expired
     saleLogMap[LOCK_OPEN_STATE] = LOCK_STATE_CLOSED--出货时设置锁的状态为关闭
 
     -- 如果收到订单时，已经过期或者本地时间不准:过早收到了订单，则直接上传超时
@@ -185,9 +185,9 @@ function DeliverHandler:handleContent( content )
         LogUtil.d(TAG,TAG.." timeout orderId="..orderId.." expired ="..expired.." os.time()="..osTime)
         saleLogMap[CloudConsts.CTS]=osTime
         saleLogMap[UPLOAD_POSITION]=UPLOAD_TIMEOUT_ARRIVAL
-        saleLogHandler = UploadSaleLogHandler:new()
+        saleLogHandler = UploadSaleLog:new()
         saleLogHandler:setMap(saleLogMap)
-        saleLogHandler:send(CloudReplyBaseHandler.TIMEOUT_WHEN_ARRIVE)--超时的话，直接上报失败状态
+        saleLogHandler:send(CRBase.TIMEOUT_WHEN_ARRIVE)--超时的话，直接上报失败状态
         return
     end
 
@@ -198,7 +198,7 @@ function DeliverHandler:handleContent( content )
     if arriveTime then
         map[CloudConsts.ARRIVE_TIME]= arriveTime    
     end
-    MqttReplyHandlerMgr.replyWith(ReplyDeliverHandler.MY_TOPIC,map)
+    MQTTReplyMgr.replyWith(RepDeliver.MY_TOPIC,map)
     
     timeoutInSec = expired-osTime
     LogUtil.d(TAG," expired ="..expired.." orderId="..orderId.." device_seq="..device_seq.." location="..location.." sn="..sn.." timeoutInSec ="..timeoutInSec)
@@ -214,27 +214,27 @@ function DeliverHandler:handleContent( content )
 
             -- 同一个扭蛋机的同一个弹仓
             if tmpOrderId and tmpLoc and tmpDeviceSeq and tmpDeviceSeq == device_seq and tmpLoc == location and orderId ~= tmpOrderId  then
-                saleLogHandler = UploadSaleLogHandler:new()
+                saleLogHandler = UploadSaleLog:new()
 
                 --相同location，之前的订单还没到过期时间,那么当前的订单直接上报硬件繁忙
-                if osTime<saleTable[DeliverHandler.ORDER_TIMEOUT_TIME_IN_SEC] then
+                if osTime<saleTable[Deliver.ORDER_TIMEOUT_TIME_IN_SEC] then
                     saleLogMap[CloudConsts.CTS]=osTime
                     saleLogMap[UPLOAD_POSITION]=UPLOAD_BUSY_ARRIVAL
 
                     saleLogHandler:setMap(saleLogMap)
-                    saleLogHandler:send(CloudReplyBaseHandler.BUSY)
+                    saleLogHandler:send(CRBase.BUSY)
 
                     LogUtil.d(TAG,TAG.." duprequest for seq = "..device_seq.." loc = "..location.." ignored order ="..orderId)
                     --当前的location，有订单在处理中，上报后，直接返回，不再继续开锁
                     return
                 else
                     --之前的订单已经超时了，那么上报状态，并且从缓存中删除
-                    saleTable[DeliverHandler.ORDER_TIMEOUT_TIME_IN_SEC]=nil--remove this key
+                    saleTable[Deliver.ORDER_TIMEOUT_TIME_IN_SEC]=nil--remove this key
                     saleTable[CloudConsts.CTS]=osTime
                     saleTable[UPLOAD_POSITION]=UPLOAD_ARRIVAL_TRIGGER_TIMEOUT
 
                     saleLogHandler:setMap(saleTable)
-                    saleLogHandler:send(CloudReplyBaseHandler.NOT_ROTATE)
+                    saleLogHandler:send(CRBase.NOT_ROTATE)
 
                     gBusyMap[key]=nil
                     LogUtil.d(TAG,TAG.." in deliver, previous order timeout, orderId ="..tmpOrderId)
@@ -257,13 +257,13 @@ function DeliverHandler:handleContent( content )
         LogUtil.d(TAG,TAG.." invalid orderId="..orderId)
         saleLogMap[CloudConsts.CTS]=os.time()
         saleLogMap[UPLOAD_POSITION]=UPLOAD_INVALID_ARRIVAL
-        saleLogHandler = UploadSaleLogHandler:new()
+        saleLogHandler = UploadSaleLog:new()
         saleLogHandler:setMap(saleLogMap)
-        saleLogHandler:send(CloudReplyBaseHandler.TIMEOUT_WHEN_ARRIVE)--超时的话，直接上报失败状态
+        saleLogHandler:send(CRBase.TIMEOUT_WHEN_ARRIVE)--超时的话，直接上报失败状态
         return
     end
         saleLogMap[LOCK_OPEN_TIME]=os.time()
-        UARTStatusReport.setCallback(openLockCallback)
+        UARTStatRep.setCallback(openLockCallback)
         r = UARTControlInd.encode(addr,location,timeoutInSec)
 
         UartMgr.publishMessage(r)
@@ -325,10 +325,10 @@ function  openLockCallback(addr,flagsTable)
                 --      0为初始化状态  1为出货成功   2为出货超时（在协议设定的时间内用户未操作，锁已恢复锁止状态）
                 
                 loc = tonumber(loc)
-                ok = UARTStatusReport.isDeliverOK(loc)
+                ok = UARTStatRep.isDeliverOK(loc)
 
                 -- 锁曾经开过，则将其增加到订单状态中，下次不再更新
-                lockOpen = UARTStatusReport.isLockOpen(loc)
+                lockOpen = UARTStatRep.isLockOpen(loc)
                 if lockOpen then
                     saleTable[LOCK_OPEN_STATE] = LOCK_STATE_OPEN
                 end
@@ -340,10 +340,10 @@ function  openLockCallback(addr,flagsTable)
 
                         saleTable[CloudConsts.CTS]=os.time()
                         saleTable[UPLOAD_POSITION]=UPLOAD_LOCK_TIMEOUT
-                        local saleLogHandler = UploadSaleLogHandler:new()
+                        local saleLogHandler = UploadSaleLog:new()
                         saleLogHandler:setMap(saleTable)
                         
-                        saleLogHandler:send(CloudReplyBaseHandler.NOT_ROTATE)
+                        saleLogHandler:send(CRBase.NOT_ROTATE)
 
                         -- 添加到待删除列表中
                         toRemove[key] = 1
@@ -360,7 +360,7 @@ function  openLockCallback(addr,flagsTable)
                     detectTable[CloudConsts.SN]=saleTable[CloudConsts.SN]
                     detectTable[CloudConsts.ONLINE_ORDER_ID]=saleTable[CloudConsts.ONLINE_ORDER_ID]
 
-                    detectionHandler = UploadDetection:new()
+                    detectionHandler = UploadDetect:new()
                     detectionHandler:setMap(detectTable)
                     detectionHandler:send()
 
@@ -368,12 +368,12 @@ function  openLockCallback(addr,flagsTable)
                     if not saleTable[UPLOAD_POSITION] then
                         saleTable[CloudConsts.CTS]=os.time()
                         saleTable[UPLOAD_POSITION]=UPLOAD_NORMAL
-                        local saleLogHandler = UploadSaleLogHandler:new()
+                        local saleLogHandler = UploadSaleLog:new()
                         saleLogHandler:setMap(saleTable)
 
-                        s = CloudReplyBaseHandler.SUCCESS
-                        if os.time() > saleTable[DeliverHandler.ORDER_TIMEOUT_TIME_IN_SEC] then
-                            s = CloudReplyBaseHandler.DELIVER_AFTER_TIMEOUT--超时出货
+                        s = CRBase.SUCCESS
+                        if os.time() > saleTable[Deliver.ORDER_TIMEOUT_TIME_IN_SEC] then
+                            s = CRBase.DELIVER_AFTER_TIMEOUT--超时出货
                             saleTable[UPLOAD_POSITION]=UPLOAD_DELIVER_AFTER_TIMEOUT
                         end
                         saleLogHandler:send(s)
@@ -428,7 +428,7 @@ function TimerFunc(id)
 
             --TODO 是否已经发送过重试开锁指令
             local openTime = saleTable[LOCK_OPEN_TIME]
-            if Consts.RETRY_OPEN_LOCK and openTime and os.time()-openTime > DeliverHandler.DEFAULT_EXPIRE_TIME_IN_SEC + DeliverHandler.DEFAULT_CHECK_DELAY_TIME_IN_SEC and saleTable[LOCK_OPEN_STATE] ~= LOCK_STATE_OPEN then
+            if Consts.RETRY_OPEN_LOCK and openTime and os.time()-openTime > Deliver.DEFAULT_EXPIRE_TIME_IN_SEC + Deliver.DEFAULT_CHECK_DELAY_TIME_IN_SEC and saleTable[LOCK_OPEN_STATE] ~= LOCK_STATE_OPEN then
                 local retried = saleTable[CloudConsts.RETRY_OPEN_LOCK]
                 if true~=retried then
                     -- 开锁
@@ -440,7 +440,7 @@ function TimerFunc(id)
                     end
 
                     if  addr then
-                        r = UARTControlInd.encode(addr,loc,DeliverHandler.REOPEN_EXPIRE_TIME_IN_SEC)
+                        r = UARTControlInd.encode(addr,loc,Deliver.REOPEN_EXPIRE_TIME_IN_SEC)
                         UartMgr.publishMessage(r)
 
                         LogUtil.d(TAG,TAG.." Deliver reopenLock, orderId = "..orderId)
@@ -451,7 +451,7 @@ function TimerFunc(id)
             end
 
            -- 是否超时了
-           orderTimeoutTime=saleTable[DeliverHandler.ORDER_TIMEOUT_TIME_IN_SEC]
+           orderTimeoutTime=saleTable[Deliver.ORDER_TIMEOUT_TIME_IN_SEC]
            if orderTimeoutTime then
                
                LogUtil.d(TAG,"TimeoutTable orderId = "..orderId.." seq = "..seq.." loc="..loc.." timeout at "..orderTimeoutTime.." nowTime = "..systemTime)
@@ -463,9 +463,9 @@ function TimerFunc(id)
                     saleTable[UPLOAD_POSITION]=UPLOAD_TIMER_TIMEOUT
                     saleTable[CloudConsts.CTS]=systemTime
 
-                    local saleLogHandler = UploadSaleLogHandler:new()
+                    local saleLogHandler = UploadSaleLog:new()
                     saleLogHandler:setMap(saleTable)
-                    saleLogHandler:send(CloudReplyBaseHandler.NOT_ROTATE)
+                    saleLogHandler:send(CRBase.NOT_ROTATE)
 
                     toRemove[key] = 1
                 end
@@ -485,4 +485,6 @@ end
         end
         LogUtil.d(TAG,TAG.." in TimerFunc after remove gBusyMap len="..getTableLen(gBusyMap))
     end
-end     
+end   
+
+  

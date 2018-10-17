@@ -393,3 +393,4 @@ function jsonex.decode(str)
 end 
 
 return jsonex   
+

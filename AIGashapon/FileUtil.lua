@@ -88,18 +88,3 @@ function FileUtil.deletefile(filename)--删除指定文件夹中的所有内容
 	end
 end
 
---打印文件系统的剩余空间
--- print("get_fs_free_size: "..rtos.get_fs_free_size().." Bytes")
--- --成功创建一个目录(目录已存在，也返回true表示创建成功)
--- if rtos.make_dir(USER_DIR_PATH) then
--- 	readfile(USER_DIR_PATH.."/3.txt")
-
--- 	writevala(USER_DIR_PATH.."/3.txt","great")
-
--- 	readfile(USER_DIR_PATH.."/3.txt")
--- 	writevalw(USER_DIR_PATH.."/3.txt","great")
--- 	readfile(USER_DIR_PATH.."/3.txt")
-
--- 	deletefile(USER_DIR_PATH.."/3.txt")
--- 	readfile(USER_DIR_PATH.."/3.txt")
--- end

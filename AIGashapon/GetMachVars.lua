@@ -1,29 +1,29 @@
--- @module GetMachineVars
+-- @module GetMachVars
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.23
 -- tested 2018.8.30
 
 require "CloudConsts"
-require "CloudBaseHandler"
-require "MqttReplyHandlerMgr"
+require "CBase"
+require "MQTTReplyMgr"
 require "LogUtil"
 local jsonex = require "jsonex"
 
-local TAG = "GetMachineVars"
+local TAG = "GetMachVars"
 
-GetMachineVars = CloudBaseHandler:new{
+GetMachVars = CBase:new{
     MY_TOPIC = "get_machine_variables",
 }
 
-function GetMachineVars:new (o)
-    o = o or CloudBaseHandler:new(o)
+function GetMachVars:new (o)
+    o = o or CBase:new(o)
     setmetatable(o, self)
     self.__index = self
     return o
 end
 
-function GetMachineVars:name()
+function GetMachVars:name()
     return self.MY_TOPIC
 end
 
@@ -39,7 +39,7 @@ end
 -- }
 -- ]]
 
-function GetMachineVars:handleContent( content )
+function GetMachVars:handleContent( content )
  	if not content then
  		return false
  	end
@@ -53,7 +53,8 @@ function GetMachineVars:handleContent( content )
     end
     
  	-- --LogUtil.d(TAG,TAG.." handleContent ="..jsonex.encode(map))
- 	MqttReplyHandlerMgr.replyWith(ReplyMachineVars.MY_TOPIC,map)
+ 	MQTTReplyMgr.replyWith(RepMachVars.MY_TOPIC,map)
  	
  	return true
 end       
+

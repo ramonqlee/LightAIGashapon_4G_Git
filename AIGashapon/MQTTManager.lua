@@ -20,11 +20,11 @@ require "UartMgr"
 require "Lightup"
 require "CloudConsts"
 require "NodeIdConfig"
-require "GetMachineVars"
-require "DeliverHandler"
-require "GetTimeHandler"
-require "ReplyTimeHandler"
-require "SetConfigHandler"
+require "GetMachVars"
+require "Deliver"
+require "GetTime"
+require "RepTime"
+require "SetConfig"
 
 local jsonex = require "jsonex"
 
@@ -90,7 +90,7 @@ local function timeSync()
                 return
             end
 
-            local handle = GetTimeHandler:new()
+            local handle = GetTime:new()
             handle:sendGetTime(os.time())
 
             LogUtil.d(TAG,"timeSync count =="..Consts.timeSyncCount)
@@ -162,7 +162,7 @@ function MQTTManager.loopFeedDog()
 
             if Consts.timeSynced and timeOffset > Consts.MAX_LOOP_INTERVAL then
                 -- 如果在出货中，则不重启，防止出现数据丢失
-                if DeliverHandler.isDelivering() then
+                if Deliver.isDelivering() then
                     LogUtil.d(TAG,TAG.."isDelivering,ignore reboot")
                     return
                 end
@@ -290,10 +290,10 @@ function MQTTManager.startmqtt()
         end
         
         local mMqttProtocolHandlerPool={}
-        mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=ReplyTimeHandler:new(nil)
-        mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=SetConfigHandler:new(nil)
-        mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=GetMachineVars:new(nil)
-        mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=DeliverHandler:new(nil)
+        mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=RepTime:new(nil)
+        mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=SetConfig:new(nil)
+        mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=GetMachVars:new(nil)
+        mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=Deliver:new(nil)
         mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=Lightup:new(nil)
 
         local topics = {}
