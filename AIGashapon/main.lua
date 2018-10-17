@@ -20,7 +20,6 @@ require "Consts"
 require "log"
 require "sys"
 require "Config"
-require "update"
 require "Task"
 
 
