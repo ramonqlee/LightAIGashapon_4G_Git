@@ -12,6 +12,7 @@ require"clib"
 require"utils"
 require "LogUtil"
 require "UartMgr"
+require "update"
 require "MQTTManager"
 require "UARTBroadcastLightup"
 
@@ -19,6 +20,7 @@ local TAG="Entry"
 local timerId=nil
 local retryIdentifyTimerId=nil
 local candidateRunTimerId=nil
+local timedTaskId = nil
 
 entry = {}
 local mqttStarted=false
@@ -70,9 +72,6 @@ function startTimedTask()
    LogUtil.d(TAG,"startTimedTask.....out")
 end
 
-local function cbFnc(downloadResult)
-    -- sys.publish('FOTA_DOWNLOAD_FINISH')
-end
 -- 自动升级检测
 function checkUpdate()
     if DeliverHandler.isDelivering() then
@@ -80,12 +79,7 @@ function checkUpdate()
         return
     end
 
-    if update.isDownloading() then
-        LogUtil.d(TAG,"checkUpdating,return")
-        return 
-    end
-
-    update.request(cbFnc) -- 检测是否有更新包
+    update.request() -- 检测是否有更新包
     LogUtil.d(TAG,"start checkUpdate now")
 end
 
