@@ -15,6 +15,9 @@ require "RepConfig"
 local TAG = "SetConfig"
 
 local STATE_INIT = "INIT"
+local rebootTime
+local halt_time 
+local rebootTimer
 
 SetConfig = CBase:new{
     MY_TOPIC = "set_config",
@@ -62,7 +65,12 @@ function SetConfig:handleContent( content )
  	Config.saveValue(CloudConsts.VM_SATE,state)
  	Config.saveValue(CloudConsts.NODE_NAME,content[CloudConsts.NODE_NAME])
  	Config.saveValue(CloudConsts.NODE_PRICE,content[CloudConsts.NODE_PRICE])
- 	Config.saveValue(CloudConsts.REBOOT_SCHEDULE,content[CloudConsts.REBOOT_SCHEDULE])
+    rebootTime = content[CloudConsts.REBOOT_SCHEDULE]
+ 	Config.saveValue(CloudConsts.REBOOT_SCHEDULE,rebootTime)
+    halt_time = content[CloudConsts.HALT_SCHEDULE]
+
+    startRebootSchedule()
+
 
  	nodeName = Config.getValue(CloudConsts.NODE_NAME)
  	if nodeName then
@@ -95,4 +103,24 @@ function SetConfig:handleContent( content )
     	return
     end
 end 
+
+function SetConfig:startRebootSchedule()
+    --TODO 在此增加定时开关机功能
+    -- 设定一个定时器，每分钟检查一次，是否到了关键时间
+    -- 如果到了的话，看是否满足关机的条件
+    -- 1. 没有待发送的消息
+    -- 2. 没有订单在出货中
+    if rebootTimer and sys.timerIsActive(rebootTimer) then
+        return
+    end
+
+    rebootTimer = sys.timerLoopStart(function()
+        if MQTTManager.hasMessage() or Deliver.isDelivering() then
+            return
+        end
+
+        -- 是否到时间了
+        
+    end，60*1000)
+end
 
