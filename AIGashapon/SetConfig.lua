@@ -6,6 +6,7 @@
 -- tested 2018.8.30
 
 require "CloudConsts"
+require "sys"
 require "CBase"
 require "Config"
 require "LogUtil"
@@ -65,11 +66,11 @@ function SetConfig:handleContent( content )
  	Config.saveValue(CloudConsts.VM_SATE,state)
  	Config.saveValue(CloudConsts.NODE_NAME,content[CloudConsts.NODE_NAME])
  	Config.saveValue(CloudConsts.NODE_PRICE,content[CloudConsts.NODE_PRICE])
-    rebootTime = content[CloudConsts.REBOOT_SCHEDULE]
- 	Config.saveValue(CloudConsts.REBOOT_SCHEDULE,rebootTime)
+ 	-- Config.saveValue(CloudConsts.REBOOT_SCHEDULE,content[CloudConsts.REBOOT_SCHEDULE])
     halt_time = content[CloudConsts.HALT_SCHEDULE]
+    rebootTime = content[CloudConsts.REBOOT_SCHEDULE]
 
-    startRebootSchedule()
+    SetConfig.startRebootSchedule()
 
 
  	nodeName = Config.getValue(CloudConsts.NODE_NAME)
@@ -121,6 +122,6 @@ function SetConfig:startRebootSchedule()
 
         -- 是否到时间了
         
-    end，60*1000)
+    end,60*1000)
 end
 
