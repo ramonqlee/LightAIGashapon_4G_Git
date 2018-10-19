@@ -140,9 +140,12 @@ function MQTTManager.getNodeIdAndPasswordFromServer()
                 password = bodyJson['password']
             end
 
-            if password and nodeId then
+            if nodeId and password then
                 LogUtil.d(TAG,"http config nodeId="..nodeId)
-            end 
+                Consts.saveUserName(nodeId)
+                Consts.savePassword(password)
+            end
+        end
         end
     end)
 end
