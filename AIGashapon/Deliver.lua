@@ -16,7 +16,6 @@ require "CBase"
 require "RepDeliver"
 require "UploadSaleLog"
 require "CRBase"
-require "UARTLockClose"
 require "UploadDetect"
 
 local TAG = "Deliver"

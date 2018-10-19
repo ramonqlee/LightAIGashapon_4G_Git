@@ -1,4 +1,3 @@
-@@ -1,74 +0,0 @@
 -- @module ScanQrCode
 -- @author ramonqlee
 -- @copyright idreems.com
