@@ -226,18 +226,8 @@ function MQTTManager.checkNetwork()
 
         if netFailCount >= MAX_NET_FAIL_COUNT then
             -- 修改为看门狗和软重启交替进行的方式
-            if CloudConsts.SOFT_REBOOT == rebootMethod then
-                LogUtil.d(TAG,"............softReboot when not link.isReady")
-                sys.restart("netFailTooLong")--重启更新包生效
-                break
-            else
-                LogUtil.d(TAG,"............switchFly when not link.isReady")
-                --进入飞行模式，20秒之后，退出飞行模式
-                net.switchFly(true)
-                sys.wait(20000)
-                net.switchFly(false)
-                netFailCount = 0--reset count and wait for network recovery
-            end
+            LogUtil.d(TAG,"............softReboot when not link.isReady")
+            sys.restart("netFailTooLong")--重启更新包生效
         end
 
         netFailCount = netFailCount+1
