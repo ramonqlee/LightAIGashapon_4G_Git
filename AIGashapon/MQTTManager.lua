@@ -146,7 +146,7 @@ function MQTTManager.getNodeIdAndPasswordFromServer()
                 Consts.savePassword(password)
             end
         end
-        end
+        
     end)
 end
 

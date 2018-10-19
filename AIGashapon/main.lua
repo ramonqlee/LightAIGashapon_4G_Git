@@ -3,7 +3,7 @@
 --VERSION：ascii string类型，如果使用Luat物联云平台固件升级的功能，必须按照"X.X.X"定义，X表示1位数字；否则可随便定义
 PROJECT = "AIGashapon"
 
-VERSION = "1.1.145"
+VERSION = "1.1.146"
 
 --[[
 使用Luat物联云平台固件升级的功能，必须按照以下步骤操作：
@@ -24,8 +24,8 @@ require "console"
 -- require "errDump"
 
 require "Consts"
--- require "Config"
--- require "Task"
+require "Config"
+require "Task"
 
 
 LOG_LEVEL=log.LOGLEVEL_TRACE
