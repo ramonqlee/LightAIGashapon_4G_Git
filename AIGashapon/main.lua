@@ -23,10 +23,9 @@ require "ntp"
 require "console"
 -- require "errDump"
 
-require "entry"
+require "Consts"
 -- require "Config"
 -- require "Task"
--- require "Consts"
 
 
 LOG_LEVEL=log.LOGLEVEL_TRACE
@@ -51,6 +50,7 @@ net.startQueryAll(60000, 60000)
 ntp.timeSync()
 
 console.setup(Consts.CONSOLE_UART_ID, 115200)--默认为1，和现有app冲突，修改为2
+require "entry"
 entry.run()
 -- require "testUart"
 
