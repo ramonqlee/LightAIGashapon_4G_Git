@@ -23,4 +23,35 @@ function LogUtil.d(tag,log)
 	print("<"..tag..">\t"..log)
 end
 
+function LogUtil.StringSplit(str,split)
+    local lcSubStrTab = {}
+    while true do
+        local lcPos = string.find(str,split)
+        if not lcPos then
+            lcSubStrTab[#lcSubStrTab+1] =  str    
+            break
+        end
+        local lcSubStr  = string.sub(str,1,lcPos-1)
+        lcSubStrTab[#lcSubStrTab+1] = lcSubStr
+        str = string.sub(str,lcPos+1,#str)
+    end
+    return lcSubStrTab
+end
 
+function LogUtil.getTableLen( tab )
+    local count = 0  
+
+    if not tab then
+        return 0
+    end
+
+    if "table"~=type(tab) then
+        return count
+    end
+
+    for k,_ in pairs(tab) do  
+        count = count + 1  
+    end 
+
+    return count
+end

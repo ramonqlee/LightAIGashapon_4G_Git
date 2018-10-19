@@ -12,12 +12,14 @@ require "Config"
 require "LogUtil"
 require "MQTTReplyMgr"
 require "RepConfig"
+require "UartMgr"
+require "UARTShutDown"
 
 local TAG = "SetConfig"
 
 local STATE_INIT = "INIT"
 local rebootTime
-local halt_time 
+local haltTime 
 local rebootTimer
 
 SetConfig = CBase:new{
@@ -67,8 +69,8 @@ function SetConfig:handleContent( content )
  	Config.saveValue(CloudConsts.NODE_NAME,content[CloudConsts.NODE_NAME])
  	Config.saveValue(CloudConsts.NODE_PRICE,content[CloudConsts.NODE_PRICE])
  	-- Config.saveValue(CloudConsts.REBOOT_SCHEDULE,content[CloudConsts.REBOOT_SCHEDULE])
-    halt_time = content[CloudConsts.HALT_SCHEDULE]
-    rebootTime = content[CloudConsts.REBOOT_SCHEDULE]
+    haltTime = content[CloudConsts.HALT_SCHEDULE]--关机时间
+    rebootTime = content[CloudConsts.REBOOT_SCHEDULE]--开机时间
 
     SetConfig.startRebootSchedule()
 
@@ -120,8 +122,35 @@ function SetConfig:startRebootSchedule()
             return
         end
 
-        -- 是否到时间了
-        
+        -- 是否到时间了，关机并设置下次开机的时间
+        local y =  os.date("%Y")
+        local m =  os.date("%m")
+        local d =  os.date("%d")
+
+        local SPLIT_LEN = 2
+        local rebootTab = LogUtil.StringSplit(reboot_schedule)
+        local shutdownTab = LogUtil.StringSplit(haltTime)
+
+        if LogUtil.getTableLen(rebootTab) ~= SPLIT_LEN or LogUtil.getTableLen(shutdownTab) ~= SPLIT_LEN then
+            return
+        end
+
+        local rebootTimeMs = os.time({year =y, month = m, day =d, hour =tonumber(rebootTab[1]), min =tonumber(rebootTab[2]), sec = 00})
+        local shutdownTimeMs = os.time({year =y, month = m, day =d, hour =tonumber(shutdownTab[1]), min =tonumber(shutdownTab[2]), sec = 00})
+        if shutdownTimeMs < os.time() then
+            LogUtil.d(TAG," shutdownTimeMs = "..shutdownTimeMs.." rebootTimeMs = "..rebootTimeMs)
+            return
+        end
+
+        --播放扫码声音
+        local delay = shutdownTimeMs-rebootTimeMs
+        if delay < 0 then
+            delay = -delay
+        end
+
+        local r = UARTShutDown.encode(delay)
+        UartMgr.publishMessage(r)
+        LogUtil.d(TAG,".........................................shutdown now.........................................")
     end,60*1000)
 end
 

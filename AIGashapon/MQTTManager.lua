@@ -21,6 +21,7 @@ require "Lightup"
 require "CloudConsts"
 require "NodeIdConfig"
 require "GetMachVars"
+require "ScanQrCode"
 require "Deliver"
 require "GetTime"
 require "RepTime"
@@ -285,6 +286,7 @@ function MQTTManager.startmqtt()
         mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=GetMachVars:new(nil)
         mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=Deliver:new(nil)
         mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=Lightup:new(nil)
+        mMqttProtocolHandlerPool[#mMqttProtocolHandlerPool+1]=ScanQrCode:new(nil)
 
         local topics = {}
         for _,v in pairs(mMqttProtocolHandlerPool) do

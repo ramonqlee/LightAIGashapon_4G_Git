@@ -11,6 +11,7 @@ require "UartMgr"
 require "UARTUtils"
 require "CloudConsts"
 require "UARTControlInd"
+require "UARTPlayAudio"
 require "CBase"
 require "RepDeliver"
 require "UploadSaleLog"
@@ -284,11 +285,9 @@ function Deliver:handleContent( content )
                 LogUtil.d(TAG,TAG.." timer_loop_start id ="..mTimerId)
             end
             
-            -- 待增加最近一次出货的id
-            -- Config.saveValue(CloudConsts.LAST_ID,orderId)
-
-            -- audio.setVolume(7)
-            -- audio.play(Consts.LOCK_AUDIO)
+            -- 播放出货声音
+            local r = UARTPlayAudio.encode(UARTPlayAudio.OPENLOCK_AUDIO)
+            UartMgr.publishMessage(r)
         end
 end 
 
