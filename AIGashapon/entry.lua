@@ -58,11 +58,7 @@ function startTimedTask()
 
             sys.taskInit(function()
 				checkTask()
-				--wait until task finished
-				while Task.isRunning() do
-					sys.wait(Consts.TASK_WAIT_IN_MS)
-				end
-
+				
             	checkUpdate()
 			end)
             
@@ -93,6 +89,8 @@ function checkTask()
     
     if Task.isRunning() then 
 		LogUtil.d(TAG,"Task.isRunning,return")
+		--wait until task finished
+		sys.wait(Consts.TASK_WAIT_IN_MS)
 		return
     end
 
