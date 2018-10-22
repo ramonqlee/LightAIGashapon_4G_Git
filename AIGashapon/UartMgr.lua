@@ -95,9 +95,10 @@ end
 返回值：无
 ]]
 function uart_write(s)
-	if not s or 0 == #s then
+	if not s or "string"~= type(s) or 0 == #s then
 		return
 	end
+
 	uart.write(UartMgr.devicePath,s)
 	LogUtil.d(TAG,"uart write = "..string.toHex(s))
 end
@@ -209,6 +210,7 @@ function UartMgr.init( devicePath, baudRate)
 	--配置并且打开串口
 	uart.setup(UartMgr.devicePath,baudRate,8,uart.PAR_NONE,uart.STOP_1)
 
+	UartMgr.loopMessage()
 	-- 发送获取从板id的指令，初始化系统的一部分
 	LogUtil.d(TAG,"UartMgr.init done")
 end 
@@ -216,28 +218,30 @@ end
 local uartMsgQueueLooping = false
 
 function UartMgr.publishMessage( msg )
-	UartMgr.toWriteMessages[#UartMgr.toWriteMessages+1]=msg
+	if not UartMgr.toWriteMessages then
+		UartMgr.toWriteMessages = {}
+	end
 
+	table.insert(UartMgr.toWriteMessages,msg)
+end
+
+function UartMgr.loopMessage()
 	if uartMsgQueueLooping then
 		return
 	end
 
 	-- start message queue loop
 	sys.taskInit(function()
+		uartMsgQueueLooping = true
+		
 		while true do
-			uartMsgQueueLooping = true
-
-			UartMgr.init(Consts.UART_ID,Consts.baudRate)
-			
 			-- send msg one by one
-			for key,msg in pairs(UartMgr.toWriteMessages) do
-				uart_write(msg)
-				UartMgr.toWriteMessages[key] = nil
-				break
-			end
+			msg = table.remove(UartMgr.toWriteMessages)
+			uart_write(msg)
 
 			sys.wait(Consts.WAIT_UART_INTERVAL)--两次写入消息之间停留一段时间
 		end
+		uartMsgQueueLooping = false
 	end)    
 end
 
