@@ -49,7 +49,7 @@ function Task.getTask()
 
 		local tmp = nodeId..pwsha1..nonce..timestamp
 
-		LogUtil.d(TAG,"nodeId = "..nodeId.." tmp="..tmp)
+		-- LogUtil.d(TAG,"nodeId = "..nodeId.." tmp="..tmp)
 	    sign = crypto.sha1(tmp,#tmp)
 	    sign = string.lower(sign)
 

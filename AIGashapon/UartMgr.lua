@@ -51,7 +51,6 @@ local function dispatch( data )
 
 	for i,handler in pairs(protocalStack) do
 		-- 处理协议数据
-		LogUtil.d(TAG,"uart dispatch handler index ="..i)
 		if handler then
 			pos = handler(data)
 			if pos and pos>=0 then

@@ -195,7 +195,8 @@ function MQTTManager.checkNetwork()
 
         if netFailCount >= MAX_NET_FAIL_COUNT then
             -- 修改为看门狗和软重启交替进行的方式
-            LogUtil.d(TAG,"............softReboot when not link.isReady")
+            LogUtil.d(TAG,"............softReboot when not link.isReady in checkNetwork")
+            sys.wait(RETRY_TIME)--等待日志输出完毕
             sys.restart("netFailTooLong")--重启更新包生效
         end
 
@@ -221,7 +222,8 @@ function MQTTManager.connectMQTT()
 
             -- 网络ok时，重启板子
             if link.isReady() then
-                LogUtil.d(TAG,"............softReboot when link.isReady")
+                LogUtil.d(TAG,"............softReboot when link.isReady in connectMQTT")
+                sys.wait(RETRY_TIME)--等待日志输出完毕
                 sys.restart("mqttFailTooLong")--重启更新包生效
             end
 
