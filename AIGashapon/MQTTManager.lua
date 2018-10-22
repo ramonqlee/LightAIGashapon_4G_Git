@@ -29,7 +29,7 @@ require "SetConfig"
 
 local jsonex = require "jsonex"
 
-local MAX_MQTT_FAIL_COUNT = 2--mqtt连接失败2次
+local MAX_MQTT_FAIL_COUNT = 3--mqtt连接失败2次
 local MAX_NET_FAIL_COUNT = Consts.TEST_MODE and 6 or 2*5--断网3分钟，会重启
 local RETRY_TIME=10000
 local DISCONNECT_WAIT_TIME=5000
@@ -246,11 +246,20 @@ function MQTTManager.connectMQTT()
         LogUtil.d(TAG,"fail to connect mqtt,mqttc:disconnect,try after 10s")
         mqttc:disconnect()
         mainLoopTime =os.time()
+        
+        sys.wait(RETRY_TIME)
 
         mqttFailCount = mqttFailCount+1
         if mqttFailCount >= MAX_MQTT_FAIL_COUNT then
             Consts.clearUserName()
             Consts.clearPassword()
+
+            -- 网络ok时，重启板子
+            if link.isReady() then
+                LogUtil.d(TAG,"............softReboot when link.isReady")
+                sys.restart("mqttFailTooLong")--重启更新包生效
+            end
+
             break
         end
     end
