@@ -43,7 +43,6 @@ local CLIENT_COMMAND_SHORT_TIMEOUT = 1000
 local MAX_MSG_CNT_PER_REQ = 1--每次最多发送的消息数
 local mqttc
 local toPublishMessages={}
-local fdTimerId = nil
 
 local TAG = "MQTTManager"
 local wd = nil
@@ -150,40 +149,6 @@ function MQTTManager.getNodeIdAndPasswordFromServer()
     end)
 end
 
-function MQTTManager.loopFeedDog()
-    if fdTimerId and sys.timerIsActive(fdTimerId) then 
-        return
-    end
-
-        fdTimerId = sys.timerLoopStart(function()
-            LogUtil.d(TAG,"feeddogging")
-
-            -- 如果主玄循环停止超过一定时间，，则认为程序出问题了，重启
-            local timeOffset = os.time()-mainLoopTime
-            if timeOffset < 0 then
-                timeOffset = -timeOffset
-            end
-
-            if Consts.timeSynced and timeOffset > Consts.MAX_LOOP_INTERVAL then
-                -- 如果在出货中，则不重启，防止出现数据丢失
-                if Deliver.isDelivering() then
-                    LogUtil.d(TAG,TAG.."isDelivering,ignore reboot")
-                    return
-                end
-
-                if fdTimerId and sys.timerIsActive(fdTimerId) then
-                    sys.timerStop(fdTimerId)--停止看门狗喂狗，等待重启
-                    fdTimerId = nil
-                end
-
-                sys.restart("deadMainLoop")--重启更新包生效F
-                return
-            end
-
-            -- mywd.feed()--断网了，别忘了喂狗，否则会重启
-        end,Consts.FEEDDOG_PERIOD)
-end
-
 function MQTTManager.checkMQTTUser()
     LogUtil.d(TAG,".............................checkMQTTUser ver=".._G.VERSION)
     username = Consts.getUserName(false)
@@ -280,8 +245,6 @@ function MQTTManager.startmqtt()
 
     mainLoopTime =os.time()
 
-    -- 定时喂狗
-    MQTTManager.loopFeedDog()
     msgcache.clear()--清理缓存的消息数据
 
     while true do
