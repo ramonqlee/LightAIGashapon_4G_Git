@@ -117,8 +117,11 @@ function UARTAllInfoRep.handle(bins)
 			-- add to array and rest
 			-- temp = pack.pack("b3",id1,id2,id3)
 			temp = id1..id2..id3
-			mAllBoardIds[#mAllBoardIds+1]=temp
-			LogUtil.d(TAG,"find device = "..temp)
+			if not UARTAllInfoRep.hasIds(temp) then
+				mAllBoardIds[#mAllBoardIds+1]=temp
+				LogUtil.d(TAG,"find device = "..temp)
+			end
+
 			j = 0
 		end
 
