@@ -26,12 +26,10 @@ local TAG = "Task"
 local isRunning = false
 Task={}
 
-function Task.isRunning()
-	return isRunning
-end
-
 function Task.getTask()
-	isRunning = true
+	if isRunning then
+		return
+	end
 
 	sys.taskInit(function()
 		-- 去服务器端请求任务
@@ -58,6 +56,7 @@ function Task.getTask()
 		url = string.format(Consts.MQTT_TASK_URL_FORMATTER,nodeId, nonce, timestamp, sign)
 	    LogUtil.d(TAG,"url = "..url)
 
+	    isRunning = true
     	http.request("GET",url,nil,nil,nil,nil,function(result,prompt,head,body )
     		isRunning = false
     		

@@ -44,8 +44,6 @@ local boardIdentified = 0
 local retryCount = 0
 
 function startTimedTask()
-	LogUtil.d(TAG,"startTimedTask.....in")
-
     if timedTaskId and sys.timerIsActive(timedTaskId) then
         LogUtil.d(TAG," startTimedTask running,return")
         return
@@ -56,16 +54,10 @@ function startTimedTask()
             	return
             end
 
-            sys.taskInit(function()
-				checkTask()
-				
-            	checkUpdate()
-			end)
+            checkTask()
+            checkUpdate()
             
-            LogUtil.d(TAG,"publish message queue is empty,startTimedTask")
         end,Consts.TIMED_TASK_INTERVAL_MS)
-
-   LogUtil.d(TAG,"startTimedTask.....out")
 end
 
 -- 自动升级检测
@@ -76,7 +68,6 @@ function checkUpdate()
     end
 
     update.request() -- 检测是否有更新包
-    LogUtil.d(TAG,"start checkUpdate now")
 end
 
 
@@ -86,16 +77,8 @@ function checkTask()
         LogUtil.d(TAG,TAG.." Deliver.isDelivering or Lightup.isLightuping,delay taskCheck")
         return
     end
-    
-    if Task.isRunning() then 
-		LogUtil.d(TAG,"Task.isRunning,return")
-		--wait until task finished
-		sys.wait(Consts.TASK_WAIT_IN_MS)
-		return
-    end
 
     Task.getTask()               -- 检测是否有新任务 
-    LogUtil.d(TAG,"start checkTask now")
 end
 
 function allInfoCallback( ids )
@@ -161,8 +144,6 @@ end
 
 
 function entry.run()
-	LogUtil.d(TAG,"entry.run.....in")
-
 	startTimedTask()
 
 	-- 启动一个延时定时器, 获取板子id
@@ -206,8 +187,6 @@ function entry.run()
 		entry.startTwinkleTask()
 
 	end,Consts.TEST_MODE and 5*1000 or 120*1000)  
-
-	LogUtil.d(TAG,"entry.run.....out")
 end
 
 
