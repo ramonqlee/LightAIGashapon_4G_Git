@@ -24,27 +24,6 @@ local function httpDownloadCbFnc(result,statusCode,head)
     sys.publish("UPDATE_DOWNLOAD",result,statusCode,head)
 end
 
-local function processOta(stepData,totalLen,statusCode)
-    if stepData and totalLen then
-        if statusCode=="200" or statusCode=="206" then            
-            if rtos.fota_process((sProcessedLen+stepData:len()>totalLen) and stepData:sub(1,totalLen-sProcessedLen) or stepData,totalLen)~=0 then 
-                log.error("updata.processOta","fail")
-                return false
-            else
-                sProcessedLen = sProcessedLen + stepData:len()
-                log.info("updata.processOta",totalLen,sProcessedLen,(sProcessedLen*100/totalLen).."%")
-                --if sProcessedLen*100/totalLen==sBraekTest then return false end
-                if sProcessedLen*100/totalLen>=100 then return true end
-            end
-        elseif statusCode:sub(1,1)~="3" and stepData:len()==totalLen and totalLen>0 and totalLen<=200 then
-            local msg = stepData:match("\"msg\":%s*\"(.-)\"")
-            if msg and msg:len()<=200 then
-                log.warn("update.error",common.ucs2beToUtf8((msg:gsub("\\u","")):fromHex()))
-            end
-        end
-    end
-end
-
 function clientTask()
     sUpdating = true
     --不要省略此处代码，否则下文中的misc.getImei有可能获取不到
