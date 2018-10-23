@@ -49,7 +49,7 @@ function CBase:handle( obj )
     return r
   end
   
-  payloadJson = self:match(string.format("%s/%s",Consts.getUserName(),self:name()),tableObj)
+  payloadJson = self:match(string.format("%s/%s",LogUtil.getUserName(),self:name()),tableObj)
 
   if not payloadJson then
     --LogUtil.d(TAG,TAG.." handle empty payload,return")
