@@ -6,19 +6,14 @@
 -- @release 2018.1.3
 -- @describe 每隔5s发送0x01,0x20
 
-module(...,package.seeall)
-
+-- module(...,package.seeall)
 require "sys"
-require "clib"
-require "utils"
+require"clib"
+require"utils"
 require "LogUtil"
 require "UartMgr"
 require "update"
-require "Config"
 require "MQTTManager"
-require "Task"
-require "Deliver"
-require "Lightup"
 require "UARTLightup"
 
 local TAG="Entry"
@@ -27,6 +22,7 @@ local retryIdentifyTimerId=nil
 local candidateRunTimerId=nil
 local timedTaskId = nil
 
+entry = {}
 local mqttStarted=false
 local TWINKLE_POS_1 = 1
 local TWINKLE_POS_2 = 2
@@ -104,7 +100,7 @@ function allInfoCallback( ids )
 
 end
 
-function retryIdentify()
+function entry.retryIdentify()
 	-- 超过了最大的重试次数
 	retryCount = retryCount + 1
 	if retryCount > MAX_RETRY_COUNT then
@@ -139,7 +135,7 @@ function retryIdentify()
 		end
 
 		if boardIdentified < RETRY_BOARD_COUNT  then
-			retryIdentify()
+			entry.retryIdentify()
 		end
 
 	end,60*1000)  
@@ -147,11 +143,11 @@ function retryIdentify()
 end
 
 
-function run()
+function entry.run()
 	startTimedTask()
 
 	-- 启动一个延时定时器, 获取板子id
-	LogUtil.d(TAG,"run.....111")
+	LogUtil.d(TAG,"entry.run.....111")
 	timerId = sys.timerStart(function()
 		LogUtil.d(TAG,"start to retrieve slaves")
 		if timerId and sys.timerIsActive(timerId) then
@@ -179,7 +175,7 @@ function run()
 		end
 
 		if  boardIdentified < RETRY_BOARD_COUNT then 
-			retryIdentify()
+			entry.retryIdentify()
 		end
 
 		if not mqttStarted then
@@ -188,7 +184,7 @@ function run()
 		end
 
 		LogUtil.d(TAG,"start twinkle task")
-		startTwinkleTask()
+		entry.startTwinkleTask()
 
 	end,Consts.TEST_MODE and 5*1000 or 120*1000)  
 end
@@ -198,7 +194,7 @@ end
 -- addrs 地址数组
 -- pos 扭蛋机位置，目前取值1，2
 -- time 闪灯次数，每次?ms
-function twinkle( addrs,pos,times )
+function entry.twinkle( addrs,pos,times )
 	-- 闪灯协议
 	local msgArray = {}
 
@@ -228,8 +224,8 @@ function twinkle( addrs,pos,times )
 		return
 	end
 
-	-- r = UARTLightup.encode(msgArray)
-	-- UartMgr.publishMessage(r)      
+	r = UARTLightup.encode(msgArray)
+	UartMgr.publishMessage(r)      
 	
 	-- 切换颜色
 	nextColor = nextColor + 1
@@ -248,7 +244,7 @@ end
 
 local twinkleTimerId = nil
 
-function startTwinkleTask( )
+function entry.startTwinkleTask( )
 	if twinkleTimerId and sys.timerIsActive(twinkleTimerId) then
 		LogUtil.d(TAG,"twinkle started")
 		return
@@ -271,7 +267,7 @@ function startTwinkleTask( )
 
 			-- LogUtil.d(TAG,TAG.." twinkle pos = "..nextTwinklePos)
 
-            twinkle( addrs,nextTwinklePos,Consts.TWINKLE_TIME )
+            entry.twinkle( addrs,nextTwinklePos,Consts.TWINKLE_TIME )
 
             --切换闪灯位置
             nextTwinklePos = nextTwinklePos + 1

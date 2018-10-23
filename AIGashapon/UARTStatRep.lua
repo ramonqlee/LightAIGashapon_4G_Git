@@ -3,10 +3,11 @@
 -- @copyright idreems.com
 -- @release 2017.12.29
 -- @tested 2018.2.3
-module(...,package.seeall)
 
 require "LogUtil"
-local MT=0x91
+UARTStatRep = {
+MT=0x91
+}
 
 local mCallback = nil
 local status=""
@@ -24,38 +25,38 @@ local DELIVER_STATE_INIT = 0
 local DELIVER_STATE_OK = 1
 local DELIVER_STATE_TIMEOUT = 2
 
-function  setCallback( callback )
+function  UARTStatRep.setCallback( callback )
 	mCallback = callback	
 end
 
-function getMyAddress( )
+function UARTStatRep.getMyAddress( )
 	return address
 end 
 
-function isLockOpen( group )
-	s1,_=getStates(group)
+function UARTStatRep.isLockOpen( group )
+	s1,_=UARTStatRep.getStates(group)
 	return LOCK_STATE_OPEN==s1
 end
 
-function isLockClose( group )
-	s1,_=getStates(group)
+function UARTStatRep.isLockClose( group )
+	s1,_=UARTStatRep.getStates(group)
 	return LOCK_STATE_CLOSE==s1
 end
 
-function isDeliverOK( group )
-	_,s2=getStates(group)
+function UARTStatRep.isDeliverOK( group )
+	_,s2=UARTStatRep.getStates(group)
 	return DELIVER_STATE_OK==s2
 end
 
-function isDeliverTimeout( group )
-	_,s2=getStates(group)
+function UARTStatRep.isDeliverTimeout( group )
+	_,s2=UARTStatRep.getStates(group)
 	return DELIVER_STATE_TIMEOUT==s2
 end
 
 
 --返回第几组,group start from 1
 -- 形如：01 02 00 00 00 00 
-function getStates(group)
+function UARTStatRep.getStates(group)
 	s1,s2=-1,-1
 	if not group or not status or #status<6 then
 		LogUtil.d(TAG,"illegal status")
@@ -78,11 +79,11 @@ function getStates(group)
 	 	s2 = string.byte(status,6)
 	end
 
-	-- LogUtil.d(TAG,"getStates group ="..group.." s1 = "..s1.." s2 = "..s2)
+	-- LogUtil.d(TAG,"UARTStatRep.getStates group ="..group.." s1 = "..s1.." s2 = "..s2)
 	return s1,s2
 end
 
-function handle(bins)
+function UARTStatRep.handle(bins)
 	local noMatch=-1
 	-- 回调
 	-- 返回协议数据，上报机器状态用
@@ -117,8 +118,8 @@ function handle(bins)
 		end
 
 		mt = string.byte(bins,messageTypePos)
-		if mt ~= MT then
-			-- LogUtil.d(TAG,"illegal MT,mt = "..mt.." my MT = "..MT)
+		if mt ~= UARTStatRep.MT then
+			-- LogUtil.d(TAG,"illegal MT,mt = "..mt.." my MT = "..UARTStatRep.MT)
 			return noMatch,startPos
 		end
 
@@ -142,7 +143,7 @@ function handle(bins)
 
 	-- LogUtil.d(TAG,"to chk ="..string.toHex(temp) .." chkPos ="..chkPos)
 
-	chk = UARTUtils.chksum(temp)
+	chk = UARTUtils.chk(temp)
 	chkInHex = string.format("%04X",chk)
 
 	if chkInHex ~= string.toHex(chkInBin) then

@@ -4,7 +4,6 @@
 -- @copyright idreems.com
 -- @release 2017.12.27
 -- @tested 2018.01.28
-module(...,package.seeall)
 
 require "LogUtil"
 if Consts.DEVICE_ENV then
@@ -17,8 +16,10 @@ require "UARTBoardInfo"
 require "UARTGetAllInfo"
 
 local TAG = "UartMgr"
-local devicePath=nil
-local toWriteMessages={}
+UartMgr={
+devicePath=nil,
+toWriteMessages={}
+}
 
 
 local protocalStack = {}--串口协议栈
@@ -97,8 +98,8 @@ function uart_write(s)
 	if not s or "string"~= type(s) or 0 == #s then
 		return
 	end
-	-- FIXME 临时注释掉，排查问题
-	-- uart.write(devicePath,s)
+
+	uart.write(UartMgr.devicePath,s)
 	LogUtil.d(TAG,"uart write = "..string.toHex(s))
 end
 
@@ -117,8 +118,8 @@ function  uart_read()
 	local MAX_CACHE_SIZE=256
 	while true do
 		-- 将协议数据进行缓存，然后逐步处理	
-		LogUtil.d(TAG,"uart start to read from uart_id ="..devicePath)
-		data = uart.read(devicePath,"*l")
+		LogUtil.d(TAG,"uart start to read from uart_id ="..UartMgr.devicePath)
+		data = uart.read(UartMgr.devicePath,"*l")
 		-- TODO 
 		if not data or #data == 0 then 
 			LogUtil.d(TAG,"empty data")
@@ -184,15 +185,15 @@ end
 
 
 -- 初始化串口
-function init( devicePath, baudRate)
-	if devicePath and "number" == type(devicePath) then
-		-- LogUtil.d(TAG,"inited devicePath ="..devicePath.." baudRate = "..baudRate)
+function UartMgr.init( devicePath, baudRate)
+	if UartMgr.devicePath and "number" == type(UartMgr.devicePath) then
+		-- LogUtil.d(TAG,"UartMgr.inited devicePath ="..devicePath.." baudRate = "..baudRate)
 		return
 	end
 
-	LogUtil.d(TAG,"init devicePath ="..devicePath.." baudRate = "..baudRate)
+	LogUtil.d(TAG,"UartMgr.init devicePath ="..devicePath.." baudRate = "..baudRate)
 	if not Consts.DEVICE_ENV then
-		--LogUtil.d(TAG,"not device,init and return")
+		--LogUtil.d(TAG,"not device,UartMgr.init and return")
 	end
 
 	if not devicePath or not baudRate then
@@ -202,29 +203,29 @@ function init( devicePath, baudRate)
 
  	--保持系统处于唤醒状态，此处只是为了测试需要，所以此模块没有地方调用pm.sleep("test")休眠，不会进入低功耗休眠状态
 	--在开发“要求功耗低”的项目时，一定要想办法保证pm.wake("test")后，在不需要串口时调用pm.sleep("test")
-	devicePath = devicePath
+	UartMgr.devicePath = devicePath
 	-- pm.wake("testUart")
 	--注册串口的数据接收函数，串口收到数据后，会以中断方式，调用read接口读取数据
-	uart.on(devicePath, "receive", uart_read)
+	uart.on(UartMgr.devicePath, "receive", uart_read)
 	--配置并且打开串口
-	uart.setup(devicePath,baudRate,8,uart.PAR_NONE,uart.STOP_1)
+	uart.setup(UartMgr.devicePath,baudRate,8,uart.PAR_NONE,uart.STOP_1)
 
-	loopMessage()
+	UartMgr.loopMessage()
 	-- 发送获取从板id的指令，初始化系统的一部分
-	LogUtil.d(TAG,"init done")
+	LogUtil.d(TAG,"UartMgr.init done")
 end 
 
 local uartMsgQueueLooping = false
 
-function publishMessage( msg )
-	if not toWriteMessages then
-		toWriteMessages = {}
+function UartMgr.publishMessage( msg )
+	if not UartMgr.toWriteMessages then
+		UartMgr.toWriteMessages = {}
 	end
 
-	table.insert(toWriteMessages,msg)
+	table.insert(UartMgr.toWriteMessages,msg)
 end
 
-function loopMessage()
+function UartMgr.loopMessage()
 	if uartMsgQueueLooping then
 		return
 	end
@@ -235,7 +236,7 @@ function loopMessage()
 		
 		while true do
 			-- send msg one by one
-			msg = table.remove(toWriteMessages)
+			msg = table.remove(UartMgr.toWriteMessages)
 			uart_write(msg)
 
 			sys.wait(Consts.WAIT_UART_INTERVAL)--两次写入消息之间停留一段时间
@@ -244,9 +245,9 @@ function loopMessage()
 	end)    
 end
 
-function close( devicePath )
+function UartMgr.close( devicePath )
 	if not Consts.DEVICE_ENV then
-		--LogUtil.d(TAG,"not device,close and return")
+		--LogUtil.d(TAG,"not device,UartMgr.close and return")
 	end
 
 	if not devicePath then
@@ -257,16 +258,16 @@ function close( devicePath )
 	-- uart.close(devicePath)
 end
 
-function initSlaves( callback ,retry)
+function UartMgr.initSlaves( callback ,retry)
 
 	if not retry then
 		ids = UARTAllInfoRep.getAllBoardIds(false)
 		if ids and #ids > 0 then
-			LogUtil.d(TAG,"initSlaves done,size = "..#ids)
+			LogUtil.d(TAG,"UartMgr.initSlaves done,size = "..#ids)
 			return
 		end 
 	end
-	LogUtil.d(TAG,"initSlaves")
+	LogUtil.d(TAG,"UartMgr.initSlaves")
 
 	r = UARTGetAllInfo.encode()--获取所有板子id
 	if callback then
@@ -282,13 +283,13 @@ function initSlaves( callback ,retry)
 			end
 
 			if addr or #addr>0 then
-				LogUtil.d(TAG,"initSlaves SlaveIDChain = "..addr)
+				LogUtil.d(TAG,"UartMgr.initSlaves SlaveIDChain = "..addr)
 				return
 			end
 		end)
 	end
 
-	publishMessage(r)
+	UartMgr.publishMessage(r)
 end
 
 

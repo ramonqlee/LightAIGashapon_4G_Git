@@ -30,7 +30,7 @@ function Lightup:name()
     return self.MY_TOPIC
 end
 
-function Lightup:isLightuping()
+function Lightup.isLightuping()
     return (os.time()-lastLightUpTime<Consts.TWINKLE_TIME_DELAY)
 end
 

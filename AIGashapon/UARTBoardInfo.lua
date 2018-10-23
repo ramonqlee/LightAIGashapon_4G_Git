@@ -3,23 +3,24 @@
 -- @copyright idreems.com
 -- @release 2017.12.29
 -- @tested 2018.2.3
-module(...,package.seeall)
 
 require "LogUtil"
 
 local TAG = "UARTBoardInfo"
 
-local MT = 0x90
+UARTBoardInfo = {
+MT = 0x90
+}
 
 local masterBoardId
 local myCallback = nil
 
-function  setCallback( callback )
+function  UARTBoardInfo.setCallback( callback )
 	myCallback = callback
 end
 
 --返回最后匹配的一个字节位置
-function handle(bins)
+function UARTBoardInfo.handle(bins)
 	local noMatch=-1
 	-- 回调
 	-- 返回协议数据，上报机器状态用
@@ -54,8 +55,8 @@ function handle(bins)
 		end
 
 		mt = string.byte(bins,messageTypePos)
-		if mt ~= MT then
-			-- --LogUtil.d(TAG,"illegal MT,mt = "..mt.." my MT = "..MT)
+		if mt ~= UARTBoardInfo.MT then
+			-- --LogUtil.d(TAG,"illegal MT,mt = "..mt.." my MT = "..UARTBoardInfo.MT)
 			return noMatch,startPos
 		end
 
@@ -78,7 +79,7 @@ function handle(bins)
 	chkInBin = string.sub(bins,chkPos,chkPos+1)
 	temp = string.sub(bins,startPos+2,chkPos-1)
 
-	chk = UARTUtils.chksum(temp)
+	chk = UARTUtils.chk(temp)
 	chkInHex = string.format("%04X",chk)
 	-- --LogUtil.d(TAG,"to chk ="..string.toHex(temp) .." chkPos ="..chkPos.." chk="..chkInHex)
 

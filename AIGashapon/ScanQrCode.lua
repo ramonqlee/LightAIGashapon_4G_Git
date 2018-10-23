@@ -23,11 +23,11 @@ ScanQrCode = CBase:new{
 }
 
 
-function ScanQrCode:lastPurchaseTime()
+function ScanQrCode.lastPurchaseTime()
     return lastPurchaseTime
 end
 
-function ScanQrCode:lastLocation()
+function ScanQrCode.lastLocation()
     return lastLocation
 end
 

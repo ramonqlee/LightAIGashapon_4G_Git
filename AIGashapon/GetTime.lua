@@ -40,7 +40,7 @@ function GetTime:handle( object )
 end
 
 function GetTime:sendGetTime(lastReboot)
-    local topic = string.format("%s/%s",LogUtil.getUserName(),self:name())
+    local topic = string.format("%s/%s",Consts.getUserName(),self:name())
 
     local msg = {}
     msg[CloudConsts.TIMESTAMP] = os.time()

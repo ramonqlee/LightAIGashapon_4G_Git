@@ -2,7 +2,6 @@
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2018.2.8
-module(...,package.seeall)
 
 require "LogUtil"
 require "Config"
@@ -14,13 +13,14 @@ local SN_SET_PERSISTENCE_KEY="msg_sn_set"
 
 local TAG = "MSGCACHE"
 
-function clear()
+msgcache={}
+function msgcache.clear()
     Config.saveValue(SN_SET_PERSISTENCE_KEY,"")
     LogUtil.d(TAG,"clear msgcache")
 end
 
 
-function remove(sn)
+function msgcache.remove(sn)
     if not sn or "string"~=type(sn) then
         return
     end
@@ -54,7 +54,7 @@ function remove(sn)
 end
 
 --添加到msg缓存,如果不存在，则返回true；如果已经存在，则返回false
-function addMsg2Cache(msg)
+function msgcache.addMsg2Cache(msg)
     local r = false
     --解析msg中的sn
     if not msg then

@@ -3,7 +3,6 @@
 -- @copyright idreems.com
 -- @release 2017.12.23
 -- tested 2017.12.27
-module(...,package.seeall)
 
 local jsonex=require "jsonex"
 require "LogUtil"
@@ -12,12 +11,17 @@ require "Consts"
 
 
 local TAG = "NodeIdConfig"
-local CONFIG_FILE = Consts.USER_DIR.."/nodeid_config.dat"
+NodeIdConfig = {}
 
+if Consts.DEVICE_ENV then
+	NodeIdConfig.CONFIG_FILE = Consts.USER_DIR.."/nodeid_config.dat"
+else
+	NodeIdConfig.CONFIG_FILE = "nodeid_config.dat"
+end
 
-function getValue(key)
+function NodeIdConfig.getValue(key)
 	
-	local content = FileUtil.readfile(CONFIG_FILE)
+	local content = FileUtil.readfile(NodeIdConfig.CONFIG_FILE)
 
 	if content then 
 		content= jsonex.decode(content)
@@ -33,12 +37,12 @@ function getValue(key)
 end
 
 
-function saveValue(key,value)
+function NodeIdConfig.saveValue(key,value)
 	if not key then
 		return nil
 	end
 
-	local content = FileUtil.readfile(CONFIG_FILE)
+	local content = FileUtil.readfile(NodeIdConfig.CONFIG_FILE)
 
 	if content and #content >0 then
 		content = jsonex.decode(content)
@@ -60,7 +64,7 @@ function saveValue(key,value)
 
 	-- LogUtil.d(TAG,TAG.." config saveValue = "..content)
 
-	FileUtil.writevalw(CONFIG_FILE,content)
+	FileUtil.writevalw(NodeIdConfig.CONFIG_FILE,content)
 end  
 
  

@@ -4,7 +4,6 @@
 -- @copyright idreems.com
 -- @release 2017.12.23
 -- tested 2017.12.27
-module(...,package.seeall)
 
 require "Consts"
 require "LogUtil"
@@ -17,7 +16,8 @@ local jsonex = require "jsonex"
 
 local TAG = "MQTTReplyMgr"
 local handlerTable={}
-
+MQTTReplyMgr ={
+}
 
 local function getTableLen( tab )
     local count = 0  
@@ -34,7 +34,7 @@ local function getTableLen( tab )
 end
 
 --注册处理器，如果已经注册过，直接覆盖
-function registerHandler( handler )
+function MQTTReplyMgr.registerHandler( handler )
 	if not handler then
 		return
 	end
@@ -46,18 +46,18 @@ function registerHandler( handler )
 	handlerTable[handler:name()]=handler
 end
 
-function makesureInit()
+function MQTTReplyMgr.makesureInit()
 	if getTableLen(handlerTable)>0 then
 		return
 	end
 
-	registerHandler(RepMachVars:new(nil))
-	registerHandler(RepConfig:new(nil))
-	registerHandler(RepDeliver:new(nil))
+	MQTTReplyMgr.registerHandler(RepMachVars:new(nil))
+	MQTTReplyMgr.registerHandler(RepConfig:new(nil))
+	MQTTReplyMgr.registerHandler(RepDeliver:new(nil))
 end
 
-function replyWith(topic,payload)
-	makesureInit()
+function MQTTReplyMgr.replyWith(topic,payload)
+	MQTTReplyMgr.makesureInit()
 	if nil == handlerTable then
 		return
 	end

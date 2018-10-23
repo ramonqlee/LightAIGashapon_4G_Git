@@ -4,13 +4,15 @@
 -- @copyright idreems.com
 -- @release 2017.12.27
 -- @tested 2018.
-module(...,package.seeall)
 
 require "Consts"
 require "LogUtil"
 require "UartMgr"
 require "UARTSlave"
-require "sys"
+
+if Consts.DEVICE_ENV then
+	require "sys"
+end
 
 local NONE_TASK = "NONE"
 local BODY_KEY = "body"
@@ -22,16 +24,17 @@ REBOOT_TYPE = "REBOOT"
 
 local TAG = "Task"
 local isRunning = false
+Task={}
 
-function getTask()
+function Task.getTask()
 	if isRunning then
 		return
 	end
 
 	sys.taskInit(function()
 		-- 去服务器端请求任务
-		local nodeId = LogUtil.getUserName(false)
-		local password = LogUtil.getPassword(false)
+		local nodeId = Consts.getUserName(false)
+		local password = Consts.getPassword(false)
 		if not nodeId or 0 == #nodeId or not password or 0 == #password then
 			LogUtil.d(TAG,"unregistered node")
 			return

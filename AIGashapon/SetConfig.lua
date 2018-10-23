@@ -99,8 +99,8 @@ function SetConfig:handleContent( content )
  	-- 恢复初始状态
  	if STATE_INIT==state then
     	LogUtil.d(TAG,"state ="..state.." clear nodeId and password")
-        LogUtil.clearUserName()
-        LogUtil.clearPassword()
+        Consts.clearUserName()
+        Consts.clearPassword()
         
     	MQTTManager.disconnect()
     	return

@@ -3,7 +3,7 @@
 --VERSION：ascii string类型，如果使用Luat物联云平台固件升级的功能，必须按照"X.X.X"定义，X表示1位数字；否则可随便定义
 PROJECT = "AIGashapon"
 
-VERSION = "1.1.150"
+VERSION = "1.1.147"
 
 --[[
 使用Luat物联云平台固件升级的功能，必须按照以下步骤操作：
@@ -21,6 +21,11 @@ require "sys"
 require "net"
 require "ntp"
 require "console"
+-- require "errDump"
+
+require "Consts"
+require "Config"
+require "Task"
 
 
 LOG_LEVEL=log.LOGLEVEL_TRACE
@@ -29,8 +34,10 @@ LOG_LEVEL=log.LOGLEVEL_TRACE
 --每1分钟查询一次基站信息
 net.startQueryAll(60000, 60000)
 
+-- errDump.request("udp://ota.airm2m.com:9072")
 ntp.timeSync()
 
+console.setup(Consts.CONSOLE_UART_ID, 115200)--默认为1，和现有app冲突，修改为2
 require "entry"
 entry.run()
 -- require "testUart"
