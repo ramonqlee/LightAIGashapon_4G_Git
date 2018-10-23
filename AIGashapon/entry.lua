@@ -8,12 +8,16 @@
 
 -- module(...,package.seeall)
 require "sys"
-require"clib"
-require"utils"
+require "clib"
+require "utils"
+require "Consts"
 require "LogUtil"
 require "UartMgr"
 require "update"
+require "Config"
+require "Task"
 require "MQTTManager"
+require "Lightup"
 require "UARTLightup"
 
 local TAG="Entry"
@@ -285,7 +289,4 @@ function entry.startTwinkleTask( )
 
         end,Consts.TWINKLE_INTERVAL)
 end
-
-
-
 

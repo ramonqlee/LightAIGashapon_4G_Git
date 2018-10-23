@@ -141,8 +141,8 @@ function MQTTManager.getNodeIdAndPasswordFromServer()
 
             if nodeId and password then
                 LogUtil.d(TAG,"http config nodeId="..nodeId)
-                Consts.saveUserName(nodeId)
-                Consts.savePassword(password)
+                LogUtil.saveUserName(nodeId)
+                LogUtil.savePassword(password)
             end
         end
         
@@ -151,22 +151,22 @@ end
 
 function MQTTManager.checkMQTTUser()
     LogUtil.d(TAG,".............................checkMQTTUser ver=".._G.VERSION)
-    username = Consts.getUserName(false)
-    password = Consts.getPassword(false)
+    username = LogUtil.getUserName(false)
+    password = LogUtil.getPassword(false)
     while not username or 0==#username or not password or 0==#password do
         mainLoopTime =os.time()
          -- mywd.feed()--获取配置中，别忘了喂狗，否则会重启
         MQTTManager.getNodeIdAndPasswordFromServer()
         
         sys.wait(RETRY_TIME)
-        username = Consts.getUserName(false)
-        password = Consts.getPassword(false)
+        username = LogUtil.getUserName(false)
+        password = LogUtil.getPassword(false)
 
          -- mywd.feed()--获取配置中，别忘了喂狗，否则会重启
         if username and password then
             LogUtil.d(TAG,".............................startmqtt retry to username="..username.." and ver=".._G.VERSION)
-            Consts.saveUserName(username)
-            Consts.savePassword(password)
+            LogUtil.saveUserName(username)
+            LogUtil.savePassword(password)
             return username,password
         end
     end
@@ -217,8 +217,8 @@ function MQTTManager.connectMQTT()
 
         mqttFailCount = mqttFailCount+1
         if mqttFailCount >= MAX_MQTT_FAIL_COUNT then
-            Consts.clearUserName()
-            Consts.clearPassword()
+            LogUtil.clearUserName()
+            LogUtil.clearPassword()
 
             -- 网络ok时，重启板子
             if link.isReady() then

@@ -33,7 +33,7 @@ function CRBase:new (o)
 end
 
 function CRBase:getTopic(  )
-	local nodeId = Consts.getUserName()
+	local nodeId = LogUtil.getUserName()
 	if not nodeId or  0 == #nodeId then
 		return ""
 	end
