@@ -78,7 +78,7 @@ function handle(bins)
 	chkInBin = string.sub(bins,chkPos,chkPos+1)
 	temp = string.sub(bins,startPos+2,chkPos-1)
 
-	chk = UARTUtils.chk(temp)
+	chk = UARTUtils.chksum(temp)
 	chkInHex = string.format("%04X",chk)
 	-- --LogUtil.d(TAG,"to chk ="..string.toHex(temp) .." chkPos ="..chkPos.." chk="..chkInHex)
 

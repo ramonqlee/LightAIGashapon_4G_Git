@@ -14,7 +14,7 @@ SEND = 0xC7
 RCV = 0xC8
 
 
-function chk( msg )
+function chksum( msg )
 	-- unsigned short i, j; unsigned short crc = 0; unsigned short current;
 	-- for (i = 0; i < len; i++)
 	-- {
@@ -82,7 +82,7 @@ function  encode( sf,addr,mt,data )
 	r = sf..len..addr..mt..data
 	-- --LogUtil.d(TAG,"encode to chk = "..string.toHex(r))
 
-	chk = chk(r)
+	chk = chksum(r)
 
 	-- --LogUtil.d(TAG,"encode chk = "..chk)
 

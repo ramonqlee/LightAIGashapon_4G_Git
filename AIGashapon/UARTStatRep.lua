@@ -142,7 +142,7 @@ function handle(bins)
 
 	-- LogUtil.d(TAG,"to chk ="..string.toHex(temp) .." chkPos ="..chkPos)
 
-	chk = UARTUtils.chk(temp)
+	chk = UARTUtils.chksum(temp)
 	chkInHex = string.format("%04X",chk)
 
 	if chkInHex ~= string.toHex(chkInBin) then

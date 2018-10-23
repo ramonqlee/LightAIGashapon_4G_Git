@@ -5,11 +5,12 @@
 -- tested 2017.12.27
 module(..., package.seeall)
 
-local jsonex=require "jsonex"
+require "Consts"
 require "LogUtil"
 require "FileUtil"
-require "Consts"
 
+
+local jsonex=require "jsonex"
 local TAG = "Config"
 local CONFIG_FILE = Consts.USER_DIR.."/niuqu_config.dat"
 
