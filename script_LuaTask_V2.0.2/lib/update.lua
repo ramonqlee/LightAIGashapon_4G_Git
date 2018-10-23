@@ -12,9 +12,12 @@ require "common"
 
 module(..., package.seeall)
 
+-- 升级包保存路径
+local UPD_FILE_PATH = "/luazip/update.bin"
+
+
 local sUpdating,sCbFnc,sUrl,sPeriod,SRedir,sLocation
-local sProcessedLen = 0
---local sBraekTest = 0
+local sDownloading
 
 local function httpDownloadCbFnc(result,statusCode,head)
     log.info("update.httpDownloadCbFnc",result,statusCode,head,sCbFnc,sPeriod)
@@ -47,22 +50,20 @@ function clientTask()
     --不要省略此处代码，否则下文中的misc.getImei有可能获取不到
     while not socket.isReady() do sys.waitUntil("IP_READY_IND") end
     while true do
+    
         local retryCnt = 0
-        sProcessedLen = 0
+        sDownloading = true
         while true do
-            --sBraekTest = sBraekTest+30
-            log.info("update.http.request",sLocation,sUrl,sProcessedLen,sBraekTest)
+            os.remove(UPD_FILE_PATH)
             http.request("GET",
                      sLocation or ((sUrl or "iot.openluat.com/api/site/firmware_upgrade").."?project_key=".._G.PRODUCT_KEY
                             .."&imei="..misc.getImei().."&device_key="..misc.getSn()
                             .."&firmware_name=".._G.PROJECT.."_"..rtos.get_version().."&version=".._G.VERSION..(sRedir and "&need_oss_url=1" or "")),
-                     nil,{["Range"]="bytes="..sProcessedLen.."-"},nil,60000,httpDownloadCbFnc,processOta)
+                     nil,nil,nil,60000,httpDownloadCbFnc,UPD_FILE_PATH)
                      
             local _,result,statusCode,head = sys.waitUntil("UPDATE_DOWNLOAD")
-            log.info("update.waitUntil UPDATE_DOWNLOAD",result,statusCode)
             if result then
-                rtos.fota_end()
-                if statusCode=="200" or statusCode=="206" then                    
+                if statusCode=="200" then
                     if sCbFnc then
                         sCbFnc(true)
                     else
@@ -73,20 +74,28 @@ function clientTask()
                     print("update.timerStart",head["Location"])
                     return sys.timerStart(request,2000)
                 else
+                    local fileSize = io.fileSize(UPD_FILE_PATH)
+                    if fileSize>0 and fileSize<=200 then
+                        local body = io.readFile(UPD_FILE_PATH)
+                        local msg = body:match("\"msg\":%s*\"(.-)\"")
+                        if msg and msg:len()<=200 then
+                            log.warn("update.error",common.ucs2beToUtf8((msg:gsub("\\u","")):fromHex()))
+                        end
+                    end                    
+                    os.remove(UPD_FILE_PATH)
                     if sCbFnc then sCbFnc(false) end
                 end
                 break
             else
+                os.remove(UPD_FILE_PATH)
                 retryCnt = retryCnt+1
-                if retryCnt==30 then
-                    rtos.fota_end()
+                if retryCnt==3 then
                     if sCbFnc then sCbFnc(false) end
                     break
                 end
             end
         end
-        
-        sProcessedLen = 0
+        sDownloading = false
         
         if sPeriod then
             sys.wait(sPeriod)
@@ -121,13 +130,13 @@ end
 -- update.request(cbFnc,nil,4*3600*1000)
 -- update.request(cbFnc,nil,4*3600*1000,true)
 function request(cbFnc,url,period,redir)
-    if rtos.fota_start()~=0 then 
-        log.error("update.request","fota_start fail")
-        return
-    end
     sCbFnc,sUrl,sPeriod,sRedir = cbFnc or sCbFnc,url or sUrl,period or sPeriod,sRedir or redir
-    log.info("update.request",sCbFnc,sUrl,sPeriod,sRedir)
+    print("update.request",sCbFnc,sUrl,sPeriod,sRedir)
     if not sUpdating then        
         sys.taskInit(clientTask)
     end
+end
+
+function isDownloading()
+    return sDownloading
 end
