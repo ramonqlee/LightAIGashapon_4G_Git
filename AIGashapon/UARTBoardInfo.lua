@@ -3,6 +3,7 @@
 -- @copyright idreems.com
 -- @release 2017.12.29
 -- @tested 2018.2.3
+module(...,package.seeall)
 
 require "LogUtil"
 
