@@ -11,7 +11,7 @@ require "FileUtil"
 require "Consts"
 
 local TAG = "Config"
-local Consts.USER_DIR.."/niuqu_config.dat"
+local CONFIG_FILE = Consts.USER_DIR.."/niuqu_config.dat"
 
 function getValue(key)
 	-- --LogUtil.d(TAG,"config file name ="..CONFIG_FILE)
