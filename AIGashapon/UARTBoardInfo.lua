@@ -8,19 +8,17 @@ require "LogUtil"
 
 local TAG = "UARTBoardInfo"
 
-UARTBoardInfo = {
-MT = 0x90
-}
+local MT = 0x90
 
 local masterBoardId
 local myCallback = nil
 
-function  UARTBoardInfo.setCallback( callback )
+function  setCallback( callback )
 	myCallback = callback
 end
 
 --返回最后匹配的一个字节位置
-function UARTBoardInfo.handle(bins)
+function handle(bins)
 	local noMatch=-1
 	-- 回调
 	-- 返回协议数据，上报机器状态用
@@ -55,8 +53,8 @@ function UARTBoardInfo.handle(bins)
 		end
 
 		mt = string.byte(bins,messageTypePos)
-		if mt ~= UARTBoardInfo.MT then
-			-- --LogUtil.d(TAG,"illegal MT,mt = "..mt.." my MT = "..UARTBoardInfo.MT)
+		if mt ~= MT then
+			-- --LogUtil.d(TAG,"illegal MT,mt = "..mt.." my MT = "..MT)
 			return noMatch,startPos
 		end
 

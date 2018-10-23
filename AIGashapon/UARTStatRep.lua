@@ -3,11 +3,10 @@
 -- @copyright idreems.com
 -- @release 2017.12.29
 -- @tested 2018.2.3
+module(...,package.seeall)
 
 require "LogUtil"
-UARTStatRep = {
-MT=0x91
-}
+local MT=0x91
 
 local mCallback = nil
 local status=""
@@ -25,38 +24,38 @@ local DELIVER_STATE_INIT = 0
 local DELIVER_STATE_OK = 1
 local DELIVER_STATE_TIMEOUT = 2
 
-function  UARTStatRep.setCallback( callback )
+function  setCallback( callback )
 	mCallback = callback	
 end
 
-function UARTStatRep.getMyAddress( )
+function getMyAddress( )
 	return address
 end 
 
-function UARTStatRep.isLockOpen( group )
-	s1,_=UARTStatRep.getStates(group)
+function isLockOpen( group )
+	s1,_=getStates(group)
 	return LOCK_STATE_OPEN==s1
 end
 
-function UARTStatRep.isLockClose( group )
-	s1,_=UARTStatRep.getStates(group)
+function isLockClose( group )
+	s1,_=getStates(group)
 	return LOCK_STATE_CLOSE==s1
 end
 
-function UARTStatRep.isDeliverOK( group )
-	_,s2=UARTStatRep.getStates(group)
+function isDeliverOK( group )
+	_,s2=getStates(group)
 	return DELIVER_STATE_OK==s2
 end
 
-function UARTStatRep.isDeliverTimeout( group )
-	_,s2=UARTStatRep.getStates(group)
+function isDeliverTimeout( group )
+	_,s2=getStates(group)
 	return DELIVER_STATE_TIMEOUT==s2
 end
 
 
 --返回第几组,group start from 1
 -- 形如：01 02 00 00 00 00 
-function UARTStatRep.getStates(group)
+function getStates(group)
 	s1,s2=-1,-1
 	if not group or not status or #status<6 then
 		LogUtil.d(TAG,"illegal status")
@@ -79,11 +78,11 @@ function UARTStatRep.getStates(group)
 	 	s2 = string.byte(status,6)
 	end
 
-	-- LogUtil.d(TAG,"UARTStatRep.getStates group ="..group.." s1 = "..s1.." s2 = "..s2)
+	-- LogUtil.d(TAG,"getStates group ="..group.." s1 = "..s1.." s2 = "..s2)
 	return s1,s2
 end
 
-function UARTStatRep.handle(bins)
+function handle(bins)
 	local noMatch=-1
 	-- 回调
 	-- 返回协议数据，上报机器状态用
@@ -118,8 +117,8 @@ function UARTStatRep.handle(bins)
 		end
 
 		mt = string.byte(bins,messageTypePos)
-		if mt ~= UARTStatRep.MT then
-			-- LogUtil.d(TAG,"illegal MT,mt = "..mt.." my MT = "..UARTStatRep.MT)
+		if mt ~= MT then
+			-- LogUtil.d(TAG,"illegal MT,mt = "..mt.." my MT = "..MT)
 			return noMatch,startPos
 		end
 

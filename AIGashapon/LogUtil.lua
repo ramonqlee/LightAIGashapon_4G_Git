@@ -3,11 +3,11 @@
 -- @copyright idreems.com
 -- @release 2017.12.24
 -- tested 2017.12.27
+module(...,package.seeall)
 
 require "Consts"
-LogUtil={}
 
-function LogUtil.d(tag,log) 
+function d(tag,log) 
 	if not Consts.LOG_ENABLED then
 		return
 	end
@@ -23,7 +23,7 @@ function LogUtil.d(tag,log)
 	print("<"..tag..">\t"..log)
 end
 
-function LogUtil.StringSplit(str,split)
+function StringSplit(str,split)
     local lcSubStrTab = {}
     while true do
         local lcPos = string.find(str,split)
@@ -38,7 +38,7 @@ function LogUtil.StringSplit(str,split)
     return lcSubStrTab
 end
 
-function LogUtil.getTableLen( tab )
+function getTableLen( tab )
     local count = 0  
 
     if not tab then

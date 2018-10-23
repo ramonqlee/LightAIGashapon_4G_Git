@@ -25,9 +25,9 @@ end
 function CBase:handle( obj )
 
   if Consts.LOG_ENABLED then
-    -- collectgarbage("collect")
-    -- c = collectgarbage("count")
-    --LogUtil.d("Mem","CBase:handle memory count ="..c)
+    collectgarbage("collect")
+    c = collectgarbage("count")
+    LogUtil.d("Mem","CBase:handle memory count ="..c)
   end
 
   -- --LogUtil.d(TAG,TAG.." handle now")

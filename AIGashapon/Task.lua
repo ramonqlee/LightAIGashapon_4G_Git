@@ -4,15 +4,13 @@
 -- @copyright idreems.com
 -- @release 2017.12.27
 -- @tested 2018.
+module(...,package.seeall)
 
 require "Consts"
 require "LogUtil"
 require "UartMgr"
 require "UARTSlave"
-
-if Consts.DEVICE_ENV then
-	require "sys"
-end
+require "sys"
 
 local NONE_TASK = "NONE"
 local BODY_KEY = "body"
@@ -24,9 +22,8 @@ REBOOT_TYPE = "REBOOT"
 
 local TAG = "Task"
 local isRunning = false
-Task={}
 
-function Task.getTask()
+function getTask()
 	if isRunning then
 		return
 	end
