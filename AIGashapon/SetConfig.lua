@@ -13,6 +13,7 @@ require "LogUtil"
 require "MQTTReplyMgr"
 require "RepConfig"
 require "UartMgr"
+require "MyUtils"
 require "UARTShutDown"
 
 local TAG = "SetConfig"
@@ -99,8 +100,8 @@ function SetConfig:handleContent( content )
  	-- 恢复初始状态
  	if STATE_INIT==state then
     	LogUtil.d(TAG,"state ="..state.." clear nodeId and password")
-        LogUtil.clearUserName()
-        LogUtil.clearPassword()
+        MyUtils.clearUserName()
+        MyUtils.clearPassword()
         
     	MQTTManager.disconnect()
     	return
@@ -128,10 +129,10 @@ function SetConfig:startRebootSchedule()
         local d =  os.date("%d")
 
         local SPLIT_LEN = 2
-        local rebootTab = LogUtil.StringSplit(reboot_schedule)
-        local shutdownTab = LogUtil.StringSplit(haltTime)
+        local rebootTab = MyUtils.StringSplit(reboot_schedule)
+        local shutdownTab = MyUtils.StringSplit(haltTime)
 
-        if LogUtil.getTableLen(rebootTab) ~= SPLIT_LEN or LogUtil.getTableLen(shutdownTab) ~= SPLIT_LEN then
+        if MyUtils.getTableLen(rebootTab) ~= SPLIT_LEN or MyUtils.getTableLen(shutdownTab) ~= SPLIT_LEN then
             return
         end
 

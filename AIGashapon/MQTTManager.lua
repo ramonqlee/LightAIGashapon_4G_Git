@@ -26,6 +26,7 @@ require "Deliver"
 require "GetTime"
 require "RepTime"
 require "SetConfig"
+require "MyUtils"
 
 local jsonex = require "jsonex"
 
@@ -141,8 +142,8 @@ function MQTTManager.getNodeIdAndPasswordFromServer()
 
             if nodeId and password then
                 LogUtil.d(TAG,"http config nodeId="..nodeId)
-                LogUtil.saveUserName(nodeId)
-                LogUtil.savePassword(password)
+                MyUtils.saveUserName(nodeId)
+                MyUtils.savePassword(password)
             end
         end
         
@@ -151,22 +152,22 @@ end
 
 function MQTTManager.checkMQTTUser()
     LogUtil.d(TAG,".............................checkMQTTUser ver=".._G.VERSION)
-    username = LogUtil.getUserName(false)
-    password = LogUtil.getPassword(false)
+    username = MyUtils.getUserName(false)
+    password = MyUtils.getPassword(false)
     while not username or 0==#username or not password or 0==#password do
         mainLoopTime =os.time()
          -- mywd.feed()--获取配置中，别忘了喂狗，否则会重启
         MQTTManager.getNodeIdAndPasswordFromServer()
         
         sys.wait(RETRY_TIME)
-        username = LogUtil.getUserName(false)
-        password = LogUtil.getPassword(false)
+        username = MyUtils.getUserName(false)
+        password = MyUtils.getPassword(false)
 
          -- mywd.feed()--获取配置中，别忘了喂狗，否则会重启
         if username and password then
             LogUtil.d(TAG,".............................startmqtt retry to username="..username.." and ver=".._G.VERSION)
-            LogUtil.saveUserName(username)
-            LogUtil.savePassword(password)
+            MyUtils.saveUserName(username)
+            MyUtils.savePassword(password)
             return username,password
         end
     end
@@ -217,8 +218,8 @@ function MQTTManager.connectMQTT()
 
         mqttFailCount = mqttFailCount+1
         if mqttFailCount >= MAX_MQTT_FAIL_COUNT then
-            LogUtil.clearUserName()
-            LogUtil.clearPassword()
+            MyUtils.clearUserName()
+            MyUtils.clearPassword()
 
             -- 网络ok时，重启板子
             if link.isReady() then

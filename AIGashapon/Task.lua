@@ -33,8 +33,8 @@ function Task.getTask()
 
 	sys.taskInit(function()
 		-- 去服务器端请求任务
-		local nodeId = LogUtil.getUserName(false)
-		local password = LogUtil.getPassword(false)
+		local nodeId = MyUtils.getUserName(false)
+		local password = MyUtils.getPassword(false)
 		if not nodeId or 0 == #nodeId or not password or 0 == #password then
 			LogUtil.d(TAG,"unregistered node")
 			return

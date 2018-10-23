@@ -25,8 +25,8 @@ end
 function CBase:handle( obj )
 
   if Consts.LOG_ENABLED then
-    -- collectgarbage("collect")
-    -- c = collectgarbage("count")
+    collectgarbage("collect")
+    c = collectgarbage("count")
     --LogUtil.d("Mem","CBase:handle memory count ="..c)
   end
 
@@ -49,7 +49,7 @@ function CBase:handle( obj )
     return r
   end
   
-  payloadJson = self:match(string.format("%s/%s",LogUtil.getUserName(),self:name()),tableObj)
+  payloadJson = self:match(string.format("%s/%s",MyUtils.getUserName(),self:name()),tableObj)
 
   if not payloadJson then
     --LogUtil.d(TAG,TAG.." handle empty payload,return")
