@@ -14,6 +14,54 @@ SEND = 0xC7
 RCV = 0xC8
 
 
+function chk( msg )
+	-- unsigned short i, j; unsigned short crc = 0; unsigned short current;
+	-- for (i = 0; i < len; i++)
+	-- {
+	-- current = msg[i] << 8;
+	-- for (j = 0; j < 8; j++)
+	-- {
+	-- 	if ((short)(crc ^ current) < 0)
+	-- 		crc = (crc << 1) ^ 0x1221;
+	-- 	else
+	-- 		crc <<= 1;
+	-- current <<= 1;
+	-- } 
+	-- }
+	-- return crc;
+
+	local crc = 0
+	if msg == nil or type(msg) ~= "string" then 
+		return bit.band(crc,0xffff)--确保是short类型的数据
+	end
+
+	-- --LogUtil.d(TAG,"checking= "..string.toHex(msg))
+	for i=1,string.len(msg) do
+		v = string.byte(msg,i)
+		-- --LogUtil.d(TAG,"chk v= "..v.." for i = "..i)
+
+		current = bit.lshift(v,8)
+		-- --LogUtil.d(TAG,"chk current= "..current)
+
+		for j=0,7 do
+			current = bit.band(current,0xffff)--确保是short类型的数据
+			crc = bit.band(crc,0xffff)--确保是short类型的数据
+
+			t=bit.bxor(crc,current)
+			if(bit.isset(t,15)) then
+				crc=bit.bxor(bit.lshift(crc,1),0x1221)
+			else
+				crc=bit.lshift(crc,1)
+			end
+
+			-- --LogUtil.d(TAG,"chk crc= "..crc.." for j = "..j)
+			current=bit.lshift(current,1)
+			-- --LogUtil.d(TAG,"chk current= "..current)
+		end
+	end
+	return bit.band(crc,0xffff)--确保是short类型的数据
+end  
+
 function  encode( sf,addr,mt,data )
 	if not sf or not addr or not mt then
 		return
@@ -64,52 +112,5 @@ function binstohexs(bins,s)
 	hexs = string.upper(hexs)
 	return hexs
 end
-
-function chk( msg )
-	-- unsigned short i, j; unsigned short crc = 0; unsigned short current;
-	-- for (i = 0; i < len; i++)
-	-- {
-	-- current = msg[i] << 8;
-	-- for (j = 0; j < 8; j++)
-	-- {
-	-- 	if ((short)(crc ^ current) < 0)
-	-- 		crc = (crc << 1) ^ 0x1221;
-	-- 	else
-	-- 		crc <<= 1;
-	-- current <<= 1;
-	-- } 
-	-- }
-	-- return crc;
-
-	local crc = 0
-	if msg == nil or type(msg) ~= "string" then 
-		return bit.band(crc,0xffff)--确保是short类型的数据
-	end
-
-	-- --LogUtil.d(TAG,"checking= "..string.toHex(msg))
-	for i=1,string.len(msg) do
-		v = string.byte(msg,i)
-		-- --LogUtil.d(TAG,"chk v= "..v.." for i = "..i)
-
-		current = bit.lshift(v,8)
-		-- --LogUtil.d(TAG,"chk current= "..current)
-
-		for j=0,7 do
-			current = bit.band(current,0xffff)--确保是short类型的数据
-			crc = bit.band(crc,0xffff)--确保是short类型的数据
-
-			t=bit.bxor(crc,current)
-			if(bit.isset(t,15)) then
-				crc=bit.bxor(bit.lshift(crc,1),0x1221)
-			else
-				crc=bit.lshift(crc,1)
-			end
-
-			-- --LogUtil.d(TAG,"chk crc= "..crc.." for j = "..j)
-			current=bit.lshift(current,1)
-			-- --LogUtil.d(TAG,"chk current= "..current)
-		end
-	end
-	return bit.band(crc,0xffff)--确保是short类型的数据
-end   
+ 
 

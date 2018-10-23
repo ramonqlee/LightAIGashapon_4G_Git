@@ -77,7 +77,7 @@ local function getTableLen( tab )
     return count
 end
 
-function Deliver.isDelivering()
+function Deliver:isDelivering()
     if  getTableLen(gBusyMap)>0 then
         return true
     end
