@@ -9,12 +9,16 @@
 module(...,package.seeall)
 
 require "sys"
-require"clib"
-require"utils"
+require "clib"
+require "utils"
 require "LogUtil"
 require "UartMgr"
 require "update"
+require "Config"
 require "MQTTManager"
+require "Task"
+require "Deliver"
+require "Lightup"
 require "UARTLightup"
 
 local TAG="Entry"
@@ -224,8 +228,8 @@ function twinkle( addrs,pos,times )
 		return
 	end
 
-	r = UARTLightup.encode(msgArray)
-	UartMgr.publishMessage(r)      
+	-- r = UARTLightup.encode(msgArray)
+	-- UartMgr.publishMessage(r)      
 	
 	-- 切换颜色
 	nextColor = nextColor + 1
