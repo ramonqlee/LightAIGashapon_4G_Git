@@ -20,7 +20,6 @@ require "log"
 require "sys"
 require "net"
 require "ntp"
-require "Consts"
 
 
 LOG_LEVEL=log.LOGLEVEL_TRACE

@@ -19,12 +19,12 @@ require "UARTShutDown"
 local TAG = "SetConfig"
 
 local STATE_INIT = "INIT"
-local rebootTime
-local haltTime 
-local rebootTimer
+local rebootTime = nil
+local haltTime  = nil
+local rebootTimer = nil
 
 SetConfig = CBase:new{
-    MY_TOPIC = "set_config",
+    MY_TOPIC = "set_config"
 }
 
 function SetConfig:new (o)
@@ -56,13 +56,13 @@ end
 -- ]]
 function SetConfig:handleContent( content )
 	local r = false
- 	if (not content) then
+ 	if not content then
  		return
  	end
 
  	local state = content[CloudConsts.STATE]
  	local sn = content[CloudConsts.SN]
- 	if(not state or not sn) then
+ 	if not state or not sn then
  		return r
  	end
 

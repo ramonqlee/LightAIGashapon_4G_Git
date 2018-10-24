@@ -5,6 +5,7 @@
 -- tested 2017.12.27
 module(..., package.seeall)
 
+
 NODE_ID = "node_id"
 PASSWORD = "password"
 TOPIC    = "topic"
@@ -48,4 +49,5 @@ WD_REBOOT="wdReboot"
 ARRIVE_TIME="arriveTime"
 THIRD_LEVEL_KEY = "thirdLevel"
 RETRY_OPEN_LOCK="retryOpenLock"
+
 
