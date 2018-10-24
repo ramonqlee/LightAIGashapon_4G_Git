@@ -7,7 +7,6 @@
 -- @describe 每隔5s发送0x01,0x20
 
 -- module(...,package.seeall)
-require "sys"
 require "clib"
 require "utils"
 require "Consts"
@@ -46,6 +45,7 @@ local MAX_RETRY_COUNT = 3
 local RETRY_BOARD_COUNT = 1--识别的数量小于这个，就重试
 local boardIdentified = 0
 local retryCount = 0
+local twinkleTimerId = nil
 
 function startTimedTask()
     if timedTaskId and sys.timerIsActive(timedTaskId) then
@@ -245,8 +245,6 @@ function entry.twinkle( addrs,pos,times )
 		bottomNextColor = nextColor
 	end
 end
-
-local twinkleTimerId = nil
 
 function entry.startTwinkleTask( )
 	if twinkleTimerId and sys.timerIsActive(twinkleTimerId) then

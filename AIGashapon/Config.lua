@@ -4,11 +4,11 @@
 -- @release 2017.12.23
 -- tested 2017.12.27
 
-local jsonex=require "jsonex"
 require "LogUtil"
 require "FileUtil"
 require "Consts"
 
+local jsonex=require "jsonex"
 
 local TAG = "Config"
 Config = {}

@@ -3,16 +3,13 @@
 -- @copyright idreems.com
 -- @release 2017.12.21
 -- tested 2017.12.27
-
--- module(...package.seeall)
+module(..., package.seeall)
 
 NODE_ID = "node_id"
 PASSWORD = "password"
-
 TOPIC    = "topic"
 PAYLOAD  = "payload"
 MQTT_CLIENT_CONNECTION = "websoket_client_connection"
-
 TIMESTAMP = "timestamp"
 CONTENT   = "content"
 STATE     = "state"
@@ -37,12 +34,10 @@ CTS = "cts"
 LAST_CHECK_TIME = "last_check_time"
 LAST_ID = "last_id"
 VM_S2STATE = "s2state"
-
 DIR       = "dir"
 DATE      = "date"
 URL       = "url"
 TOKEN     = "token"
-
 CONST_POSTERS   = "posters"
 VM_SATE ="vm_state"
 APP_VERSION="version"
@@ -53,6 +48,4 @@ WD_REBOOT="wdReboot"
 ARRIVE_TIME="arriveTime"
 THIRD_LEVEL_KEY = "thirdLevel"
 RETRY_OPEN_LOCK="retryOpenLock"
-
-
 

@@ -9,6 +9,8 @@ require "Consts"
 require "LogUtil"
 require "UartMgr"
 require "UARTSlave"
+require "MyUtils"
+
 
 if Consts.DEVICE_ENV then
 	require "sys"
