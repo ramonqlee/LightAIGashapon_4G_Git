@@ -8,6 +8,7 @@
 
 require "clib"
 require "utils"
+require "ntp"
 require "Consts"
 require "LogUtil"
 require "UartMgr"
@@ -146,53 +147,6 @@ function retryIdentify()
 end
 
 
-function run()
-	startTimedTask()
-
-	-- 启动一个延时定时器, 获取板子id
-	LogUtil.d(TAG,"run.....111")
-	timerId = sys.timerStart(function()
-		LogUtil.d(TAG,"start to retrieve slaves")
-		if timerId and sys.timerIsActive(timerId) then
-			sys.timerStop(timerId)
-			timerId = nil
-		end
-
-		sys.taskInit(function()
-			--首先初始化本地环境，然后成功后，启动mqtt
-			UartMgr.init(Consts.UART_ID,Consts.baudRate)
-				--获取所有板子id
-			UartMgr.initSlaves(allInfoCallback,false)    
-		end)
-
-	end,60*1000)
-		
-	
-	-- 启动一个延时定时器，防止没有回调时无法正常启动
-	candidateRunTimerId=sys.timerStart(function()
-		LogUtil.d(TAG,"start after timeout in retrieving slaves")
-
-		if candidateRunTimerId and sys.timerIsActive(candidateRunTimerId) then
-			sys.timerStop(candidateRunTimerId)
-			candidateRunTimerId = nil
-		end
-
-		if  boardIdentified < RETRY_BOARD_COUNT then 
-			retryIdentify()
-		end
-
-		if not mqttStarted then
-			mqttStarted = true
-			sys.taskInit(MQTTManager.startmqtt)
-		end
-
-		LogUtil.d(TAG,"start twinkle task")
-		startTwinkleTask()
-
-	end,Consts.TEST_MODE and 5*1000 or 120*1000)  
-end
-
-
 -- 让灯闪起来
 -- addrs 地址数组
 -- pos 扭蛋机位置，目前取值1，2
@@ -287,7 +241,55 @@ function startTwinkleTask( )
         end,Consts.TWINKLE_INTERVAL)
 end
 
+
+function run()
+	startTimedTask()
+
+	-- 启动一个延时定时器, 获取板子id
+	LogUtil.d(TAG,"run.....111")
+	timerId = sys.timerStart(function()
+		LogUtil.d(TAG,"start to retrieve slaves")
+		if timerId and sys.timerIsActive(timerId) then
+			sys.timerStop(timerId)
+			timerId = nil
+		end
+
+		sys.taskInit(function()
+			--首先初始化本地环境，然后成功后，启动mqtt
+			UartMgr.init(Consts.UART_ID,Consts.baudRate)
+				--获取所有板子id
+			UartMgr.initSlaves(allInfoCallback,false)    
+		end)
+
+	end,60*1000)
+		
+	
+	-- 启动一个延时定时器，防止没有回调时无法正常启动
+	candidateRunTimerId=sys.timerStart(function()
+		LogUtil.d(TAG,"start after timeout in retrieving slaves")
+
+		if candidateRunTimerId and sys.timerIsActive(candidateRunTimerId) then
+			sys.timerStop(candidateRunTimerId)
+			candidateRunTimerId = nil
+		end
+
+		if  boardIdentified < RETRY_BOARD_COUNT then 
+			retryIdentify()
+		end
+
+		if not mqttStarted then
+			mqttStarted = true
+			sys.taskInit(MQTTManager.startmqtt)
+		end
+
+		LogUtil.d(TAG,"start twinkle task")
+		startTwinkleTask()
+
+	end,Consts.TEST_MODE and 5*1000 or 120*1000)  
+end
+
 sys.taskInit(run)
+ntp.timeSync()
 
 
 
