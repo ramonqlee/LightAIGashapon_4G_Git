@@ -17,7 +17,7 @@ RepMachVars = CRBase:new{
 MY_TOPIC = "reply_machine_variables"
 }
 
-function RepMachVars:new (o)
+function RepMachVars:new(o)
 	o = o or CRBase:new(o)
 	setmetatable(o, self)
 	self.__index = self

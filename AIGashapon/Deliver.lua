@@ -89,7 +89,7 @@ function Deliver:isDelivering()
     return false
 end
 
-function Deliver:new (o)
+function Deliver:new(o)
     o = o or CBase:new(o)
     setmetatable(o, self)
     self.__index = self

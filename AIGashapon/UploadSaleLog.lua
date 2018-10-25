@@ -1,4 +1,4 @@
-﻿
+
 -- @module UploadSaleLog
 -- @author ramonqlee
 -- @copyright idreems.com
@@ -15,7 +15,7 @@ UploadSaleLog = CRBase:new{
     mPayload ={}
 }
 
-function UploadSaleLog:new (o)
+function UploadSaleLog:new(o)
     o = o or CRBase:new(o)
     setmetatable(o, self)
     self.__index = self

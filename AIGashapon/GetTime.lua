@@ -1,4 +1,4 @@
-﻿
+
 -- @module GetTime
 -- @author ramonqlee
 -- @copyright idreems.com
@@ -12,9 +12,9 @@ require "Consts"
 
 local TAG = "GetTime"
 
-GetTime = CBase:new{MY_TOPIC="get_time"}
+GetTime = CBase:new{ MY_TOPIC="get_time" }
 
-function GetTime:new (o)
+function GetTime:new(o)
     o = o or CBase:new(o)
     setmetatable(o, self)
     self.__index = self
@@ -58,3 +58,4 @@ function GetTime:sendGetTime(lastReboot)
     MQTTManager.publish(topic,json.encode(msg))
 end          
 
+        

@@ -18,7 +18,7 @@ Lightup = CBase:new{
     MY_TOPIC = "light_up"
 }
 
-function Lightup:new (o)
+function Lightup:new(o)
     o = o or CBase:new(o)
     setmetatable(o, self)
     self.__index = self

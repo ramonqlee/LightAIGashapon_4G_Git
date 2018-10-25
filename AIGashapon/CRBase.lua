@@ -25,7 +25,7 @@ CRBase = {
 
 local TAG = "CRBase"
 -- Derived class method new
-function CRBase:new (o)
+function CRBase:new(o)
 	o = o or {}
 	setmetatable(o, self)
 	self.__index = self

@@ -16,7 +16,7 @@ mTimestampInSec=0
 
 local TAG = "CBase"
 
-function CBase:new (o)
+function CBase:new(o)
 	o = o or {}
 	setmetatable(o, self)
 	self.__index = self

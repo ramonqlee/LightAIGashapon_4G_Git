@@ -1,4 +1,4 @@
-﻿-- @module FileUtil
+-- @module FileUtil
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.21
@@ -17,7 +17,7 @@ end
 	功能：打开所输入文件名的文件，并输出储存在里面额内容
 	参数：文件名
 	返回值：无                     ]]
- function FileUtil.readfile(filename)--打开指定文件并输出内容
+function FileUtil.readfile(filename)--打开指定文件并输出内容
     local filehandle=io.open(filename,"r")--第一个参数是文件名，第二个是打开方式，'r'读模式,'w'写模式，对数据进行覆盖,'a'附加模式,'b'加在模式后面表示以二进制形式打开
 	if filehandle then          --判断文件是否存在
 	    local fileval=filehandle:read("*all")--读出文件内容
@@ -43,7 +43,7 @@ end
 	功能：向输入的文件中添加内容，内容附加在原文件内容之后
 	参数：第一个文件名，第二个需要添加的内容
 	返回值：无                         --]]
- function FileUtil.writevala(filename,value)--在指定文件中添加内容,函数名最后一位就是打开的模式
+function FileUtil.writevala(filename,value)--在指定文件中添加内容,函数名最后一位就是打开的模式
 
 	local filehandle = io.open(filename,"a+")--第一个参数是文件名，后一个是打开模式'r'读模式,'w'写模式，对数据进行覆盖,'a'附加模式,'b'加在模式后面表示以二进制形式打开
 	if filehandle then
@@ -61,7 +61,7 @@ end
 	功能：向输入文件中添加内容，新添加的内容会覆盖掉原文件中的内容
 	参数：同上
 	返回值：无                 --]]
- function FileUtil.writevalw(filename,value)--在指定文件中添加内容
+function FileUtil.writevalw(filename,value)--在指定文件中添加内容
 	local filehandle = io.open(filename,"w")--第一个参数是文件名，后一个是打开模式'r'读模式,'w'写模式，对数据进行覆盖,'a'附加模式,'b'加在模式后面表示以二进制形式打开
 	if filehandle then
 	    filehandle:write(value)--写入要写入的内容
@@ -87,3 +87,4 @@ function FileUtil.deletefile(filename)--删除指定文件夹中的所有内容
 	end
 end
 
+          

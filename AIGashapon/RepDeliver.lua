@@ -1,4 +1,4 @@
-﻿
+
 -- @module RepDeliver
 -- @author ramonqlee
 -- @copyright idreems.com
@@ -12,7 +12,7 @@ RepDeliver = CRBase:new{
     MY_TOPIC = "reply_deliver"
 }
 
-function RepDeliver:new (o)
+function RepDeliver:new(o)
     o = o or CRBase:new(o)
     setmetatable(o, self)
     self.__index = self

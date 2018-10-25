@@ -1,4 +1,4 @@
-﻿-- @module GetMachVars
+-- @module GetMachVars
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.23
@@ -13,11 +13,9 @@ require "LogUtil"
 
 local TAG = "GetMachVars"
 
-GetMachVars = CBase:new{
-    MY_TOPIC = "get_machine_variables"
-}
+GetMachVars = CBase:new{ MY_TOPIC = "get_machine_variables" }
 
-function GetMachVars:new (o)
+function GetMachVars:new(o)
     o = o or CBase:new(o)
     setmetatable(o, self)
     self.__index = self
@@ -58,4 +56,4 @@ function GetMachVars:handleContent( content )
  	return true
 end       
 
-         
+                 

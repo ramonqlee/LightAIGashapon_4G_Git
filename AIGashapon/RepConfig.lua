@@ -1,4 +1,4 @@
-﻿
+
 -- @module RepConfig
 -- @author ramonqlee
 -- @copyright idreems.com
@@ -14,7 +14,7 @@ RepConfig = CRBase:new{
     MY_TOPIC = "reply_config"
 }
 
-function RepConfig:new (o)
+function RepConfig:new(o)
     o = o or CRBase:new(o)
     setmetatable(o, self)
     self.__index = self

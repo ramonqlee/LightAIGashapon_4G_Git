@@ -20,7 +20,7 @@ MY_TOPIC="reply_time",
 TIME_OUT_IN_MILLS = 10 * 1000
 }
 
-function RepTime:new (o)
+function RepTime:new(o)
     o = o or CBase:new(o)
     setmetatable(o, self)
     self.__index = self

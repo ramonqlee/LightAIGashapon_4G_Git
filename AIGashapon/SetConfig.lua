@@ -27,7 +27,7 @@ SetConfig = CBase:new{
     MY_TOPIC = "set_config"
 }
 
-function SetConfig:new (o)
+function SetConfig:new(o)
     o = o or CBase:new(o)
     setmetatable(o, self)
     self.__index = self

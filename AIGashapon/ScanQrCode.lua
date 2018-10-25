@@ -31,7 +31,7 @@ function ScanQrCode:lastLocation()
     return lastLocation
 end
 
-function ScanQrCode:new (o)
+function ScanQrCode:new(o)
     o = o or CBase:new(o)
     setmetatable(o, self)
     self.__index = self

@@ -1,4 +1,4 @@
-﻿
+
 -- @module UploadDetect
 -- @author ramonqlee
 -- @copyright idreems.com
@@ -15,7 +15,7 @@ UploadDetect = CRBase:new{
     mPayload ={}
 }
 
-function UploadDetect:new (o)
+function UploadDetect:new(o)
     o = o or CRBase:new(o)
     setmetatable(o, self)
     self.__index = self
