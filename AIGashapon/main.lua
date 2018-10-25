@@ -3,7 +3,7 @@
 --VERSION：ascii string类型，如果使用Luat物联云平台固件升级的功能，必须按照"X.X.X"定义，X表示1位数字；否则可随便定义
 PROJECT = "AIGashapon"
 
-VERSION = "1.1.152"
+VERSION = "1.1.154"
 
 --[[
 使用Luat物联云平台固件升级的功能，必须按照以下步骤操作：
@@ -17,23 +17,19 @@ PRODUCT_KEY = "WbMTLT8KVFC2VRel181eWa7JOfBAOddk"
 -- FIXME 暂时注释掉
 -- 日志级别
 require "log"
+LOG_LEVEL=log.LOGLEVEL_TRACE
+
+
 require "sys"
 require "net"
-require "ntp"
-require "Consts"
-
-
-LOG_LEVEL=log.LOGLEVEL_TRACE
 
 --每1分钟查询一次GSM信号强度
 --每1分钟查询一次基站信息
 net.startQueryAll(60000, 60000)
-
-ntp.timeSync()
+require "errDump"
+errDump.request("udp://ota.airm2m.com:9072")
 
 require "entry"
-entry.run()
--- require "testUart"
 
 -- 启动系统框架
 sys.init(0, 0)
