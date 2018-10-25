@@ -5,15 +5,15 @@
 -- @tested 2018.2.3
 
 require "LogUtil"
-require "jsonex"
 require "Config"
+require "MyUtils"
+
+local jsonex = require "jsonex"
 
 local TAG = "UARTAllInfoRep"
-local ALL_INFO_CACHE_KEY = "allInfos"
+local BOARDIDS = "ids"
 
-UARTAllInfoRep = {
-MT = 0x93
-}
+UARTAllInfoRep = {MT = 0x93}
 
 local mAllBoardIds = {}
 local myCallback = nil
@@ -118,7 +118,8 @@ function UARTAllInfoRep.handle(bins)
 			-- temp = pack.pack("b3",id1,id2,id3)
 			temp = id1..id2..id3
 			if not UARTAllInfoRep.hasIds(temp) then
-				mAllBoardIds[#mAllBoardIds+1]=temp
+				-- mAllBoardIds[#mAllBoardIds+1]=temp
+				table.insert(mAllBoardIds,temp)
 				LogUtil.d(TAG,"find device = "..temp)
 			end
 
@@ -143,13 +144,12 @@ end
 
 function UARTAllInfoRep.getAllBoardIds(returnCacheIfEmpty)
 	-- 查看内存，如果为空，则尝试返回本地的；否则直接返回内存中的
-	if mAllBoardIds and #mAllBoardIds>0 then
-		-- LogUtil.d(TAG,"getAllBoardIds size = "..#mAllBoardIds)
+	if MyUtils.getTableLen(mAllBoardIds)>0 then
 		return mAllBoardIds
 	end
 
 	if returnCacheIfEmpty then
-		tmp = Config.getValue(ALL_INFO_CACHE_KEY)
+		tmp = Config.getValue(BOARDIDS)
 		if tmp and "string"==type(tmp) and #tmp>0 then
 			mAllBoardIds = jsonex.decode(tmp)
 			-- LogUtil.d(TAG,"cached getAllBoardIds size = "..#mAllBoardIds)
@@ -162,13 +162,14 @@ end
 function UARTAllInfoRep.notifiyCallback()
 	-- 是否保留之前获得的id
 	if Consts.EANBLE_MERGE_BOARD_ID then
-		tmp = Config.getValue(ALL_INFO_CACHE_KEY)
+		tmp = Config.getValue(BOARDIDS)
 		if tmp and "string"==type(tmp) and #tmp>0 then
 			local existAllBoardIds = jsonex.decode(tmp)
 			if existAllBoardIds and #existAllBoardIds >0 then
 				for _,addr in pairs(existAllBoardIds) do
 					if not UARTAllInfoRep.hasIds(addr) then
-						mAllBoardIds[#mAllBoardIds+1]=addr
+						-- mAllBoardIds[#mAllBoardIds+1]=addr
+						table.insert(mAllBoardIds,addr)
 					end
 				end
 			end
@@ -177,8 +178,8 @@ function UARTAllInfoRep.notifiyCallback()
 
 	-- 做缓存和更新
 	-- 如果获取了新的，则直接缓存
-	if mAllBoardIds and #mAllBoardIds>0 then
-		Config.saveValue(ALL_INFO_CACHE_KEY,jsonex.encode(mAllBoardIds))
+	if MyUtils.getTableLen(mAllBoardIds)>0 then
+		Config.saveValue(BOARDIDS,jsonex.encode(mAllBoardIds))
 	end
 
 	if myCallback then
@@ -188,7 +189,7 @@ end
 
 -- 当前内存中返回的id是否已经包含
 function UARTAllInfoRep.hasIds(id)
-	if not mAllBoardIds or 0 == #mAllBoardIds then
+	if not mAllBoardIds then
 		return false
 	end
 
