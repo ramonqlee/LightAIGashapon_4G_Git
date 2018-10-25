@@ -1,4 +1,4 @@
-
+﻿
 -- @module GetTime
 -- @author ramonqlee
 -- @copyright idreems.com

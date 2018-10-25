@@ -1,4 +1,4 @@
--- @module FileUtil
+ï»¿-- @module FileUtil
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.21
@@ -6,32 +6,31 @@
 
 FileUtil={}
 
---[[¸ÃdemoÌá¹©ËÄÖÖ½Ó¿Ú£¬µÚÒ»ÖÖreadfile(filename)¶ÁÎÄ¼ş£¬µÚ¶şÖÖwritevala(filename,value)£¬Ğ´ÎÄ¼şÄÚÈİ£¬¸½¼ÓÄ£Ê½£¬
-µÚÈıÖÖfunction writevalw(filename,value)£¬Ğ´ÎÄ¼şÄÚÈİ£¬¸²¸ÇÄ£Ê½£¬µÚËÄÖÖdeletefile(filename)£¬É¾³ıÎÄ¼ş¡£--]]
+--[[è¯¥demoæä¾›å››ç§æ¥å£ï¼Œç¬¬ä¸€ç§readfile(filename)è¯»æ–‡ä»¶ï¼Œç¬¬äºŒç§writevala(filename,value)ï¼Œå†™æ–‡ä»¶å†…å®¹ï¼Œé™„åŠ æ¨¡å¼ï¼Œ
+ç¬¬ä¸‰ç§function writevalw(filename,value)ï¼Œå†™æ–‡ä»¶å†…å®¹ï¼Œè¦†ç›–æ¨¡å¼ï¼Œç¬¬å››ç§deletefile(filename)ï¼Œåˆ é™¤æ–‡ä»¶ã€‚--]]
 
 function FileUtil.exists( filename )
 	return io.exists(filename)
 end
 --[[
-    º¯ÊıÃû£ºreadfile(filename)
-	¹¦ÄÜ£º´ò¿ªËùÊäÈëÎÄ¼şÃûµÄÎÄ¼ş£¬²¢Êä³ö´¢´æÔÚÀïÃæ¶îÄÚÈİ
-	²ÎÊı£ºÎÄ¼şÃû
-	·µ»ØÖµ£ºÎŞ                     ]]
- function FileUtil.readfile(filename)--´ò¿ªÖ¸¶¨ÎÄ¼ş²¢Êä³öÄÚÈİ
-	if not FileUtil.exists(filename) then return "" end 
-    local filehandle=io.open(filename,"r")--µÚÒ»¸ö²ÎÊıÊÇÎÄ¼şÃû£¬µÚ¶ş¸öÊÇ´ò¿ª·½Ê½£¬'r'¶ÁÄ£Ê½,'w'Ğ´Ä£Ê½£¬¶ÔÊı¾İ½øĞĞ¸²¸Ç,'a'¸½¼ÓÄ£Ê½,'b'¼ÓÔÚÄ£Ê½ºóÃæ±íÊ¾ÒÔ¶ş½øÖÆĞÎÊ½´ò¿ª
-	if filehandle then          --ÅĞ¶ÏÎÄ¼şÊÇ·ñ´æÔÚ
-	    local fileval=filehandle:read("*all")--¶Á³öÎÄ¼şÄÚÈİ
+    å‡½æ•°åï¼šreadfile(filename)
+	åŠŸèƒ½ï¼šæ‰“å¼€æ‰€è¾“å…¥æ–‡ä»¶åçš„æ–‡ä»¶ï¼Œå¹¶è¾“å‡ºå‚¨å­˜åœ¨é‡Œé¢é¢å†…å®¹
+	å‚æ•°ï¼šæ–‡ä»¶å
+	è¿”å›å€¼ï¼šæ—                      ]]
+ function FileUtil.readfile(filename)--æ‰“å¼€æŒ‡å®šæ–‡ä»¶å¹¶è¾“å‡ºå†…å®¹
+    local filehandle=io.open(filename,"r")--ç¬¬ä¸€ä¸ªå‚æ•°æ˜¯æ–‡ä»¶åï¼Œç¬¬äºŒä¸ªæ˜¯æ‰“å¼€æ–¹å¼ï¼Œ'r'è¯»æ¨¡å¼,'w'å†™æ¨¡å¼ï¼Œå¯¹æ•°æ®è¿›è¡Œè¦†ç›–,'a'é™„åŠ æ¨¡å¼,'b'åŠ åœ¨æ¨¡å¼åé¢è¡¨ç¤ºä»¥äºŒè¿›åˆ¶å½¢å¼æ‰“å¼€
+	if filehandle then          --åˆ¤æ–­æ–‡ä»¶æ˜¯å¦å­˜åœ¨
+	    local fileval=filehandle:read("*all")--è¯»å‡ºæ–‡ä»¶å†…å®¹
 	  if  fileval  then
-	       -- print(fileval)  --Èç¹ûÎÄ¼ş´æÔÚ£¬´òÓ¡ÎÄ¼şÄÚÈİ
-		   filehandle:close()--¹Ø±ÕÎÄ¼ş
+	       -- print(fileval)  --å¦‚æœæ–‡ä»¶å­˜åœ¨ï¼Œæ‰“å°æ–‡ä»¶å†…å®¹
+		   filehandle:close()--å…³é—­æ–‡ä»¶
 		   return fileval
 	  else 
-	       print("ÎÄ¼şÎª¿Õ")--ÎÄ¼ş²»´æÔÚ
+	       print("æ–‡ä»¶ä¸ºç©º")--æ–‡ä»¶ä¸å­˜åœ¨
 	       return ""
 	  end
 	else 
-	    print("ÎÄ¼ş²»´æÔÚ»òÎÄ¼şÊäÈë¸ñÊ½²»ÕıÈ·") --´ò¿ªÊ§°Ü  
+	    print("æ–‡ä»¶ä¸å­˜åœ¨æˆ–æ–‡ä»¶è¾“å…¥æ ¼å¼ä¸æ­£ç¡®") --æ‰“å¼€å¤±è´¥  
 	    return ""
 	end 
 	return ""
@@ -40,51 +39,51 @@ end
 
 
 --[[
-    º¯ÊıÃû£º writevala(filename,value)
-	¹¦ÄÜ£ºÏòÊäÈëµÄÎÄ¼şÖĞÌí¼ÓÄÚÈİ£¬ÄÚÈİ¸½¼ÓÔÚÔ­ÎÄ¼şÄÚÈİÖ®ºó
-	²ÎÊı£ºµÚÒ»¸öÎÄ¼şÃû£¬µÚ¶ş¸öĞèÒªÌí¼ÓµÄÄÚÈİ
-	·µ»ØÖµ£ºÎŞ                         --]]
- function FileUtil.writevala(filename,value)--ÔÚÖ¸¶¨ÎÄ¼şÖĞÌí¼ÓÄÚÈİ,º¯ÊıÃû×îºóÒ»Î»¾ÍÊÇ´ò¿ªµÄÄ£Ê½
+    å‡½æ•°åï¼š writevala(filename,value)
+	åŠŸèƒ½ï¼šå‘è¾“å…¥çš„æ–‡ä»¶ä¸­æ·»åŠ å†…å®¹ï¼Œå†…å®¹é™„åŠ åœ¨åŸæ–‡ä»¶å†…å®¹ä¹‹å
+	å‚æ•°ï¼šç¬¬ä¸€ä¸ªæ–‡ä»¶åï¼Œç¬¬äºŒä¸ªéœ€è¦æ·»åŠ çš„å†…å®¹
+	è¿”å›å€¼ï¼šæ—                          --]]
+ function FileUtil.writevala(filename,value)--åœ¨æŒ‡å®šæ–‡ä»¶ä¸­æ·»åŠ å†…å®¹,å‡½æ•°åæœ€åä¸€ä½å°±æ˜¯æ‰“å¼€çš„æ¨¡å¼
 
-	local filehandle = io.open(filename,"a+")--µÚÒ»¸ö²ÎÊıÊÇÎÄ¼şÃû£¬ºóÒ»¸öÊÇ´ò¿ªÄ£Ê½'r'¶ÁÄ£Ê½,'w'Ğ´Ä£Ê½£¬¶ÔÊı¾İ½øĞĞ¸²¸Ç,'a'¸½¼ÓÄ£Ê½,'b'¼ÓÔÚÄ£Ê½ºóÃæ±íÊ¾ÒÔ¶ş½øÖÆĞÎÊ½´ò¿ª
+	local filehandle = io.open(filename,"a+")--ç¬¬ä¸€ä¸ªå‚æ•°æ˜¯æ–‡ä»¶åï¼Œåä¸€ä¸ªæ˜¯æ‰“å¼€æ¨¡å¼'r'è¯»æ¨¡å¼,'w'å†™æ¨¡å¼ï¼Œå¯¹æ•°æ®è¿›è¡Œè¦†ç›–,'a'é™„åŠ æ¨¡å¼,'b'åŠ åœ¨æ¨¡å¼åé¢è¡¨ç¤ºä»¥äºŒè¿›åˆ¶å½¢å¼æ‰“å¼€
 	if filehandle then
-	    filehandle:write(value)--Ğ´ÈëÒªĞ´ÈëµÄÄÚÈİ
+	    filehandle:write(value)--å†™å…¥è¦å†™å…¥çš„å†…å®¹
 	    filehandle:close()
 	else
-	    print("ÎÄ¼ş²»´æÔÚ»òÎÄ¼şÊäÈë¸ñÊ½²»ÕıÈ·") --´ò¿ªÊ§°Ü  
+	    print("æ–‡ä»¶ä¸å­˜åœ¨æˆ–æ–‡ä»¶è¾“å…¥æ ¼å¼ä¸æ­£ç¡®") --æ‰“å¼€å¤±è´¥  
 	end
 end
 
 
 
 --[[
-    º¯ÊıÃû£ºwritevalw(filename,value)
-	¹¦ÄÜ£ºÏòÊäÈëÎÄ¼şÖĞÌí¼ÓÄÚÈİ£¬ĞÂÌí¼ÓµÄÄÚÈİ»á¸²¸ÇµôÔ­ÎÄ¼şÖĞµÄÄÚÈİ
-	²ÎÊı£ºÍ¬ÉÏ
-	·µ»ØÖµ£ºÎŞ                 --]]
- function FileUtil.writevalw(filename,value)--ÔÚÖ¸¶¨ÎÄ¼şÖĞÌí¼ÓÄÚÈİ
-	local filehandle = io.open(filename,"w")--µÚÒ»¸ö²ÎÊıÊÇÎÄ¼şÃû£¬ºóÒ»¸öÊÇ´ò¿ªÄ£Ê½'r'¶ÁÄ£Ê½,'w'Ğ´Ä£Ê½£¬¶ÔÊı¾İ½øĞĞ¸²¸Ç,'a'¸½¼ÓÄ£Ê½,'b'¼ÓÔÚÄ£Ê½ºóÃæ±íÊ¾ÒÔ¶ş½øÖÆĞÎÊ½´ò¿ª
+    å‡½æ•°åï¼šwritevalw(filename,value)
+	åŠŸèƒ½ï¼šå‘è¾“å…¥æ–‡ä»¶ä¸­æ·»åŠ å†…å®¹ï¼Œæ–°æ·»åŠ çš„å†…å®¹ä¼šè¦†ç›–æ‰åŸæ–‡ä»¶ä¸­çš„å†…å®¹
+	å‚æ•°ï¼šåŒä¸Š
+	è¿”å›å€¼ï¼šæ—                  --]]
+ function FileUtil.writevalw(filename,value)--åœ¨æŒ‡å®šæ–‡ä»¶ä¸­æ·»åŠ å†…å®¹
+	local filehandle = io.open(filename,"w")--ç¬¬ä¸€ä¸ªå‚æ•°æ˜¯æ–‡ä»¶åï¼Œåä¸€ä¸ªæ˜¯æ‰“å¼€æ¨¡å¼'r'è¯»æ¨¡å¼,'w'å†™æ¨¡å¼ï¼Œå¯¹æ•°æ®è¿›è¡Œè¦†ç›–,'a'é™„åŠ æ¨¡å¼,'b'åŠ åœ¨æ¨¡å¼åé¢è¡¨ç¤ºä»¥äºŒè¿›åˆ¶å½¢å¼æ‰“å¼€
 	if filehandle then
-	    filehandle:write(value)--Ğ´ÈëÒªĞ´ÈëµÄÄÚÈİ
+	    filehandle:write(value)--å†™å…¥è¦å†™å…¥çš„å†…å®¹
 	    filehandle:close()
 	else
-	    print("ÎÄ¼ş²»´æÔÚ»òÎÄ¼şÊäÈë¸ñÊ½²»ÕıÈ·") --´ò¿ªÊ§°Ü  
+	    print("æ–‡ä»¶ä¸å­˜åœ¨æˆ–æ–‡ä»¶è¾“å…¥æ ¼å¼ä¸æ­£ç¡®") --æ‰“å¼€å¤±è´¥  
 	end
 end
 
 
---[[º¯ÊıÃû£ºdeletefile(filename)
-    ¹¦ÄÜ£ºÉ¾³ıÖ¸¶¨ÎÄ¼şÖĞµÄËùÓĞÄÚÈİ
-	²ÎÊı£ºÎÄ¼şÃû
-	·µ»ØÖµ£ºÎŞ             --]]
-function FileUtil.deletefile(filename)--É¾³ıÖ¸¶¨ÎÄ¼ş¼ĞÖĞµÄËùÓĞÄÚÈİ
+--[[å‡½æ•°åï¼šdeletefile(filename)
+    åŠŸèƒ½ï¼šåˆ é™¤æŒ‡å®šæ–‡ä»¶ä¸­çš„æ‰€æœ‰å†…å®¹
+	å‚æ•°ï¼šæ–‡ä»¶å
+	è¿”å›å€¼ï¼šæ—              --]]
+function FileUtil.deletefile(filename)--åˆ é™¤æŒ‡å®šæ–‡ä»¶å¤¹ä¸­çš„æ‰€æœ‰å†…å®¹
 	local filehandle = io.open(filename,"w")
 	if filehandle then
-	    filehandle:write()--Ğ´Èë¿ÕµÄÄÚÈİ
-	    print("É¾³ı³É¹¦")
+	    filehandle:write()--å†™å…¥ç©ºçš„å†…å®¹
+	    print("åˆ é™¤æˆåŠŸ")
 		filehandle:close()
 	else
-	    print("ÎÄ¼ş²»´æÔÚ»òÎÄ¼şÊäÈë¸ñÊ½²»ÕıÈ·") --´ò¿ªÊ§°Ü  
+	    print("æ–‡ä»¶ä¸å­˜åœ¨æˆ–æ–‡ä»¶è¾“å…¥æ ¼å¼ä¸æ­£ç¡®") --æ‰“å¼€å¤±è´¥  
 	end
 end
 

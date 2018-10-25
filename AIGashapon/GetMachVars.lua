@@ -1,4 +1,4 @@
--- @module GetMachVars
+﻿-- @module GetMachVars
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.23

@@ -4,10 +4,11 @@
 -- @release 2017.12.21
 -- tested 2017.12.27
 
-local jsonex = require "jsonex"
 require "LogUtil"
 require "CloudConsts"
 require "Consts"
+
+local jsonex = require "jsonex"
 
 CBase = {
 mTimestampInSec=0

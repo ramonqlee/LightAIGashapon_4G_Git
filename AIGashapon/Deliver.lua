@@ -6,7 +6,6 @@
 
 require "Config"
 require "Consts"
-require "jsonex"
 require "UartMgr"
 require "UARTUtils"
 require "CloudConsts"
@@ -18,6 +17,7 @@ require "UploadSaleLog"
 require "CRBase"
 require "UploadDetect"
 
+local jsonex = require "jsonex"
 local TAG = "Deliver"
 local gBusyMap={}--是否在占用的记录
 local ORDER_EXPIRED_SPAN = 5*60--订单超期时间和系统当前当前时间的偏差
@@ -77,7 +77,7 @@ local function getTableLen( tab )
     return count
 end
 
-function Deliver.isDelivering()
+function Deliver:isDelivering()
     if  getTableLen(gBusyMap)>0 then
         return true
     end

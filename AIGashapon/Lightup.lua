@@ -7,7 +7,6 @@
 
 require "LogUtil"
 require "UartMgr"
-require "jsonex"
 require "CloudConsts"
 require "UARTBroadcast"
 require "CBase"
@@ -49,7 +48,6 @@ end
 -- }
 -- ]]
 function Lightup:handleContent( content )
-	LogUtil.d(TAG,TAG.." handleContent,content "..jsonex.encode(content))
 
 	local r = false
  	if (not content) then

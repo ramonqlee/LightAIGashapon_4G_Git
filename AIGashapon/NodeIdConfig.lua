@@ -1,4 +1,4 @@
--- @module NodeIdConfig
+﻿-- @module NodeIdConfig
 -- @author ramonqlee
 -- @copyright idreems.com
 -- @release 2017.12.23
