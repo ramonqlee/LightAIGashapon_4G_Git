@@ -6,7 +6,6 @@
 -- @release 2018.1.3
 -- @describe 每隔5s发送0x01,0x20
 
--- module(...,package.seeall)
 require "clib"
 require "utils"
 require "Consts"
@@ -15,6 +14,7 @@ require "UartMgr"
 require "update"
 require "Config"
 require "Task"
+require "Deliver"
 require "MQTTManager"
 require "Lightup"
 require "UARTLightup"
@@ -25,7 +25,6 @@ local retryIdentifyTimerId=nil
 local candidateRunTimerId=nil
 local timedTaskId = nil
 
-entry = {}
 local mqttStarted=false
 local TWINKLE_POS_1 = 1
 local TWINKLE_POS_2 = 2
@@ -104,7 +103,7 @@ function allInfoCallback( ids )
 
 end
 
-function entry.retryIdentify()
+function retryIdentify()
 	-- 超过了最大的重试次数
 	retryCount = retryCount + 1
 	if retryCount > MAX_RETRY_COUNT then
@@ -139,7 +138,7 @@ function entry.retryIdentify()
 		end
 
 		if boardIdentified < RETRY_BOARD_COUNT  then
-			entry.retryIdentify()
+			retryIdentify()
 		end
 
 	end,60*1000)  
@@ -147,11 +146,11 @@ function entry.retryIdentify()
 end
 
 
-function entry.run()
+function run()
 	startTimedTask()
 
 	-- 启动一个延时定时器, 获取板子id
-	LogUtil.d(TAG,"entry.run.....111")
+	LogUtil.d(TAG,"run.....111")
 	timerId = sys.timerStart(function()
 		LogUtil.d(TAG,"start to retrieve slaves")
 		if timerId and sys.timerIsActive(timerId) then
@@ -179,7 +178,7 @@ function entry.run()
 		end
 
 		if  boardIdentified < RETRY_BOARD_COUNT then 
-			entry.retryIdentify()
+			retryIdentify()
 		end
 
 		if not mqttStarted then
@@ -188,7 +187,7 @@ function entry.run()
 		end
 
 		LogUtil.d(TAG,"start twinkle task")
-		entry.startTwinkleTask()
+		startTwinkleTask()
 
 	end,Consts.TEST_MODE and 5*1000 or 120*1000)  
 end
@@ -198,7 +197,7 @@ end
 -- addrs 地址数组
 -- pos 扭蛋机位置，目前取值1，2
 -- time 闪灯次数，每次?ms
-function entry.twinkle( addrs,pos,times )
+function twinkle( addrs,pos,times )
 	-- 闪灯协议
 	local msgArray = {}
 
@@ -246,7 +245,7 @@ function entry.twinkle( addrs,pos,times )
 	end
 end
 
-function entry.startTwinkleTask( )
+function startTwinkleTask( )
 	if twinkleTimerId and sys.timerIsActive(twinkleTimerId) then
 		LogUtil.d(TAG,"twinkle started")
 		return
@@ -269,7 +268,7 @@ function entry.startTwinkleTask( )
 
 			-- LogUtil.d(TAG,TAG.." twinkle pos = "..nextTwinklePos)
 
-            entry.twinkle( addrs,nextTwinklePos,Consts.TWINKLE_TIME )
+            twinkle( addrs,nextTwinklePos,Consts.TWINKLE_TIME )
 
             --切换闪灯位置
             nextTwinklePos = nextTwinklePos + 1
@@ -287,4 +286,9 @@ function entry.startTwinkleTask( )
 
         end,Consts.TWINKLE_INTERVAL)
 end
+
+sys.taskInit(run)
+
+
+
 
