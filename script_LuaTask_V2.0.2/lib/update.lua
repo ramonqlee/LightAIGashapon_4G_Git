@@ -12,16 +12,39 @@ require "common"
 
 module(..., package.seeall)
 
--- 升级包保存路径
-local UPD_FILE_PATH = "/luazip/update.bin"
-
-
 local sUpdating,sCbFnc,sUrl,sPeriod,SRedir,sLocation
-local sDownloading
+local sProcessedLen = 0
+--local sBraekTest = 0
 
 local function httpDownloadCbFnc(result,statusCode,head)
     log.info("update.httpDownloadCbFnc",result,statusCode,head,sCbFnc,sPeriod)
     sys.publish("UPDATE_DOWNLOAD",result,statusCode,head)
+end
+
+local function processOta(stepData,totalLen,statusCode)
+    if stepData and totalLen then
+        if statusCode=="200" or statusCode=="206" then   
+            if rtos.fota_start()~=0 then 
+                log.error("update.request","fota_start fail")
+                return
+            end
+
+            if rtos.fota_process((sProcessedLen+stepData:len()>totalLen) and stepData:sub(1,totalLen-sProcessedLen) or stepData,totalLen)~=0 then 
+                log.error("updata.processOta","fail")
+                return false
+            else
+                sProcessedLen = sProcessedLen + stepData:len()
+                log.info("updata.processOta",totalLen,sProcessedLen,(sProcessedLen*100/totalLen).."%")
+                --if sProcessedLen*100/totalLen==sBraekTest then return false end
+                if sProcessedLen*100/totalLen>=100 then return true end
+            end
+        elseif statusCode:sub(1,1)~="3" and stepData:len()==totalLen and totalLen>0 and totalLen<=200 then
+            local msg = stepData:match("\"msg\":%s*\"(.-)\"")
+            if msg and msg:len()<=200 then
+                log.warn("update.error",common.ucs2beToUtf8((msg:gsub("\\u","")):fromHex()))
+            end
+        end
+    end
 end
 
 function clientTask()
@@ -29,20 +52,22 @@ function clientTask()
     --不要省略此处代码，否则下文中的misc.getImei有可能获取不到
     while not socket.isReady() do sys.waitUntil("IP_READY_IND") end
     while true do
-    
         local retryCnt = 0
-        sDownloading = true
+        sProcessedLen = 0
         while true do
-            os.remove(UPD_FILE_PATH)
+            --sBraekTest = sBraekTest+30
+            log.info("update.http.request",sLocation,sUrl,sProcessedLen,sBraekTest)
             http.request("GET",
                      sLocation or ((sUrl or "iot.openluat.com/api/site/firmware_upgrade").."?project_key=".._G.PRODUCT_KEY
                             .."&imei="..misc.getImei().."&device_key="..misc.getSn()
                             .."&firmware_name=".._G.PROJECT.."_"..rtos.get_version().."&version=".._G.VERSION..(sRedir and "&need_oss_url=1" or "")),
-                     nil,nil,nil,60000,httpDownloadCbFnc,UPD_FILE_PATH)
+                     nil,{["Range"]="bytes="..sProcessedLen.."-"},nil,60000,httpDownloadCbFnc,processOta)
                      
             local _,result,statusCode,head = sys.waitUntil("UPDATE_DOWNLOAD")
+            log.info("update.waitUntil UPDATE_DOWNLOAD",result,statusCode)
             if result then
-                if statusCode=="200" then
+                if statusCode=="200" or statusCode=="206" then   
+                    rtos.fota_end()                 
                     if sCbFnc then
                         sCbFnc(true)
                     else
@@ -53,28 +78,20 @@ function clientTask()
                     print("update.timerStart",head["Location"])
                     return sys.timerStart(request,2000)
                 else
-                    local fileSize = io.fileSize(UPD_FILE_PATH)
-                    if fileSize>0 and fileSize<=200 then
-                        local body = io.readFile(UPD_FILE_PATH)
-                        local msg = body:match("\"msg\":%s*\"(.-)\"")
-                        if msg and msg:len()<=200 then
-                            log.warn("update.error",common.ucs2beToUtf8((msg:gsub("\\u","")):fromHex()))
-                        end
-                    end                    
-                    os.remove(UPD_FILE_PATH)
                     if sCbFnc then sCbFnc(false) end
                 end
                 break
             else
-                os.remove(UPD_FILE_PATH)
                 retryCnt = retryCnt+1
-                if retryCnt==3 then
+                if retryCnt==30 then
+                    rtos.fota_end()
                     if sCbFnc then sCbFnc(false) end
                     break
                 end
             end
         end
-        sDownloading = false
+        
+        sProcessedLen = 0
         
         if sPeriod then
             sys.wait(sPeriod)
@@ -110,12 +127,10 @@ end
 -- update.request(cbFnc,nil,4*3600*1000,true)
 function request(cbFnc,url,period,redir)
     sCbFnc,sUrl,sPeriod,sRedir = cbFnc or sCbFnc,url or sUrl,period or sPeriod,sRedir or redir
-    print("update.request",sCbFnc,sUrl,sPeriod,sRedir)
+    log.info("update.request",sCbFnc,sUrl,sPeriod,sRedir)
     if not sUpdating then        
         sys.taskInit(clientTask)
     end
 end
 
-function isDownloading()
-    return sDownloading
-end
+
