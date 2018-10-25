@@ -18,7 +18,7 @@ end
 	参数：文件名
 	返回值：无                     ]]
  function FileUtil.readfile(filename)--打开指定文件并输出内容
-	
+	if not FileUtil.exists(filename) then return "" end 
     local filehandle=io.open(filename,"r")--第一个参数是文件名，第二个是打开方式，'r'读模式,'w'写模式，对数据进行覆盖,'a'附加模式,'b'加在模式后面表示以二进制形式打开
 	if filehandle then          --判断文件是否存在
 	    local fileval=filehandle:read("*all")--读出文件内容

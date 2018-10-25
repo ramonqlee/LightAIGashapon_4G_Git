@@ -23,7 +23,7 @@ function NodeIdConfig.getValue(key)
 	
 	local content = FileUtil.readfile(NodeIdConfig.CONFIG_FILE)
 
-	if content then 
+	if "string"==type(content) and #content>0 then
 		content= jsonex.decode(content)
 	else
 		content={}

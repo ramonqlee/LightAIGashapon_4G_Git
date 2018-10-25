@@ -31,8 +31,8 @@ require "MyUtils"
 local jsonex = require "jsonex"
 
 local MAX_MQTT_FAIL_COUNT = 3--mqtt连接失败2次
-local MAX_NET_FAIL_COUNT = Consts.TEST_MODE and 6 or 2*5--断网3分钟，会重启
-local RETRY_TIME=10000
+local MAX_NET_FAIL_COUNT = Consts.TEST_MODE and 6 or 3*5--断网3分钟，会重启
+local RETRY_TIME=12000
 local DISCONNECT_WAIT_TIME=5000
 local KEEPALIVE,CLEANSESSION=60,0
 local CLEANSESSION_TRUE=1

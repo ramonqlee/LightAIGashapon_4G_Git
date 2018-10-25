@@ -24,7 +24,7 @@ function Config.getValue(key)
 	
 	local content = FileUtil.readfile(Config.CONFIG_FILE)
 
-	if content then 
+	if "string"==type(content) and #content>0 then 
 		content= jsonex.decode(content)
 	else
 		content={}

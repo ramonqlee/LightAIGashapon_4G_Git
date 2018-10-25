@@ -3,6 +3,7 @@
 -- @copyright idreems.com
 -- @release 2017.12.24
 -- tested 2017.12.27
+module(..., package.seeall)
 
 require "Consts"
 require "Config"
