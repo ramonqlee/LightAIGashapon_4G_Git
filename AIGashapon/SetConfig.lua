@@ -24,7 +24,7 @@ local haltTime
 local rebootTimer
 
 SetConfig = CBase:new{
-    MY_TOPIC = "set_config",
+    MY_TOPIC = "set_config"
 }
 
 function SetConfig:new (o)

@@ -16,7 +16,7 @@ local lastLightUpTime = 0
 
 local TAG = "Lightup"
 Lightup = CBase:new{
-    MY_TOPIC = "light_up",
+    MY_TOPIC = "light_up"
 }
 
 function Lightup:new (o)

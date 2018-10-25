@@ -14,8 +14,7 @@ local TAG = "RepMachVars"
 local DEFAULT_JS_VERSION = "1"
 
 RepMachVars = CRBase:new{
-MY_TOPIC = "reply_machine_variables",
--- mState=0
+MY_TOPIC = "reply_machine_variables"
 }
 
 function RepMachVars:new (o)
@@ -91,5 +90,6 @@ function RepMachVars:addExtraPayloadContent( content )
 
 	content["devices"]=devices
 end  
+
 
       

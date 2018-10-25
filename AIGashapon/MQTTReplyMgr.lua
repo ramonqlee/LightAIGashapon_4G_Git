@@ -16,8 +16,7 @@ local jsonex = require "jsonex"
 
 local TAG = "MQTTReplyMgr"
 local handlerTable={}
-MQTTReplyMgr ={
-}
+MQTTReplyMgr ={}
 
 local function getTableLen( tab )
     local count = 0  
