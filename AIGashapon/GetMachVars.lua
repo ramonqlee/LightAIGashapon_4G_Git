@@ -6,14 +6,15 @@
 
 require "CloudConsts"
 require "CBase"
+require "RepMachVars"
 require "MQTTReplyMgr"
 require "LogUtil"
-local jsonex = require "jsonex"
+
 
 local TAG = "GetMachVars"
 
 GetMachVars = CBase:new{
-    MY_TOPIC = "get_machine_variables",
+    MY_TOPIC = "get_machine_variables"
 }
 
 function GetMachVars:new (o)
@@ -52,9 +53,9 @@ function GetMachVars:handleContent( content )
         map[CloudConsts.ARRIVE_TIME]= arriveTime    
     end
     
- 	-- --LogUtil.d(TAG,TAG.." handleContent ="..jsonex.encode(map))
  	MQTTReplyMgr.replyWith(RepMachVars.MY_TOPIC,map)
  	
  	return true
 end       
 
+         
