@@ -20,7 +20,7 @@ CRBase = {
     EMPTY = 6,
     NOT_ROTATE = 13,--未旋转
     DELIVER_AFTER_TIMEOUT=14,--超时出货
-    UNKNOWN = 99,
+    UNKNOWN = 99
 }
 
 local TAG = "CRBase"
@@ -42,9 +42,6 @@ function CRBase:getTopic(  )
 end
 
 function CRBase:handle( object )
-
-	-- --LogUtil.d(TAG,TAG.." handle now")
-
 	local r = false
 	if not object then
 		return r

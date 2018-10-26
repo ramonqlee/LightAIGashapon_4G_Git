@@ -7,7 +7,6 @@
 
 require "CloudConsts"
 require "CRBase"
-require "Location"
 require "UARTAllInfoRep"
 
 local TAG = "RepMachVars"
@@ -26,10 +25,6 @@ end
 
 function RepMachVars:name()
 	return self.MY_TOPIC
-end
-
-function RepMachVars:setState(state)
-	self.mState=state
 end
 
 function RepMachVars:addExtraPayloadContent( content )

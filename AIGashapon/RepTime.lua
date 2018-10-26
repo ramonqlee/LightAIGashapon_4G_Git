@@ -6,7 +6,6 @@
 -- tested 2018.8.30
 
 require "CBase"
-require "CloudConsts"
 require "LogUtil"
 require "misc"
 local jsonex = require "jsonex"
@@ -15,9 +14,9 @@ local jsonex = require "jsonex"
 local TAG = "RepTime"
 
 RepTime = CBase:new{
-mServerTimestamp=0,
-MY_TOPIC="reply_time",
-TIME_OUT_IN_MILLS = 10 * 1000
+    mServerTimestamp=0,
+    MY_TOPIC="reply_time",
+    TIME_OUT_IN_MILLS = 10 * 1000
 }
 
 function RepTime:new(o)
@@ -44,7 +43,7 @@ end
 -- ]]
 function RepTime:handleContent( timestampInSec,content )
     local r = false
-    if (timestampInSec<=0) then
+    if timestampInSec<=0 then
         LogUtil.d(TAG," illegal content or timestamp,handleContent return")
         return r
     end

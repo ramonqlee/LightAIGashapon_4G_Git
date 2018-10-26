@@ -7,6 +7,7 @@
 
 require "Consts"
 require "LogUtil"
+require "MyUtils"
 require "CloudConsts"
 require "RepMachVars"
 require "RepConfig"
@@ -16,21 +17,8 @@ local jsonex = require "jsonex"
 
 local TAG = "MQTTReplyMgr"
 local handlerTable={}
-MQTTReplyMgr ={}
+MQTTReplyMgr = {}
 
-local function getTableLen( tab )
-    local count = 0  
-
-    if "table"~=type(tab) then
-        return count
-    end
-
-    for k,_ in pairs(tab) do  
-        count = count + 1  
-    end 
-
-    return count
-end
 
 --注册处理器，如果已经注册过，直接覆盖
 function MQTTReplyMgr.registerHandler( handler )
@@ -38,7 +26,7 @@ function MQTTReplyMgr.registerHandler( handler )
 		return
 	end
 
-	if (not handler:name()) then
+	if not handler:name() then
 		return
 	end
 
@@ -46,7 +34,7 @@ function MQTTReplyMgr.registerHandler( handler )
 end
 
 function MQTTReplyMgr.makesureInit()
-	if getTableLen(handlerTable)>0 then
+	if MyUtils.getTableLen(handlerTable)>0 then
 		return
 	end
 
