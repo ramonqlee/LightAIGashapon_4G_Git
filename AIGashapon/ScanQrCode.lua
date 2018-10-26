@@ -48,7 +48,7 @@ function ScanQrCode:handleContent( content )
     -- 超时未出货，上传超时错误
 
     local r = false
-    if (not content) then
+    if not content then
         return
     end
 

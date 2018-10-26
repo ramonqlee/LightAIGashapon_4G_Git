@@ -56,7 +56,7 @@ end
 -- ]]
 function SetConfig:handleContent( content )
 	local r = false
- 	if (not content) then
+ 	if not content then
  		return
  	end
 
