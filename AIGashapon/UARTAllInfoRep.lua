@@ -11,7 +11,8 @@ require "MyUtils"
 local jsonex = require "jsonex"
 
 local TAG = "UARTAllInfoRep"
-local BOARDIDS = "ids"
+local BOARDIDS = "boardids"
+local SPLIT_CHAR = "_"
 
 UARTAllInfoRep = {MT = 0x93}
 
@@ -149,9 +150,11 @@ function UARTAllInfoRep.getAllBoardIds(returnCacheIfEmpty)
 	end
 
 	if returnCacheIfEmpty then
+		-- TODO 获取数据，并解析 StringSplit
 		tmp = Config.getValue(BOARDIDS)
 		if tmp and "string"==type(tmp) and #tmp>0 then
-			mAllBoardIds = jsonex.decode(tmp)
+			-- mAllBoardIds = jsonex.decode(tmp)
+			mAllBoardIds = MyUtils.StringSplit(tmp,SPLIT_CHAR)
 			-- LogUtil.d(TAG,"cached getAllBoardIds size = "..#mAllBoardIds)
 		end
 	end
@@ -163,8 +166,10 @@ function UARTAllInfoRep.notifiyCallback()
 	-- 是否保留之前获得的id
 	if Consts.EANBLE_MERGE_BOARD_ID then
 		tmp = Config.getValue(BOARDIDS)
+		-- TODO 获取数据，并解析 StringSplit
 		if tmp and "string"==type(tmp) and #tmp>0 then
-			local existAllBoardIds = jsonex.decode(tmp)
+			-- local existAllBoardIds = jsonex.decode(tmp)
+			local existAllBoardIds = MyUtils.StringSplit(tmp,SPLIT_CHAR)
 			if existAllBoardIds and #existAllBoardIds >0 then
 				for _,addr in pairs(existAllBoardIds) do
 					if not UARTAllInfoRep.hasIds(addr) then
@@ -179,7 +184,9 @@ function UARTAllInfoRep.notifiyCallback()
 	-- 做缓存和更新
 	-- 如果获取了新的，则直接缓存
 	if MyUtils.getTableLen(mAllBoardIds)>0 then
-		Config.saveValue(BOARDIDS,jsonex.encode(mAllBoardIds))
+		-- TODO 保存数据
+		v = MyUtils.ConcatTabValue(mAllBoardIds,SPLIT_CHAR)
+		Config.saveValue(BOARDIDS,v)
 	end
 
 	if myCallback then

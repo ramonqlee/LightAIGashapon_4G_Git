@@ -10,6 +10,25 @@ require "Config"
 require "CloudConsts"
 require "NodeIdConfig"
 
+function ConcatTabValue( tab,split )
+    if not tab or "table"~=type(tab) then
+        return ""
+    end
+
+    local ret = ""
+    for _,v in pairs(tab) do
+        ret = ret..v..split
+    end
+
+    if #ret<#split then
+        return ret
+    end
+
+    --remove last split
+    ret = string.sub(ret,1,#ret-#split)
+
+    return ret
+end
 
 function StringSplit(str,split)
     local lcSubStrTab = {}
