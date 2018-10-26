@@ -20,6 +20,7 @@ require "MQTTManager"
 require "Lightup"
 require "UARTLightup"
 
+
 local TAG="Entry"
 local timerId=nil
 local retryIdentifyTimerId=nil

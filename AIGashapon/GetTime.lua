@@ -10,6 +10,7 @@ require "CloudConsts"
 require "LogUtil"
 require "Consts"
 
+local jsonex = require "jsonex"
 local TAG = "GetTime"
 
 GetTime = CBase:new{ MY_TOPIC="get_time" }
@@ -55,7 +56,7 @@ function GetTime:sendGetTime(lastReboot)
     msg[CloudConsts.CONTENT]=myContent
 
 
-    MQTTManager.publish(topic,json.encode(msg))
+    MQTTManager.publish(topic,jsonex.encode(msg))
 end          
 
         

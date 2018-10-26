@@ -14,7 +14,7 @@ local TAG = "RepMachVars"
 local DEFAULT_JS_VERSION = "1"
 
 RepMachVars = CRBase:new{
-MY_TOPIC = "reply_machine_variables"
+	MY_TOPIC = "reply_machine_variables"
 }
 
 function RepMachVars:new(o)

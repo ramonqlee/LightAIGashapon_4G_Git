@@ -5,8 +5,9 @@
 -- @tested 2018.2.3
 
 require "LogUtil"
+
 UARTStatRep = {
-MT=0x91
+	MT=0x91
 }
 
 local mCallback = nil

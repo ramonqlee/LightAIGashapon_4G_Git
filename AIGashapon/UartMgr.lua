@@ -6,10 +6,7 @@
 -- @tested 2018.01.28
 
 require "LogUtil"
-if Consts.DEVICE_ENV then
-	require "sys"
-end
-
+require "sys"
 require "UARTStatRep"
 require "UARTAllInfoRep"
 require "UARTBoardInfo"
@@ -17,8 +14,8 @@ require "UARTGetAllInfo"
 
 local TAG = "UartMgr"
 UartMgr={
-devicePath=nil,
-toWriteMessages={}
+	devicePath=nil,
+	toWriteMessages={}
 }
 
 

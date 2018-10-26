@@ -5,7 +5,6 @@
 -- tested 2018.5.11
 
 require "Consts"
-require "jsonex"
 require "LogUtil"
 require "UartMgr"
 require "UARTPlayAudio"
@@ -47,9 +46,6 @@ function ScanQrCode:handleContent( content )
     -- 出货
     -- 监听出货情况
     -- 超时未出货，上传超时错误
-    if Consts.LOG_ENABLED then
-        LogUtil.d(TAG,TAG.." handleContent content="..jsonex.encode(content))
-    end
 
     local r = false
     if (not content) then

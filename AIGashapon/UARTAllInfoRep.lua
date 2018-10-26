@@ -8,7 +8,6 @@ require "LogUtil"
 require "Config"
 require "MyUtils"
 
-local jsonex = require "jsonex"
 
 local TAG = "UARTAllInfoRep"
 local BOARDIDS = "boardids"
@@ -153,7 +152,6 @@ function UARTAllInfoRep.getAllBoardIds(returnCacheIfEmpty)
 		-- TODO 获取数据，并解析 StringSplit
 		tmp = Config.getValue(BOARDIDS)
 		if tmp and "string"==type(tmp) and #tmp>0 then
-			-- mAllBoardIds = jsonex.decode(tmp)
 			mAllBoardIds = MyUtils.StringSplit(tmp,SPLIT_CHAR)
 			-- LogUtil.d(TAG,"cached getAllBoardIds size = "..#mAllBoardIds)
 		end
@@ -168,7 +166,6 @@ function UARTAllInfoRep.notifiyCallback()
 		tmp = Config.getValue(BOARDIDS)
 		-- TODO 获取数据，并解析 StringSplit
 		if tmp and "string"==type(tmp) and #tmp>0 then
-			-- local existAllBoardIds = jsonex.decode(tmp)
 			local existAllBoardIds = MyUtils.StringSplit(tmp,SPLIT_CHAR)
 			if existAllBoardIds and #existAllBoardIds >0 then
 				for _,addr in pairs(existAllBoardIds) do

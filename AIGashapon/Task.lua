@@ -10,11 +10,7 @@ require "LogUtil"
 require "UartMgr"
 require "UARTSlave"
 require "MyUtils"
-
-
-if Consts.DEVICE_ENV then
-	require "sys"
-end
+require "sys"
 
 local NONE_TASK = "NONE"
 local BODY_KEY = "body"

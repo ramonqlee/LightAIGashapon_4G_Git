@@ -9,7 +9,7 @@ require "LogUtil"
 local TAG = "UARTBoardInfo"
 
 UARTBoardInfo = {
-MT = 0x90
+	MT = 0x90
 }
 
 local masterBoardId

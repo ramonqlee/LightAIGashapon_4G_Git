@@ -9,8 +9,8 @@ require "CBase"
 require "CloudConsts"
 require "LogUtil"
 require "misc"
-local json = require "jsonex"
--- module(...,package.seeall)
+local jsonex = require "jsonex"
+
 
 local TAG = "RepTime"
 

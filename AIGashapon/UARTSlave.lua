@@ -5,7 +5,6 @@
 -- @release 2017.12.29
 
 require "UARTUtils"
-require "LogUtil"
 
 UARTSlave={
 	MT = 0xFE
