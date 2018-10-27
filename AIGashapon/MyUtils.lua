@@ -32,6 +32,10 @@ end
 
 function StringSplit(str,split)
     local lcSubStrTab = {}
+    if not str or "string" ~= type(str) then
+        return lcSubStrTab
+    end
+    
     while true do
         local lcPos = string.find(str,split)
         if not lcPos then

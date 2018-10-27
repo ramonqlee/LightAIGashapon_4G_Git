@@ -123,6 +123,9 @@ function SetConfig:startRebootSchedule()
             return
         end
 
+        if not reboot_schedule or not haltTime then
+            return
+        end
         -- 是否到时间了，关机并设置下次开机的时间
         local y =  os.date("%Y")
         local m =  os.date("%m")
