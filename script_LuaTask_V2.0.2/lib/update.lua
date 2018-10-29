@@ -23,12 +23,7 @@ end
 
 local function processOta(stepData,totalLen,statusCode)
     if stepData and totalLen then
-        if statusCode=="200" or statusCode=="206" then   
-            if rtos.fota_start()~=0 then 
-                log.error("update.request","fota_start fail")
-                return
-            end
-
+        if statusCode=="200" or statusCode=="206" then            
             if rtos.fota_process((sProcessedLen+stepData:len()>totalLen) and stepData:sub(1,totalLen-sProcessedLen) or stepData,totalLen)~=0 then 
                 log.error("updata.processOta","fail")
                 return false
@@ -66,8 +61,8 @@ function clientTask()
             local _,result,statusCode,head = sys.waitUntil("UPDATE_DOWNLOAD")
             log.info("update.waitUntil UPDATE_DOWNLOAD",result,statusCode)
             if result then
-                if statusCode=="200" or statusCode=="206" then   
-                    rtos.fota_end()                 
+                rtos.fota_end()
+                if statusCode=="200" or statusCode=="206" then                    
                     if sCbFnc then
                         sCbFnc(true)
                     else
@@ -126,11 +121,13 @@ end
 -- update.request(cbFnc,nil,4*3600*1000)
 -- update.request(cbFnc,nil,4*3600*1000,true)
 function request(cbFnc,url,period,redir)
+    if rtos.fota_start()~=0 then 
+        log.error("update.request","fota_start fail")
+        return
+    end
     sCbFnc,sUrl,sPeriod,sRedir = cbFnc or sCbFnc,url or sUrl,period or sPeriod,sRedir or redir
     log.info("update.request",sCbFnc,sUrl,sPeriod,sRedir)
     if not sUpdating then        
         sys.taskInit(clientTask)
     end
 end
-
-
