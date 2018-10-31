@@ -71,7 +71,7 @@ function pdpCmdCnf(curCmd, result,respdata, interdata)
         end
     else
         if net.getState() ~= 'REGISTERED' then return end
-        if net.getnetmode() == net.NetMode_LTE then
+        if net.getNetMode() == net.NetMode_LTE then
             request("AT+CGDCONT?", nil, pdpCmdCnf,1000)
         else
             request("AT+CGATT?", nil, nil, 1000)
@@ -114,16 +114,13 @@ rtos.on(rtos.MSG_PDP_DEACT_IND, function()
     request('AT+CGATT?')
 end)
 
--- 网络注册成功 :4G,AT*CGDFLT 设置PDP Context info
---            2/3G发起GPRS附着状态查询
-sys.subscribe("NET_STATE_REGISTERED", function()
-    --request('AT+CGATT?')
-    log.info("link.NET_STATE_REGISTERED",ready,net.getnetmode(), gprsAttached)
+local function Pdp_Act()
+    log.info(ready,net.getNetMode(), gprsAttached)
     if ready then 
         request("AT+CGDCONT?", nil, pdpCmdCnf)
         return 
     end
-    if net.getnetmode() == net.NetMode_LTE then
+    if net.getNetMode() == net.NetMode_LTE then
         if not gprsAttached then
             gprsAttached = true
             sys.publish("GPRS_ATTACH", true)
@@ -131,13 +128,17 @@ sys.subscribe("NET_STATE_REGISTERED", function()
         if not apnname then
             sys.timerStart(pdpCmdCnf, 1000, "SET_PDP_4G_WAITAPN",true)
         else
-			request(string.format('AT+CGDCONT=1,"IP","%s"', apnname), nil, pdpCmdCnf)
---          request(string.format('AT*CGDFLT=0,"IP","%s"', apnname), nil, pdpCmdCnf)
+            request(string.format('AT+CGDCONT=1,"IP","%s"', apnname), nil, pdpCmdCnf)
+            --request(string.format('AT*CGDFLT=0,"IP","%s"', apnname), nil, pdpCmdCnf)
         end
     else
         request('AT+CGATT?')
     end
-end)
+end
+
+-- 网络注册成功 :4G,AT*CGDFLT 设置PDP Context info
+--            2/3G发起GPRS附着状态查询
+sys.subscribe("NET_STATE_REGISTERED", Pdp_Act)
 
 local function cindCnf(curCmd, result,respdata,interdata)
     if not result then
@@ -150,6 +151,9 @@ local function cgevurc(data)
     if string.match(data, "DEACT") then
         ready = false
         sys.publish('IP_ERROR_IND')
+        
+        if net.getState() ~= 'REGISTERED' then return end
+        sys.timerStart(Pdp_Act, 2000)
     end
 end
 
