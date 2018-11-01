@@ -11,6 +11,7 @@ require "UARTPlayAudio"
 require "CloudConsts"
 require "CBase"
 
+local jsonex = require "jsonex"
 
 local TAG = "ScanQrCode"
 
@@ -63,6 +64,10 @@ function ScanQrCode:handleContent( content )
     if not device_seq or not location or not sn then 
         LogUtil.d(TAG,TAG.." oopse,missing key")
         return
+    end
+
+    if Consts.LOG_ENABLED then
+        LogUtil.d(TAG,TAG.." handleContent content="..jsonex.encode(content))
     end
 
     lastLocation = location
