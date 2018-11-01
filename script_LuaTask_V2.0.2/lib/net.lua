@@ -450,8 +450,8 @@ end
 
 --- 获取netmode
 -- @return netMode
--- @usage net.getnetmode()
-function getnetmode()
+-- @usage net.getNetMode()
+function getNetMode()
     return netMode
 end
 

@@ -88,7 +88,7 @@ end
 -- 返回值：无
 --]]
 local function updateState_LTE()
-    netMode=net.getnetmode()
+    netMode=net.getNetMode()
     if lteSwitch then
 	    if netMode == net.NetMode_LTE then
 		    sys.publish("LTE_LED_UPDATE",true)
