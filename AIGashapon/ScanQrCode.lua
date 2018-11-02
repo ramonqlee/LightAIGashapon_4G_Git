@@ -74,8 +74,8 @@ function ScanQrCode:handleContent( content )
     lastPurchaseTime = os.time()
 
     --播放扫码声音
-    local r = UARTPlayAudio.encode(UARTPlayAudio.SCAN_AUDIO)
-	UartMgr.publishMessage(r)
+    -- local r = UARTPlayAudio.encode(UARTPlayAudio.SCAN_AUDIO)
+	-- UartMgr.publishMessage(r)
 end   
 
 
