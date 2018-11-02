@@ -8,8 +8,8 @@ require "UARTUtils"
 
 UARTPlayAudio={
 	MT = 0x15,
-	SCAN_AUDIO = 0x1,-- 扫码声音；
-	OPENLOCK_AUDIO = 0x2--购买成功后
+	OPENLOCK_AUDIO = 0x1,--购买成功后
+	SCAN_AUDIO = 0x2-- 扫码声音；
 }
 
 function UARTPlayAudio.encode( audioIndex)
