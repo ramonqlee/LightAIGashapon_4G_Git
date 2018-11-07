@@ -9,6 +9,7 @@
 require "clib"
 require "utils"
 require "ntp"
+require "mywd"
 require "Consts"
 require "LogUtil"
 require "UartMgr"
@@ -242,9 +243,16 @@ function startTwinkleTask( )
         end,Consts.TWINKLE_INTERVAL)
 end
 
+function watchdog()
+	sys.timer_loop_start(function()
+         LogUtil.d(TAG,"feeddog started")
+         mywd.feed()--断网了，别忘了喂狗，否则会重启
+    end,Consts.FEEDDOG_PERIOD)
+end
 
 function run()
 	startTimedTask()
+	watchdog()
 
 	-- 启动一个延时定时器, 获取板子id
 	LogUtil.d(TAG,"run.....111")
@@ -288,6 +296,7 @@ function run()
 
 	end,Consts.TEST_MODE and 5*1000 or 120*1000)  
 end
+
 
 sys.taskInit(run)
 ntp.timeSync()
