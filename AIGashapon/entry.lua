@@ -244,7 +244,7 @@ function startTwinkleTask( )
 end
 
 function watchdog()
-	sys.timer_loop_start(function()
+	sys.timerLoopStart(function()
          LogUtil.d(TAG,"feeddog started")
          mywd.feed()--断网了，别忘了喂狗，否则会重启
     end,Consts.FEEDDOG_PERIOD)
