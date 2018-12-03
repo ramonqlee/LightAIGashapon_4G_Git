@@ -251,6 +251,7 @@ function watchdog()
 end
 
 function run()
+	rtos.make_dir(Consts.USER_DIR)--make sure directory exist
 	startTimedTask()
 	watchdog()
 
