@@ -31,7 +31,7 @@ Deliver = CBase:new{
     -- PAY_CARD = "card",
     DEFAULT_EXPIRE_TIME_IN_SEC=10,
     REOPEN_EXPIRE_TIME_IN_SEC=30,
-    DEFAULT_CHECK_DELAY_TIME_IN_SEC=5,
+    DEFAULT_CHECK_DELAY_TIME_IN_SEC=10,
     LOOP_TIME_IN_MS = 5*1000,-- 检查是否超时的时间间隔
     -- FIXME TEMP CODE
     ORDER_EXTRA_TIMEOUT_IN_SEC = 0--一个location的订单，如果超过了这个时间，则认为订单周期结束了(真的超时了)
@@ -425,26 +425,26 @@ function TimerFunc(id)
             loc = saleTable[CloudConsts.LOCATION]
 
             --TODO 是否已经发送过重试开锁指令
+            --TODO 是否已经发送过重试开锁指令，并且在指定的时间内没有收到开锁成功的指令
             local openTime = saleTable[LOCK_OPEN_TIME]
-            if Consts.RETRY_OPEN_LOCK and openTime and os.time()-openTime > Deliver.DEFAULT_EXPIRE_TIME_IN_SEC + Deliver.DEFAULT_CHECK_DELAY_TIME_IN_SEC and saleTable[LOCK_OPEN_STATE] ~= LOCK_STATE_OPEN then
-                local retried = saleTable[CloudConsts.RETRY_OPEN_LOCK]
-                if true~=retried then
+            if Consts.RETRY_OPEN_LOCK and openTime and os.time()-openTime < DeliverHandler.DEFAULT_CHECK_DELAY_TIME_IN_SEC and saleTable[LOCK_OPEN_STATE] ~= LOCK_STATE_OPEN then
+                if not saleTable[CloudConsts.RETRY_OPEN_LOCK_KEY] then
                     -- 开锁
                     local addr = nil
                     if "string" == type(seq) then
-                        addr = string.fromHex(seq)--pack.pack("b3",0x00,0x00,0x06)  
+                        addr = string.fromhex(seq)--pack.pack("b3",0x00,0x00,0x06)  
                     elseif "number"==type(seq) then
                         addr = string.format("%2X",seq)
                     end
 
                     if  addr then
-                        r = UARTControlInd.encode(addr,loc,Deliver.REOPEN_EXPIRE_TIME_IN_SEC)
+                        r = UARTControlInd.encode(addr,loc,DeliverHandler.REOPEN_EXPIRE_TIME_IN_SEC)
                         UartMgr.publishMessage(r)
 
                         LogUtil.d(TAG,TAG.." Deliver reopenLock, orderId = "..orderId)
                     end
 
-                    saleTable[CloudConsts.RETRY_OPEN_LOCK] = true
+                    saleTable[CloudConsts.RETRY_OPEN_LOCK_KEY] = "1"
                 end
             end
 
