@@ -11,11 +11,13 @@ require "UARTStatRep"
 require "UARTAllInfoRep"
 require "UARTBoardInfo"
 require "UARTGetAllInfo"
+require "MyUtils"
+
+local msgQueue={}
 
 local TAG = "UartMgr"
 UartMgr={
-	devicePath=nil,
-	toWriteMessages={}
+	devicePath=nil
 }
 
 
@@ -215,11 +217,11 @@ end
 local uartMsgQueueLooping = false
 
 function UartMgr.publishMessage( msg )
-	if not UartMgr.toWriteMessages then
-		UartMgr.toWriteMessages = {}
+	if not msgQueue then
+		msgQueue = {}
 	end
 
-	table.insert(UartMgr.toWriteMessages,msg)
+	table.insert(msgQueue,msg)
 end
 
 function UartMgr.loopMessage()
@@ -233,8 +235,10 @@ function UartMgr.loopMessage()
 		
 		while true do
 			-- send msg one by one
-			msg = table.remove(UartMgr.toWriteMessages)
-			uart_write(msg)
+			if MyUtils.getTableLen(msgQueue)>0 then
+				msg = table.remove(msgQueue,1)
+				uart_write(msg)
+			end
 
 			sys.wait(Consts.WAIT_UART_INTERVAL)--两次写入消息之间停留一段时间
 		end
