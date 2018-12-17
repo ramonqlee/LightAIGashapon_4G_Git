@@ -201,12 +201,9 @@ function connectMQTT()
             MyUtils.clearPassword()
 
             -- 网络ok时，重启板子
-            if link.isReady() then
-                LogUtil.d(TAG,"............softReboot when link.isReady in connectMQTT")
-                sys.wait(RETRY_TIME)--等待日志输出完毕
-                sys.restart("mqttFailTooLong")--重启更新包生效
-            end
-
+            LogUtil.d(TAG,"............softReboot when link.isReady in connectMQTT")
+            sys.restart("mqttFailTooLong")--重启更新包生效
+            sys.wait(RETRY_TIME)--等待日志输出完毕
             break
         end
     end
