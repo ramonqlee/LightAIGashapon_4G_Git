@@ -142,12 +142,21 @@ function SetConfig:startRebootSchedule()
         end
 
         -- 是否到时间了，关机并设置下次开机的时间
-        local y =  os.date("%Y")
-        local m =  os.date("%m")
-        local d =  os.date("%d")
+        local y =  2016
+        local m =  9
+        local d =  27
 
-        local rebootTimeInSec = os.time({year =y, month = m, day =d, hour =tonumber(rebootTab[1]), min =tonumber(rebootTab[2]), sec = 00})
-        local shutdownTimeInSec = os.time({year =y, month = m, day =d, hour =tonumber(shutdownTab[1]), min =tonumber(shutdownTab[2]), sec = 00})
+        LogUtil.d(TAG," year = "..y.." month = "..m.." day="..d)
+
+        local rebootTimeInSec = os.time({year =y, month = m, day =d, hour =tonumber(rebootTab[1]), min =tonumber(rebootTab[2])})
+        local shutdownTimeInSec = os.time({year =y, month = m, day =d, hour =tonumber(shutdownTab[1]), min =tonumber(shutdownTab[2])})
+        --理论上开机时间应该在关机时间之后，所以需要处理下
+        if rebootTimeInSec < shutdownTimeInSec then
+            --将开机时间推迟到第二天
+            LogUtil.d(TAG," origin rebootTimeInSec= "..rebootTimeInSec)
+            rebootTimeInSec = rebootTimeInSec+24*60*60
+        end
+
         LogUtil.d(TAG," shutdownTimeInSec = "..shutdownTimeInSec.." rebootTimeInSec = "..rebootTimeInSec.." os.time()="..os.time())
         local timeSpan = shutdownTimeInSec-os.time()
         if timeSpan < 0 then
