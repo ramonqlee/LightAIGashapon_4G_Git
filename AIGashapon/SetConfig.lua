@@ -134,8 +134,6 @@ function SetConfig:startRebootSchedule()
         local m =  9
         local d =  27
 
-        LogUtil.d(TAG," year = "..y.." month = "..m.." day="..d)
-
         local rebootTimeInSec = os.time({year =y, month = m, day =d, hour =tonumber(rebootTab[1]), min =tonumber(rebootTab[2])})
         local shutdownTimeInSec = os.time({year =y, month = m, day =d, hour =tonumber(shutdownTab[1]), min =tonumber(shutdownTab[2])})
         --理论上开机时间应该在关机时间之后，所以需要处理下
@@ -158,7 +156,7 @@ function SetConfig:startRebootSchedule()
 
         local r = UARTShutDown.encode(delay)
         UartMgr.publishMessage(r)
-        LogUtil.d(TAG,"......shutdown now....after "..delay.."ms, it will poweron")
+        LogUtil.d(TAG,"......shutdown now....after "..delay.."seconds, it will poweron")
     end,CHECK_INTERVAL_IN_SEC*1000)
 end
 
