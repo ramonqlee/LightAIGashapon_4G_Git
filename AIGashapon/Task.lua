@@ -11,6 +11,7 @@ require "UartMgr"
 require "UARTSlave"
 require "MyUtils"
 require "sys"
+require "ConstsPrivate"
 
 local NONE_TASK = "NONE"
 local BODY_KEY = "body"
@@ -51,7 +52,7 @@ function Task.getTask()
 	    sign = crypto.sha1(tmp,#tmp)
 	    sign = string.lower(sign)
 
-		url = string.format(Consts.MQTT_TASK_URL_FORMATTER,nodeId, nonce, timestamp, sign)
+		url = string.format(ConstsPrivate.MQTT_TASK_URL_FORMATTER,nodeId, nonce, timestamp, sign)
 	    LogUtil.d(TAG,"url = "..url)
 
 	    isRunning = true

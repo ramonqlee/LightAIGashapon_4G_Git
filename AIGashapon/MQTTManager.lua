@@ -24,6 +24,7 @@ require "GetTime"
 require "RepTime"
 require "SetConfig"
 require "MyUtils"
+require "ConstsPrivate"
 
 local jsonex = require "jsonex"
 
@@ -34,7 +35,7 @@ local DISCONNECT_WAIT_TIME=5000
 local KEEPALIVE,CLEANSESSION=60,0
 local CLEANSESSION_TRUE=1
 local MAX_RETRY_SESSION_COUNT=2--重试n次后，如果还事变，则清理服务端的消息
-local PROT,ADDR,PORT =Consts.PROTOCOL,Consts.MQTT_ADDR,Consts.MQTT_PORT
+local PROT,ADDR,PORT =ConstsPrivate.MQTT_PROTOCOL,ConstsPrivate.MQTT_ADDR,ConstsPrivate.MQTT_PORT
 local QOS,RETAIN=2,1
 local CLIENT_COMMAND_TIMEOUT = 5000
 local CLIENT_COMMAND_SHORT_TIMEOUT = 1000
@@ -109,7 +110,7 @@ function getNodeIdAndPasswordFromServer()
     imei = misc.getImei()
     sn = crypto.md5(imei,#imei)
 
-    url = string.format(Consts.MQTT_CONFIG_NODEID_URL_FORMATTER,imei,sn)
+    url = string.format(ConstsPrivate.MQTT_CONFIG_NODEID_URL_FORMATTER,imei,sn)
     LogUtil.d(TAG,"url = "..url)
     http.request("GET",url,nil,nil,nil,nil,function(result,prompt,head,body )
         if result and body then

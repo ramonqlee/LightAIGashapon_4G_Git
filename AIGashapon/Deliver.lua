@@ -427,7 +427,7 @@ function TimerFunc(id)
             --TODO 是否已经发送过重试开锁指令
             --TODO 是否已经发送过重试开锁指令，并且在指定的时间内没有收到开锁成功的指令
             local openTime = saleTable[LOCK_OPEN_TIME]
-            if Consts.RETRY_OPEN_LOCK and openTime and os.time()-openTime < DeliverHandler.DEFAULT_CHECK_DELAY_TIME_IN_SEC and saleTable[LOCK_OPEN_STATE] ~= LOCK_STATE_OPEN then
+            if Consts.RETRY_OPEN_LOCK and openTime and os.time()-openTime < Deliver.DEFAULT_CHECK_DELAY_TIME_IN_SEC and saleTable[LOCK_OPEN_STATE] ~= LOCK_STATE_OPEN then
                 if not saleTable[CloudConsts.RETRY_OPEN_LOCK_KEY] then
                     -- 开锁
                     local addr = nil
@@ -438,7 +438,7 @@ function TimerFunc(id)
                     end
 
                     if  addr then
-                        r = UARTControlInd.encode(addr,loc,DeliverHandler.REOPEN_EXPIRE_TIME_IN_SEC)
+                        r = UARTControlInd.encode(addr,loc,Deliver.REOPEN_EXPIRE_TIME_IN_SEC)
                         UartMgr.publishMessage(r)
 
                         LogUtil.d(TAG,TAG.." Deliver reopenLock, orderId = "..orderId)
