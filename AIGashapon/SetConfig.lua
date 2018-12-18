@@ -19,14 +19,33 @@ require "UARTShutDown"
 local TAG = "SetConfig"
 
 local STATE_INIT = "INIT"
+local REBOOT_TIMEOUT = 5*60
 local CHECK_INTERVAL_IN_SEC = 60--检查重启的时间间隔
 local rebootTime
 local haltTime 
 local rebootTimer
 
+local function formTimeWithHourMin( timeStr )
+    local SPLIT_LEN = 2
+    local timeTab = MyUtils.StringSplit(timeStr,":")
+
+    if MyUtils.getTableLen(timeTab) ~= SPLIT_LEN then
+        return os.time()
+    end
+
+        -- 是否到时间了，关机并设置下次开机的时间
+    local time = misc.getClock()
+    local y =  time.year
+    local m =  time.month
+    local d =  time.day
+
+    return os.time({year =y, month = m, day =d, hour =tonumber(timeTab[1]), min =tonumber(timeTab[2])})
+end
+
 SetConfig = CBase:new{
     MY_TOPIC = "set_config"
 }
+
 
 function SetConfig:new(o)
     o = o or CBase:new(o)
@@ -73,6 +92,16 @@ function SetConfig:handleContent( content )
  	-- Config.saveValue(CloudConsts.REBOOT_SCHEDULE,content[CloudConsts.REBOOT_SCHEDULE])
     haltTime = content[CloudConsts.HALT_SCHEDULE]--关机时间
     rebootTime = content[CloudConsts.REBOOT_SCHEDULE]--开机时间
+
+    --TOOD 加入误操作机制
+    --如果收到的关机时间已经过了5分钟，则忽略
+    local rebootTimeInSec = formTimeWithHourMin(haltTime)
+    if rebootTimeInSec + REBOOT_TIMEOUT < os.time() and then
+        haltTime = nil
+        rebootTime = nil
+        LogUtil.d(TAG,"timeout boot schedule,ignore")
+    end
+    
 
     SetConfig.startRebootSchedule()
 
@@ -121,21 +150,8 @@ function SetConfig:startRebootSchedule()
 
         LogUtil.d(TAG,"rebootTime = "..rebootTime.." haltTime="..haltTime)
 
-        local SPLIT_LEN = 2
-        local rebootTab = MyUtils.StringSplit(rebootTime,":")
-        local shutdownTab = MyUtils.StringSplit(haltTime,":")
-
-        if MyUtils.getTableLen(rebootTab) ~= SPLIT_LEN or MyUtils.getTableLen(shutdownTab) ~= SPLIT_LEN then
-            return
-        end
-
-        -- 是否到时间了，关机并设置下次开机的时间
-        local y =  2016
-        local m =  9
-        local d =  27
-
-        local rebootTimeInSec = os.time({year =y, month = m, day =d, hour =tonumber(rebootTab[1]), min =tonumber(rebootTab[2])})
-        local shutdownTimeInSec = os.time({year =y, month = m, day =d, hour =tonumber(shutdownTab[1]), min =tonumber(shutdownTab[2])})
+        local rebootTimeInSec = formTimeWithHourMin(rebootTime)
+        local shutdownTimeInSec = formTimeWithHourMin(haltTime)
         --理论上开机时间应该在关机时间之后，所以需要处理下
         if rebootTimeInSec < shutdownTimeInSec then
             --将开机时间推迟到第二天
