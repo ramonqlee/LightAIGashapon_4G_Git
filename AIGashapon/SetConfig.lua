@@ -158,8 +158,7 @@ function SetConfig:startRebootSchedule()
         end
 
         LogUtil.d(TAG," shutdownTimeInSec = "..shutdownTimeInSec.." rebootTimeInSec = "..rebootTimeInSec.." os.time()="..os.time())
-        local timeSpan = shutdownTimeInSec-os.time()
-        if timeSpan < 0 then
+        if shutdownTimeInSec > os.time() then
             return
         end
 
