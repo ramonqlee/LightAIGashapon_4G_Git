@@ -123,7 +123,7 @@ function SetConfig:startRebootSchedule()
             return
         end
 
-        if not reboot_schedule or not haltTime then
+        if not rebootTime or not haltTime then
             return
         end
         -- 是否到时间了，关机并设置下次开机的时间
@@ -132,7 +132,7 @@ function SetConfig:startRebootSchedule()
         local d =  os.date("%d")
 
         local SPLIT_LEN = 2
-        local rebootTab = MyUtils.StringSplit(reboot_schedule)
+        local rebootTab = MyUtils.StringSplit(rebootTime)
         local shutdownTab = MyUtils.StringSplit(haltTime)
 
         if MyUtils.getTableLen(rebootTab) ~= SPLIT_LEN or MyUtils.getTableLen(shutdownTab) ~= SPLIT_LEN then
@@ -146,7 +146,7 @@ function SetConfig:startRebootSchedule()
             return
         end
 
-        --播放扫码声音
+        --关机，并设定下次开机的时间
         local delay = shutdownTimeMs-rebootTimeMs
         if delay < 0 then
             delay = -delay
@@ -154,7 +154,7 @@ function SetConfig:startRebootSchedule()
 
         local r = UARTShutDown.encode(delay)
         UartMgr.publishMessage(r)
-        LogUtil.d(TAG,".........................................shutdown now.........................................")
+        LogUtil.d(TAG,"......shutdown now....after "..delay.."ms, it will poweron")
     end,60*1000)
 end
 
