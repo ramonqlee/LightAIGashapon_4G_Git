@@ -90,6 +90,8 @@ function SetConfig:handleContent( content )
  	map[CloudConsts.NODE_NAME]=content[CloudConsts.NODE_NAME]
  	map[CloudConsts.NODE_PRICE]=content[CloudConsts.NODE_PRICE]
  	map[CloudConsts.REBOOT_SCHEDULE]=content[CloudConsts.REBOOT_SCHEDULE]
+    map[CloudConsts.HALT_SCHEDULE]=content[CloudConsts.HALT_SCHEDULE]
+    
     local arriveTime = content[CloudConsts.ARRIVE_TIME]
     if arriveTime then
         map[CloudConsts.ARRIVE_TIME]= arriveTime    
@@ -157,7 +159,7 @@ function SetConfig:startRebootSchedule()
             rebootTimeInSec = rebootTimeInSec+24*60*60
         end
 
-        LogUtil.d(TAG," shutdownTimeInSec = "..shutdownTimeInSec.." rebootTimeInSec = "..rebootTimeInSec.." os.time()="..os.time())
+        LogUtil.d(TAG,"rebootTimeInSec = "..rebootTimeInSec.." shutdownTimeInSec = "..shutdownTimeInSec.." os.time()="..os.time())
         if shutdownTimeInSec > os.time() then
             return
         end
