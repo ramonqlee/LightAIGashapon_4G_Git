@@ -92,7 +92,7 @@ function SetConfig:handleContent( content )
     --TOOD 加入误操作机制
     --如果收到的关机时间已经过了5分钟，则忽略
     local rebootTimeInSec = formTimeWithHourMin(haltTime)
-    if rebootTimeInSec + REBOOT_TIMEOUT < os.time() and then
+    if rebootTimeInSec + REBOOT_TIMEOUT < os.time() then
         haltTime = nil
         rebootTime = nil
         LogUtil.d(TAG,"timeout boot schedule,ignore")
