@@ -35,11 +35,7 @@ local function formTimeWithHourMin( timeStr )
 
         -- 是否到时间了，关机并设置下次开机的时间
     local time = misc.getClock()
-    local y =  time.year
-    local m =  time.month
-    local d =  time.day
-
-    return os.time({year =y, month = m, day =d, hour =tonumber(timeTab[1]), min =tonumber(timeTab[2])})
+    return os.time({year =time.year, month = time.month, day =time.day, hour =tonumber(timeTab[1]), min =tonumber(timeTab[2])})
 end
 
 SetConfig = CBase:new{
