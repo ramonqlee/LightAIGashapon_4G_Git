@@ -132,18 +132,19 @@ function SetConfig:startRebootSchedule()
         end
 
         LogUtil.d(TAG,"rebootTime = "..rebootTime.." haltTime="..haltTime)
-        -- 是否到时间了，关机并设置下次开机的时间
-        local y =  os.date("%Y")
-        local m =  os.date("%m")
-        local d =  os.date("%d")
 
         local SPLIT_LEN = 2
-        local rebootTab = MyUtils.StringSplit(rebootTime)
-        local shutdownTab = MyUtils.StringSplit(haltTime)
+        local rebootTab = MyUtils.StringSplit(rebootTime,":")
+        local shutdownTab = MyUtils.StringSplit(haltTime,":")
 
         if MyUtils.getTableLen(rebootTab) ~= SPLIT_LEN or MyUtils.getTableLen(shutdownTab) ~= SPLIT_LEN then
             return
         end
+
+        -- 是否到时间了，关机并设置下次开机的时间
+        local y =  os.date("%Y")
+        local m =  os.date("%m")
+        local d =  os.date("%d")
 
         local rebootTimeInSec = os.time({year =y, month = m, day =d, hour =tonumber(rebootTab[1]), min =tonumber(rebootTab[2]), sec = 00})
         local shutdownTimeInSec = os.time({year =y, month = m, day =d, hour =tonumber(shutdownTab[1]), min =tonumber(shutdownTab[2]), sec = 00})

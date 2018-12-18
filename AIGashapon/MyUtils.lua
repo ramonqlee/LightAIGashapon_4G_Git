@@ -30,7 +30,7 @@ end
 
 function StringSplit(str,split)
     local lcSubStrTab = {}
-    if not str or "string" ~= type(str) then
+    if not str or "string" ~= type(str) or not split then
         return lcSubStrTab
     end
     
