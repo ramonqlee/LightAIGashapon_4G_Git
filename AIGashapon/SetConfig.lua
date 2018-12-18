@@ -19,6 +19,7 @@ require "UARTShutDown"
 local TAG = "SetConfig"
 
 local STATE_INIT = "INIT"
+local CHECK_INTERVAL_IN_SEC = 60--检查重启的时间间隔
 local rebootTime
 local haltTime 
 local rebootTimer
@@ -119,13 +120,18 @@ function SetConfig:startRebootSchedule()
     end
 
     rebootTimer = sys.timerLoopStart(function()
+        LogUtil.d(TAG," checking reboot schedule")
+
         if MQTTManager.hasMessage() or Deliver.isDelivering() then
+            LogUtil.d(TAG," checking reboot schedule,but mqtt has message or is delivering")
             return
         end
 
         if not rebootTime or not haltTime then
             return
         end
+
+        LogUtil.d(TAG,"rebootTime = "..rebootTime.." haltTime="..haltTime)
         -- 是否到时间了，关机并设置下次开机的时间
         local y =  os.date("%Y")
         local m =  os.date("%m")
@@ -139,15 +145,16 @@ function SetConfig:startRebootSchedule()
             return
         end
 
-        local rebootTimeMs = os.time({year =y, month = m, day =d, hour =tonumber(rebootTab[1]), min =tonumber(rebootTab[2]), sec = 00})
-        local shutdownTimeMs = os.time({year =y, month = m, day =d, hour =tonumber(shutdownTab[1]), min =tonumber(shutdownTab[2]), sec = 00})
-        if shutdownTimeMs < os.time() then
-            LogUtil.d(TAG," shutdownTimeMs = "..shutdownTimeMs.." rebootTimeMs = "..rebootTimeMs)
+        local rebootTimeInSec = os.time({year =y, month = m, day =d, hour =tonumber(rebootTab[1]), min =tonumber(rebootTab[2]), sec = 00})
+        local shutdownTimeInSec = os.time({year =y, month = m, day =d, hour =tonumber(shutdownTab[1]), min =tonumber(shutdownTab[2]), sec = 00})
+        LogUtil.d(TAG," shutdownTimeInSec = "..shutdownTimeInSec.." rebootTimeInSec = "..rebootTimeInSec.." os.time()="..os.time())
+        local timeSpan = shutdownTimeInSec-os.time()
+        if timeSpan < 0 then
             return
         end
 
         --关机，并设定下次开机的时间
-        local delay = shutdownTimeMs-rebootTimeMs
+        local delay = shutdownTimeInSec-rebootTimeInSec
         if delay < 0 then
             delay = -delay
         end
@@ -155,6 +162,6 @@ function SetConfig:startRebootSchedule()
         local r = UARTShutDown.encode(delay)
         UartMgr.publishMessage(r)
         LogUtil.d(TAG,"......shutdown now....after "..delay.."ms, it will poweron")
-    end,60*1000)
+    end,CHECK_INTERVAL_IN_SEC*1000)
 end
 
