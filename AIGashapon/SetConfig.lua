@@ -63,7 +63,7 @@ function SetConfig:handleContent( content )
 
  	local state = content[CloudConsts.STATE]
  	local sn = content[CloudConsts.SN]
- 	if(not state or not sn) then
+ 	if not state or not sn then
  		return r
  	end
 
@@ -76,7 +76,6 @@ function SetConfig:handleContent( content )
 
     SetConfig.startRebootSchedule()
 
-
  	nodeName = Config.getValue(CloudConsts.NODE_NAME)
  	if nodeName then
  		LogUtil.d(TAG,"state ="..state.." node_name="..nodeName)
@@ -84,21 +83,8 @@ function SetConfig:handleContent( content )
  		LogUtil.d(TAG,"nodeName is empty")
  	end
 
- 	local map={}
- 	map[CloudConsts.SN]=sn
- 	map[CloudConsts.STATE]=state
- 	map[CloudConsts.NODE_NAME]=content[CloudConsts.NODE_NAME]
- 	map[CloudConsts.NODE_PRICE]=content[CloudConsts.NODE_PRICE]
- 	map[CloudConsts.REBOOT_SCHEDULE]=content[CloudConsts.REBOOT_SCHEDULE]
-    map[CloudConsts.HALT_SCHEDULE]=content[CloudConsts.HALT_SCHEDULE]
-    
-    local arriveTime = content[CloudConsts.ARRIVE_TIME]
-    if arriveTime then
-        map[CloudConsts.ARRIVE_TIME]= arriveTime    
-    end
-
  	-- print(RepConfig.MY_TOPIC)
- 	MQTTReplyMgr.replyWith(RepConfig.MY_TOPIC,map)
+ 	MQTTReplyMgr.replyWith(RepConfig.MY_TOPIC,content)
 
  	-- 恢复初始状态
  	if STATE_INIT==state then
