@@ -12,7 +12,7 @@ UARTShutDown={
 
 function UARTShutDown.encode( delayInSec)
 	-- TODO待根据格式组装报文
- 	data = pack.pack("l",delayInSec)
+ 	data = pack.pack(">I",delayInSec)
  	
  	sf = pack.pack("b",UARTUtils.SEND)
  	mt = pack.pack("b",UARTShutDown.MT)
