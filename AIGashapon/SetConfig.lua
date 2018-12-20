@@ -19,7 +19,6 @@ require "UARTShutDown"
 local TAG = "SetConfig"
 
 local STATE_INIT = "INIT"
-local REBOOT_TIMEOUT = 5*60
 local CHECK_INTERVAL_IN_SEC = 60--检查重启的时间间隔
 local rebootTime
 local haltTime 
@@ -86,19 +85,16 @@ function SetConfig:handleContent( content )
  	Config.saveValue(CloudConsts.NODE_NAME,content[CloudConsts.NODE_NAME])
  	Config.saveValue(CloudConsts.NODE_PRICE,content[CloudConsts.NODE_PRICE])
  	-- Config.saveValue(CloudConsts.REBOOT_SCHEDULE,content[CloudConsts.REBOOT_SCHEDULE])
-    haltTime = content[CloudConsts.HALT_SCHEDULE]--关机时间
-    rebootTime = content[CloudConsts.REBOOT_SCHEDULE]--开机时间
-
+    
+    haltTimeTemp = content[CloudConsts.HALT_SCHEDULE]--关机时间
     --TOOD 加入误操作机制
     --如果收到的关机时间已经过了5分钟，则忽略
-    local rebootTimeInSec = formTimeWithHourMin(haltTime)
-    if rebootTimeInSec + REBOOT_TIMEOUT < os.time() then
-        haltTime = nil
-        rebootTime = nil
-        LogUtil.d(TAG,"timeout boot schedule,ignore")
+    local rebootTimeInSec = formTimeWithHourMin(haltTimeTemp)
+    if rebootTimeInSec > os.time() then
+        haltTime = haltTimeTemp
+        rebootTime = content[CloudConsts.REBOOT_SCHEDULE]--开机时间
     end
     
-
     SetConfig.startRebootSchedule()
 
  	nodeName = Config.getValue(CloudConsts.NODE_NAME)
