@@ -55,7 +55,8 @@ local startmqtted = false
 local unsubscribe = false
 
 function emptyExtraRequest()
-      toHandleRequests={}
+    toHandleRequests={}
+    LogUtil.d(TAG," emptyExtraRequest")
 end 
 
 function emptyMessageQueue()
@@ -298,7 +299,6 @@ function handleRequst()
 
         -- 对于断开mqtt的请求，需要先清空消息队列
         if MQTT_DISCONNECT_REQUEST == req and not MQTTManager.hasMessage() then
-            sys.wait(DISCONNECT_WAIT_TIME)
             LogUtil.d(TAG,"mqtt MQTT_DISCONNECT_REQUEST")
             if mqttc and mqttc.connected then
                 mqttc:disconnect()
@@ -368,7 +368,6 @@ function loopPreviousMessage( mqttProtocolHandlerPool )
         end
     end
 
-    emptyExtraRequest()--忽略请求
     log.info(TAG, "loopPreviousMessage done")
 end
 
@@ -485,8 +484,8 @@ function startmqtt()
             mqttc:disconnect()
 
             msgcache.clear()
-            emptyMessageQueue()
-            emptyExtraRequest()
+            -- emptyMessageQueue()
+            -- emptyExtraRequest()
             reconnectCount = 0
             LogUtil.d(TAG,".............................startmqtt CLEANSESSION all ".." reconnectCount = "..reconnectCount)
         end

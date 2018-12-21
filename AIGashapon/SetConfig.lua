@@ -21,6 +21,7 @@ local TAG = "SetConfig"
 local STATE_INIT = "INIT"
 local CHECK_INTERVAL_IN_SEC = 60--检查重启的时间间隔
 local rebootTimer
+local previousInitSn
 
 local rebootTimeInSec
 local shutdownTimeInSec
@@ -104,11 +105,6 @@ function SetConfig:handleContent( content )
  	if not state or not sn then
  		return r
  	end
-
- 	Config.saveValue(CloudConsts.VM_SATE,state)
- 	Config.saveValue(CloudConsts.NODE_NAME,content[CloudConsts.NODE_NAME])
- 	Config.saveValue(CloudConsts.NODE_PRICE,content[CloudConsts.NODE_PRICE])
- 	-- Config.saveValue(CloudConsts.REBOOT_SCHEDULE,content[CloudConsts.REBOOT_SCHEDULE])
     
     haltTimeTemp = content[CloudConsts.HALT_SCHEDULE]--关机时间
     --TOOD 加入误操作机制
@@ -118,47 +114,41 @@ function SetConfig:handleContent( content )
         local haltTime = haltTimeTemp
         local rebootTime = content[CloudConsts.REBOOT_SCHEDULE]--开机时间
 
-        if not rebootTime or not haltTime then
-            return
+        if rebootTime or haltTime then
+            LogUtil.d(TAG,"rebootTime = "..rebootTime.." haltTime="..haltTime)
+
+            rebootTimeInSec = formTimeWithHourMin(rebootTime)
+            shutdownTimeInSec = formTimeWithHourMin(haltTime)
+            --理论上开机时间应该在关机时间之后，所以需要处理下
+            if rebootTimeInSec < shutdownTimeInSec then
+                --将开机时间推迟到第二天
+                LogUtil.d(TAG," origin rebootTimeInSec= "..rebootTimeInSec)
+                rebootTimeInSec = rebootTimeInSec+24*60*60
+            end
+
+            LogUtil.d(TAG,"rebootTimeInSec = "..rebootTimeInSec.." shutdownTimeInSec = "..shutdownTimeInSec.." os.time()="..os.time())
+
+            content["setHaltTime"]=shutdownTimeInSec
+            content["setBootTime"]=rebootTimeInSec
         end
-
-        LogUtil.d(TAG,"rebootTime = "..rebootTime.." haltTime="..haltTime)
-
-        rebootTimeInSec = formTimeWithHourMin(rebootTime)
-        shutdownTimeInSec = formTimeWithHourMin(haltTime)
-        --理论上开机时间应该在关机时间之后，所以需要处理下
-        if rebootTimeInSec < shutdownTimeInSec then
-            --将开机时间推迟到第二天
-            LogUtil.d(TAG," origin rebootTimeInSec= "..rebootTimeInSec)
-            rebootTimeInSec = rebootTimeInSec+24*60*60
-        end
-
-        LogUtil.d(TAG,"rebootTimeInSec = "..rebootTimeInSec.." shutdownTimeInSec = "..shutdownTimeInSec.." os.time()="..os.time())
-
-        content["setHaltTime"]=shutdownTimeInSec
-        content["setBootTime"]=rebootTimeInSec
     end
-    
+
+    MQTTReplyMgr.replyWith(RepConfig.MY_TOPIC,content)
+
     SetConfig.startRebootSchedule()
-
- 	nodeName = Config.getValue(CloudConsts.NODE_NAME)
- 	if nodeName then
- 		LogUtil.d(TAG,"state ="..state.." node_name="..nodeName)
- 	else
- 		LogUtil.d(TAG,"nodeName is empty")
- 	end
-
- 	-- print(RepConfig.MY_TOPIC)
- 	MQTTReplyMgr.replyWith(RepConfig.MY_TOPIC,content)
 
  	-- 恢复初始状态
  	if STATE_INIT==state then
-    	LogUtil.d(TAG,"state ="..state.." clear nodeId and password")
-        MyUtils.clearUserName()
-        MyUtils.clearPassword()
-        
-    	MQTTManager.disconnect()
-    	return
+        -- 获取最近一次INIT的sn，如果是重复的，则不再发送消息
+        if previousInitSn ~= sn then
+            previousInitSn = sn
+
+            LogUtil.d(TAG,"state ="..state.." clear nodeId and password")
+            MyUtils.clearUserName()
+            MyUtils.clearPassword()
+            
+            MQTTManager.disconnect()
+        end
     end
 end 
 
