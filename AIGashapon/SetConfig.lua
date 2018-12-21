@@ -179,6 +179,10 @@ function SetConfig:startRebootSchedule()
             LogUtil.d(TAG," checking reboot schedule,but mqtt has message or is delivering")
             return
         end
+
+        if not shutdownTimeInSec or not shutdownTimeInSec then
+            return
+        end
         
         if shutdownTimeInSec > os.time() then
             return
