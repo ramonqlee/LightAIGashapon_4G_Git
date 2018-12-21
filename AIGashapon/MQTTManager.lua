@@ -287,7 +287,7 @@ end
 function handleRequst()
     timeSync()
 
-    if not toHandleRequests or 0 == getTableLen(toHandleRequests) then
+    if not toHandleRequests or 0 == MyUtils.getTableLen(toHandleRequests) then
         LogUtil.d(TAG,"empty handleRequst")
         return
     end
