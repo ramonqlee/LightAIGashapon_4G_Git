@@ -44,7 +44,7 @@ function RepMachVars:addExtraPayloadContent( content )
 	content["last_reboot"] =  t --0--用户标识时间未同步
 	-- FIXME 待赋值
 	content["signal_strength"]=net.getRssi()
-	content["app_version"]="NIUQUMCS-01-".._G.VERSION
+	content["app_version"]="NIUQUMCS-03-".._G.VERSION
 	local devices={}
 
 	local CATEGORY = "sem"
