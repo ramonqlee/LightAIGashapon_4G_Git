@@ -20,9 +20,10 @@ local TAG = "SetConfig"
 
 local STATE_INIT = "INIT"
 local CHECK_INTERVAL_IN_SEC = 60--检查重启的时间间隔
-local rebootTime
-local haltTime 
 local rebootTimer
+
+local rebootTimeInSec
+local shutdownTimeInSec
 
 local function formTimeWithHourMin( timeStr )
     local ONE_HOUR_IN_SEC = 60*60
@@ -114,8 +115,28 @@ function SetConfig:handleContent( content )
     --如果收到的关机时间已经过了，则忽略
     local tempTime = formTimeWithHourMin(haltTimeTemp)
     if tempTime > os.time() then
-        haltTime = haltTimeTemp
-        rebootTime = content[CloudConsts.REBOOT_SCHEDULE]--开机时间
+        local haltTime = haltTimeTemp
+        local rebootTime = content[CloudConsts.REBOOT_SCHEDULE]--开机时间
+
+        if not rebootTime or not haltTime then
+            return
+        end
+
+        LogUtil.d(TAG,"rebootTime = "..rebootTime.." haltTime="..haltTime)
+
+        rebootTimeInSec = formTimeWithHourMin(rebootTime)
+        shutdownTimeInSec = formTimeWithHourMin(haltTime)
+        --理论上开机时间应该在关机时间之后，所以需要处理下
+        if rebootTimeInSec < shutdownTimeInSec then
+            --将开机时间推迟到第二天
+            LogUtil.d(TAG," origin rebootTimeInSec= "..rebootTimeInSec)
+            rebootTimeInSec = rebootTimeInSec+24*60*60
+        end
+
+        LogUtil.d(TAG,"rebootTimeInSec = "..rebootTimeInSec.." shutdownTimeInSec = "..shutdownTimeInSec.." os.time()="..os.time())
+
+        content["setHaltTime"]=shutdownTimeInSec
+        content["setBootTime"]=rebootTimeInSec
     end
     
     SetConfig.startRebootSchedule()
@@ -158,29 +179,13 @@ function SetConfig:startRebootSchedule()
             LogUtil.d(TAG," checking reboot schedule,but mqtt has message or is delivering")
             return
         end
-
-        if not rebootTime or not haltTime then
-            return
-        end
-
-        LogUtil.d(TAG,"rebootTime = "..rebootTime.." haltTime="..haltTime)
-
-        local rebootTimeInSec = formTimeWithHourMin(rebootTime)
-        local shutdownTimeInSec = formTimeWithHourMin(haltTime)
-        --理论上开机时间应该在关机时间之后，所以需要处理下
-        if rebootTimeInSec < shutdownTimeInSec then
-            --将开机时间推迟到第二天
-            LogUtil.d(TAG," origin rebootTimeInSec= "..rebootTimeInSec)
-            rebootTimeInSec = rebootTimeInSec+24*60*60
-        end
-
-        LogUtil.d(TAG,"rebootTimeInSec = "..rebootTimeInSec.." shutdownTimeInSec = "..shutdownTimeInSec.." os.time()="..os.time())
+        
         if shutdownTimeInSec > os.time() then
             return
         end
 
         --关机，并设定下次开机的时间
-        local delay = shutdownTimeInSec-rebootTimeInSec
+        local delay = rebootTimeInSec - shutdownTimeInSec
         if delay < 0 then
             delay = -delay
         end
