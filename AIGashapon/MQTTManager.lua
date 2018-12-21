@@ -283,14 +283,12 @@ function publishMessageQueue(maxMsgPerRequest)
 
 end
 
+
 function handleRequst()
     timeSync()
 
-    if not toHandleRequests or 0 == #toHandleRequests then
-        return
-    end
-
-    if not mqttc then
+    if not toHandleRequests or 0 == getTableLen(toHandleRequests) then
+        LogUtil.d(TAG,"empty handleRequst")
         return
     end
 
@@ -299,10 +297,12 @@ function handleRequst()
     for key,req in pairs(toHandleRequests) do
 
         -- 对于断开mqtt的请求，需要先清空消息队列
-        if MQTT_DISCONNECT_REQUEST == req and not hasMessage() then
+        if MQTT_DISCONNECT_REQUEST == req and not MQTTManager.hasMessage() then
             sys.wait(DISCONNECT_WAIT_TIME)
             LogUtil.d(TAG,"mqtt MQTT_DISCONNECT_REQUEST")
-            mqttc:disconnect()
+            if mqttc and mqttc.connected then
+                mqttc:disconnect()
+            end
 
             toRemove[key]=1
         end
@@ -317,6 +317,7 @@ function handleRequst()
     end
 
 end
+
 
 function publish(topic, payload)
     toPublishMessages=toPublishMessages or{}
