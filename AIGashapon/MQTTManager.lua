@@ -246,7 +246,7 @@ function publishMessageQueue(maxMsgPerRequest)
         topic = msg.topic
         payload = msg.payload
 
-        if topic and payload  then
+        if topic and payload and #topic>0 and #payload>0 then
             LogUtil.d(TAG,"publish topic="..topic.." queue size = "..MyUtils.getTableLen(toPublishMessages))
             local r = mqttc:publish(topic,payload,QOS,RETAIN)
             
@@ -265,9 +265,12 @@ function publishMessageQueue(maxMsgPerRequest)
 
             count = count+1
             if maxMsgPerRequest>0 and count>=maxMsgPerRequest then
-                LogUtil.d(TAG,"publish count = "..maxMsgPerRequest)
+                -- LogUtil.d(TAG,"publish count set to = "..maxMsgPerRequest)
                 break
             end
+        else
+            toRemove[key]=1--invalid msg
+            LogUtil.d(TAG,"invalid message to be removed")
         end 
     end
 
@@ -318,14 +321,16 @@ end
 function publish(topic, payload)
     toPublishMessages=toPublishMessages or{}
     
-    msg={}
-    msg.topic=topic
-    msg.payload=payload
-    toPublishMessages[crypto.md5(payload,#payload)]=msg
-    
-    -- TODO 修改为持久化方式，发送消息
+    if topic and  payload and #topic>0 and #payload>0 then 
+        msg={}
+        msg.topic=topic
+        msg.payload=payload
+        toPublishMessages[crypto.md5(payload,#payload)]=msg
+        
+        -- TODO 修改为持久化方式，发送消息
 
-    LogUtil.d(TAG,"add to publish queue,topic="..topic.." toPublishMessages len="..MyUtils.getTableLen(toPublishMessages))
+        LogUtil.d(TAG,"add to publish queue,topic="..topic.." toPublishMessages len="..MyUtils.getTableLen(toPublishMessages))
+    end
 end
 
 
