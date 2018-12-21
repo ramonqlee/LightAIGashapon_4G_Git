@@ -25,16 +25,39 @@ local haltTime
 local rebootTimer
 
 local function formTimeWithHourMin( timeStr )
-    local SPLIT_LEN = 2
-    local timeTab = MyUtils.StringSplit(timeStr,":")
+    local ONE_HOUR_IN_SEC = 60*60
+    local ONE_DAY_IN_SEC = 24*ONE_HOUR_IN_SEC
 
-    if MyUtils.getTableLen(timeTab) ~= SPLIT_LEN then
-        return os.time()
+    local timeTab = MyUtils.StringSplit(timeStr,":")
+    local tabLen = MyUtils.getTableLen(timeTab)
+
+    -- 形如"100hour"的支持
+    if 1 == tabLen then
+        local r = os.time()
+        r = r + tonumber(timeTab[1])*ONE_HOUR_IN_SEC
+        return r
     end
 
-        -- 是否到时间了，关机并设置下次开机的时间
-    local time = misc.getClock()
-    return os.time({year =time.year, month = time.month, day =time.day, hour =tonumber(timeTab[1]), min =tonumber(timeTab[2])})
+    -- 形如"7：30"的支持
+    if 2 == tabLen then
+        local time = misc.getClock()
+        return os.time({year =time.year, month = time.month, day =time.day, hour =tonumber(timeTab[1]), min =tonumber(timeTab[2])})
+    end
+
+    -- 形如"100:7:30"(10day 7:30)
+    if 3 == tabLen  then
+        local time = misc.getClock()
+        local r = os.time({year =time.year, month = time.month, day =time.day, hour =tonumber(timeTab[2]), min =tonumber(timeTab[3])})
+        r = r + tonumber(timeTab[1])*ONE_DAY_IN_SEC
+        return r
+    end
+
+    -- 形如"2018:12:21:7:30"(2018/12/21 7:30)
+    if 5 == tabLen  then
+        return os.time({year =tonumber(timeTab[1]), month = tonumber(timeTab[2]), day =tonumber(timeTab[3]), hour =tonumber(timeTab[4]), min =tonumber(timeTab[5])})
+    end
+
+    return os.time()
 end
 
 SetConfig = CBase:new{
@@ -88,9 +111,9 @@ function SetConfig:handleContent( content )
     
     haltTimeTemp = content[CloudConsts.HALT_SCHEDULE]--关机时间
     --TOOD 加入误操作机制
-    --如果收到的关机时间已经过了5分钟，则忽略
-    local rebootTimeInSec = formTimeWithHourMin(haltTimeTemp)
-    if rebootTimeInSec > os.time() then
+    --如果收到的关机时间已经过了，则忽略
+    local tempTime = formTimeWithHourMin(haltTimeTemp)
+    if tempTime > os.time() then
         haltTime = haltTimeTemp
         rebootTime = content[CloudConsts.REBOOT_SCHEDULE]--开机时间
     end
