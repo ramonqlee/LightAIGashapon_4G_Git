@@ -146,10 +146,7 @@ function checkMQTTUser()
         password = MyUtils.getPassword(false)
 
          -- mywd.feed()--获取配置中，别忘了喂狗，否则会重启
-        if username and password then
-            LogUtil.d(TAG,".............................startmqtt retry to username="..username.." and ver=".._G.VERSION)
-            MyUtils.saveUserName(username)
-            MyUtils.savePassword(password)
+        if username and password and #username>0 and #password>0 then
             return username,password
         end
     end
@@ -157,20 +154,6 @@ function checkMQTTUser()
 end
 
 function checkNetwork()
-    LogUtil.d(TAG,"prepare to switch reboot mode")
-    -- 切换下次的重启方式
-    local rebootMethod = Config.getValue(CloudConsts.REBOOT_METHOD)
-    if not rebootMethod or #rebootMethod <=0 then
-        rebootMethod = CloudConsts.SOFT_REBOOT
-    end
-
-    local nextRebootMethod = CloudConsts.WD_REBOOT--代表其他重启方式，目前为通过看门狗重启
-    if CloudConsts.WD_REBOOT == rebootMethod then
-        nextRebootMethod = CloudConsts.SOFT_REBOOT
-    end
-    Config.saveValue(CloudConsts.REBOOT_METHOD,nextRebootMethod)
-    LogUtil.d(TAG,"rebootMethod ="..rebootMethod.." nextRebootMethod = "..nextRebootMethod)
-
     local netFailCount = 0
     while not link.isReady() do
         LogUtil.d(TAG,".............................socket not ready.............................")
@@ -455,7 +438,7 @@ function startmqtt()
         --检查网络，网络不可用时，会重启机器
         checkNetwork()
         local USERNAME,PASSWORD = checkMQTTUser()
-        while not USERNAME or not PASSWORD do 
+        while not USERNAME or not PASSWORD or #USERNAME==0 or #PASSWORD==0 do 
             USERNAME,PASSWORD = checkMQTTUser()
         end
         
