@@ -3,7 +3,7 @@
 --VERSION：ascii string类型，如果使用Luat物联云平台固件升级的功能，必须按照"X.X.X"定义，X表示1位数字；否则可随便定义
 PROJECT = "AIGashapon"
 
-VERSION = "1.1.189"
+VERSION = "1.1.190"
 
 --[[
 使用Luat物联云平台固件升级的功能，必须按照以下步骤操作：
