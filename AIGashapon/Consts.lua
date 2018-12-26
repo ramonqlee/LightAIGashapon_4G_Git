@@ -37,5 +37,6 @@ timeSynced = nil
 timeSyncCount=0
 RETRY_OPEN_LOCK=false--是否开启重新开锁功能
 EANBLE_MERGE_BOARD_ID = false--是否合并所有获得的小板子id
+REPLY_INIT_CONFIG=false --暂时不回应板子初始化，待修改完毕后，再回应
    
 

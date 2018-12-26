@@ -133,7 +133,9 @@ function SetConfig:handleContent( content )
         end
     end
 
-    MQTTReplyMgr.replyWith(RepConfig.MY_TOPIC,content)
+    if Consts.REPLY_INIT_CONFIG and STATE_INIT ~= state and 
+        MQTTReplyMgr.replyWith(RepConfig.MY_TOPIC,content)
+    end
 
     SetConfig.startRebootSchedule()
 
