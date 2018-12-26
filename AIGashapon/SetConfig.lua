@@ -133,7 +133,12 @@ function SetConfig:handleContent( content )
         end
     end
 
-    if Consts.REPLY_INIT_CONFIG and STATE_INIT ~= state then 
+    local reply = STATE_INIT ~= state
+    if STATE_INIT == state and Consts.REPLY_INIT_CONFIG then 
+        reply = true
+    end
+
+    if reply then
         MQTTReplyMgr.replyWith(RepConfig.MY_TOPIC,content)
     end
 
