@@ -470,7 +470,6 @@ function startmqtt()
 
          --清理服务端的消息
         if reconnectCount>=MAX_RETRY_SESSION_COUNT then
-            cleanSession = CLEANSESSION_TRUE--初始状态，清理session
             mqttc = mqtt.client(USERNAME,KEEPALIVE,USERNAME,PASSWORD,cleanSession)
             connectMQTT()
             mqttc:disconnect()
@@ -499,12 +498,12 @@ function startmqtt()
         end
         
         if mqttc.connected and mqttc:subscribe(topics) then
+            cleanSession = CLEANSESSION--一旦连接成功，保持session
             unsubscribe = false
             LogUtil.d(TAG,".............................subscribe topic ="..jsonex.encode(topics))
 
             loopMessage(mMqttProtocolHandlerPool)
         end
-        cleanSession = CLEANSESSION--保持session
         reconnectCount = reconnectCount + 1
     end
 end
