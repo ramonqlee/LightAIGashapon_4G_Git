@@ -303,6 +303,13 @@ end
 
 
 function publish(topic, payload)
+     -- 如果已经不存在绑定关系了，就不要发送该消息了
+    local nodeId = MyUtils.getUserName(false)
+    if not nodeId or 0 == #nodeId then
+        LogUtil.d(TAG,"MQTTManager.publish return for unbound node")
+        return
+    end 
+
     toPublishMessages=toPublishMessages or{}
     
     if topic and  payload and #topic>0 and #payload>0 then 
