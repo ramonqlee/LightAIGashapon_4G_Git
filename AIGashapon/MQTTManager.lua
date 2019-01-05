@@ -441,6 +441,7 @@ function startmqtt()
 
     msgcache.clear()--清理缓存的消息数据
 
+    local cleanSession = CLEANSESSION_TRUE--初始状态，清理session
     while true do
         --检查网络，网络不可用时，会重启机器
         checkNetwork()
@@ -469,7 +470,8 @@ function startmqtt()
 
          --清理服务端的消息
         if reconnectCount>=MAX_RETRY_SESSION_COUNT then
-            mqttc = mqtt.client(USERNAME,KEEPALIVE,USERNAME,PASSWORD,CLEANSESSION_TRUE)
+            cleanSession = CLEANSESSION_TRUE--初始状态，清理session
+            mqttc = mqtt.client(USERNAME,KEEPALIVE,USERNAME,PASSWORD,cleanSession)
             connectMQTT()
             mqttc:disconnect()
 
@@ -480,7 +482,7 @@ function startmqtt()
             LogUtil.d(TAG,".............................startmqtt CLEANSESSION all ".." reconnectCount = "..reconnectCount)
         end
 
-        mqttc = mqtt.client(USERNAME,KEEPALIVE,USERNAME,PASSWORD,CLEANSESSION)
+        mqttc = mqtt.client(USERNAME,KEEPALIVE,USERNAME,PASSWORD,cleanSession)
 
         connectMQTT()
         loopPreviousMessage(mMqttProtocolHandlerPool)
@@ -502,6 +504,7 @@ function startmqtt()
 
             loopMessage(mMqttProtocolHandlerPool)
         end
+        cleanSession = CLEANSESSION--保持session
         reconnectCount = reconnectCount + 1
     end
 end
