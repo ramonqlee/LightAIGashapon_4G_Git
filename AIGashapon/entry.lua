@@ -64,6 +64,17 @@ function startTimedTask()
             checkUpdate()
             
         end,Consts.TIMED_TASK_INTERVAL_MS)
+
+    --开机先检测一次升级
+    sys.timerStart(function()
+            if MQTTManager.hasMessage() then
+            	return
+            end
+
+            checkTask()
+            checkUpdate()
+            
+        end,5*1000)
 end
 
 -- 自动升级检测
