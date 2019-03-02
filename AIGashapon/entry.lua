@@ -274,7 +274,7 @@ function run()
 	end,60*1000)
 		
 	
-	-- 启动一个延时定时器，防止没有回调时无法正常启动
+	-- 延时启动mqtt服务
 	candidateRunTimerId=sys.timerStart(function()
 		LogUtil.d(TAG,"start after timeout in retrieving slaves")
 
@@ -295,7 +295,7 @@ function run()
 		LogUtil.d(TAG,"start twinkle task")
 		startTwinkleTask()
 
-	end,Consts.TEST_MODE and 5*1000 or 120*1000)  
+	end,5*1000)  
 end
 
 
