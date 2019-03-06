@@ -201,7 +201,7 @@ function Deliver:handleContent( content )
     MQTTReplyMgr.replyWith(RepDeliver.MY_TOPIC,map)
     
     timeoutInSec = expired-osTime
-    LogUtil.d(TAG," expired ="..expired.." orderId="..orderId.." device_seq="..device_seq.." location="..location.." sn="..sn.." timeoutInSec ="..timeoutInSec)
+    LogUtil.d(TAG," expired ="..expired.." orderId="..orderId.." device_seq="..device_seq.." location="..location.." timeoutInSec ="..timeoutInSec)
 
     -- 2. 同一location，产生了新的订单(新的订单id),之前较早是的location对应的订单就该删除了
     for key,saleTable in pairs(gBusyMap) do
@@ -404,10 +404,8 @@ function  openLockCallback(addr,flagsTable)
 end
 
 function TimerFunc(id)
-    if mTimerId and sys.timerIsActive(mTimerId) and 0 == getTableLen(gBusyMap) then
-        LogUtil.d(TAG,TAG.." in TimerFunc gBusyMap len="..getTableLen(gBusyMap).." stop timer and return")
-        sys.timerStop(mTimerId)
-        mTimerId = nil
+    if 0 == getTableLen(gBusyMap) then
+        LogUtil.d(TAG,TAG.." in TimerFunc empty gBusyMap")
         return
     end
 
