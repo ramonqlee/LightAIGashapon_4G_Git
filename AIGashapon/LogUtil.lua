@@ -28,8 +28,10 @@ function LogUtil.d(tag,log)
 		FileUtil.writevala(LOG_FILE,log)
 	end
 
-	if Consts.PRINT_LOG_FILE_ENABLED then
+	if Consts.PRINT_LOG_FILE_ENABLED and Consts.timeSynced then
 		--打印文件
+		local r = FileUtil.readfile(LOG_FILE)
+		print(r)
 	end
 
 	print("<"..tag..">\t"..log)
