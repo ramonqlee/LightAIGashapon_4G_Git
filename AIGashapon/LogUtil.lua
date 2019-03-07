@@ -5,6 +5,9 @@
 -- tested 2017.12.27
 
 require "Consts"
+require "FileUtil"
+
+LOG_FILE = Consts.USER_DIR.."/niuqu_log.txt"
 
 LogUtil={}
 
@@ -19,6 +22,14 @@ function LogUtil.d(tag,log)
 
 	if not log then
 		log = ""
+	end
+
+	if Consts.LOG_FILE_ENABLED then
+		FileUtil.writevala(LOG_FILE,log)
+	end
+
+	if Consts.PRINT_LOG_FILE_ENABLED then
+		--打印文件
 	end
 
 	print("<"..tag..">\t"..log)
