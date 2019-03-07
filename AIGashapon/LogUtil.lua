@@ -30,6 +30,7 @@ function LogUtil.d(tag,log)
 
 	if Consts.PRINT_LOG_FILE_ENABLED and Consts.timeSynced then
 		--打印文件
+		print("..................LOG_FILE NOW..................")
 		FileUtil.print(LOG_FILE)
 	end
 

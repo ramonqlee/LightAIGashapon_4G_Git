@@ -39,10 +39,10 @@ end
 function FileUtil.print( filename )
 	local filehandle=io.open(filename,"r")--第一个参数是文件名，第二个是打开方式，'r'读模式,'w'写模式，对数据进行覆盖,'a'附加模式,'b'加在模式后面表示以二进制形式打开
 	if filehandle then
-	  local fileval=filehandle:read("*l")
+	  local fileval=filehandle:read("100")
 	  while fileval do
 	      print(fileval)
-	      fileval=filehandle:read("*l")
+	      fileval=filehandle:read("100")
 	  end
 	filehandle:close()--关闭文件
 	end
