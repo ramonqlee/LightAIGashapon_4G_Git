@@ -7,6 +7,8 @@
 require "Consts"
 require "FileUtil"
 
+local fileLogged = nil
+
 LOG_FILE = Consts.USER_DIR.."/niuqu_log.txt"
 
 LogUtil={}
@@ -28,10 +30,11 @@ function LogUtil.d(tag,log)
 		FileUtil.writevala(LOG_FILE,log)
 	end
 
-	if Consts.PRINT_LOG_FILE_ENABLED then
+	if Consts.PRINT_LOG_FILE_ENABLED and not fileLogged then
 		--打印文件
 		print("..................LOG_FILE NOW..................")
 		FileUtil.print(LOG_FILE)
+		fileLogged = true
 	end
 
 	print("<"..tag..">\t"..log)
