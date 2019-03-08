@@ -6,8 +6,8 @@ module(...,package.seeall)
 
 DEVICE_ENV=true -- 是否设备环境
 LOG_ENABLED=true --是否关闭日志
-LOG_FILE_ENABLED=true--是否写入日志文件
-PRINT_LOG_FILE_ENABLED=true--是否将本地日志打印出来
+LOG_FILE_ENABLED=false--是否写入日志文件
+PRINT_LOG_FILE_ENABLED=false--是否将本地日志打印出来
 TEST_MODE=false--是否启用测试模式，启用代码中的点位id
 UART_ID = 2--2123
 CONSOLE_UART_ID = 1
