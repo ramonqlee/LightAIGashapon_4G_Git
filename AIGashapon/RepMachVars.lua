@@ -54,6 +54,7 @@ function RepMachVars:addExtraPayloadContent( content )
 			local device ={}
 			device["category"]=CATEGORY
 			device["seq"]=v
+			device["from"]=UARTAllInfoRep.boardIdFrom(v)
 
 			arr = {}
 			-- var = {}

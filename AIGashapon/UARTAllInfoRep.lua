@@ -149,15 +149,26 @@ function UARTAllInfoRep.getAllBoardIds(returnCacheIfEmpty)
 	end
 
 	if returnCacheIfEmpty then
-		-- TODO 获取数据，并解析 StringSplit
+		-- 获取数据，并解析 StringSplit
 		tmp = Config.getValue(BOARDIDS)
 		if tmp and "string"==type(tmp) and #tmp>0 then
-			mAllBoardIds = MyUtils.StringSplit(tmp,SPLIT_CHAR)
-			-- LogUtil.d(TAG,"cached getAllBoardIds size = "..#mAllBoardIds)
+			return MyUtils.StringSplit(tmp,SPLIT_CHAR)
 		end
 	end
 
 	return mAllBoardIds
+end
+
+--板子id识别的位置，返回cache(缓存)或者connected(识别)
+function UARTAllInfoRep.boardIdFrom(boardId)
+	--是否当时识别的
+	for _,v in pairs(mAllBoardIds) do
+		if v==boardId then
+			return "connected"
+		end
+	end
+
+	return "cache"
 end
 
 function UARTAllInfoRep.notifiyCallback()
