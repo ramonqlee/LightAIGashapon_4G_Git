@@ -28,17 +28,18 @@ require "ConstsPrivate"
 
 local jsonex = require "jsonex"
 
-local MAX_MQTT_FAIL_COUNT = 3--mqtt连接失败2次
-local MAX_NET_FAIL_COUNT = Consts.TEST_MODE and 6 or 3*5--断网3分钟，会重启
-local RETRY_TIME=12000
-local DISCONNECT_WAIT_TIME=5000
+local MAX_FLY_MODE_RETRY_COUNT = 1
+local MAX_FLY_MODE_WAIT_TIME = 20*Consts.ONE_SEC_IN_MS
+local MAX_IP_READY_WAIT_TIME = 40*Consts.ONE_SEC_IN_MS
+local HTTP_WAIT_TIME=5*Consts.ONE_SEC_IN_MS
+
 local KEEPALIVE,CLEANSESSION=60,0
 local CLEANSESSION_TRUE=1
 local MAX_RETRY_SESSION_COUNT=2--重试n次后，如果还事变，则清理服务端的消息
 local PROT,ADDR,PORT =ConstsPrivate.MQTT_PROTOCOL,ConstsPrivate.MQTT_ADDR,ConstsPrivate.MQTT_PORT
 local QOS,RETAIN=2,1
-local CLIENT_COMMAND_TIMEOUT = 5000
-local CLIENT_COMMAND_SHORT_TIMEOUT = 1000
+local CLIENT_COMMAND_TIMEOUT = 5*Consts.ONE_SEC_IN_MS
+local CLIENT_COMMAND_SHORT_TIMEOUT = 1*Consts.ONE_SEC_IN_MS
 local MAX_MSG_CNT_PER_REQ = 1--每次最多发送的消息数
 local mqttc = nil
 local toPublishMessages={}
@@ -141,7 +142,7 @@ function checkMQTTUser()
          -- mywd.feed()--获取配置中，别忘了喂狗，否则会重启
         getNodeIdAndPasswordFromServer()
         
-        sys.wait(RETRY_TIME)
+        sys.wait(HTTP_WAIT_TIME)
         username = MyUtils.getUserName(false)
         password = MyUtils.getPassword(false)
 
@@ -154,19 +155,35 @@ function checkMQTTUser()
 end
 
 function checkNetwork()
-    local netFailCount = 0
-    while not link.isReady() do
-        LogUtil.d(TAG,".............................socket not ready.............................")
+    if socket.isReady() then
+        LogUtil.d(TAG,".............................socket ready.............................")
+        return
+    end
 
-        if netFailCount >= MAX_NET_FAIL_COUNT then
-            -- 修改为看门狗和软重启交替进行的方式
-            LogUtil.d(TAG,"............softReboot when not link.isReady in checkNetwork")
-            sys.wait(RETRY_TIME)--等待日志输出完毕
-            sys.restart("netFailTooLong")--重启更新包生效
+    local netFailCount = 0
+    while true do
+        --尝试离线模式，实在不行重启板子
+        --进入飞行模式，20秒之后，退出飞行模式
+        net.switchFly(true)
+        sys.wait(MAX_FLY_MODE_WAIT_TIME)
+        net.switchFly(false)
+
+        LogUtil.d(TAG,".............................socket not ready.............................")
+        if not socket.isReady() then
+            --等待网络环境准备就绪，超时时间是40秒
+            sys.waitUntil("IP_READY_IND",MAX_IP_READY_WAIT_TIME)
+        end
+
+        if socket.isReady() then
+            LogUtil.d(TAG,".............................socket ready after retry.............................")
+            return
         end
 
         netFailCount = netFailCount+1
-        sys.wait(RETRY_TIME)
+
+        if netFailCount>=MAX_FLY_MODE_RETRY_COUNT then
+            sys.restart("netFailTooLong")--重启更新包生效
+        end
     end
 end
 
@@ -177,19 +194,7 @@ function connectMQTT()
         LogUtil.d(TAG,"fail to connect mqtt,mqttc:disconnect,try after 10s")
         mqttc:disconnect()
         
-        sys.wait(RETRY_TIME)
-
-        mqttFailCount = mqttFailCount+1
-        if mqttFailCount >= MAX_MQTT_FAIL_COUNT then
-            MyUtils.clearUserName()
-            MyUtils.clearPassword()
-
-            -- 网络ok时，重启板子
-            LogUtil.d(TAG,"............softReboot when link.isReady in connectMQTT")
-            sys.restart("mqttFailTooLong")--重启更新包生效
-            sys.wait(RETRY_TIME)--等待日志输出完毕
-            break
-        end
+        checkNetwork()
     end
 end
 

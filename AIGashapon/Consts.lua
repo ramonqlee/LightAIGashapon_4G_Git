@@ -15,6 +15,7 @@ baudRate = 115200
 WAIT_UART_INTERVAL = 500--等待新数据写入串口的时间间隔
 USER_DIR = "/user_dir"--文件存储目录
 
+ONE_SEC_IN_MS = 1000
 LAST_REBOOT=nil
 TASK_WAIT_IN_MS = 3000--请求网络任务时，强制当前任务延时执行
 FEEDDOG_PERIOD = 30*1000--定时喂狗的周期（ms）
