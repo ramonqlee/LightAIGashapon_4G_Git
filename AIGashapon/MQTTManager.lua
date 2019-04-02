@@ -28,9 +28,9 @@ require "ConstsPrivate"
 
 local jsonex = require "jsonex"
 
-local MAX_FLY_MODE_RETRY_COUNT = 10
-local MAX_FLY_MODE_WAIT_TIME = 20*Consts.ONE_SEC_IN_MS
-local MAX_IP_READY_WAIT_TIME = 40*Consts.ONE_SEC_IN_MS
+local MAX_FLY_MODE_RETRY_COUNT = 10--为了测试方便，设定了10次，实际设定为1次
+local MAX_FLY_MODE_WAIT_TIME = 4*Consts.ONE_SEC_IN_MS--实际2秒
+local MAX_IP_READY_WAIT_TIME = 15*Consts.ONE_SEC_IN_MS--实际10秒既可以
 local HTTP_WAIT_TIME=5*Consts.ONE_SEC_IN_MS
 
 local KEEPALIVE,CLEANSESSION=60,0
@@ -171,7 +171,7 @@ function checkNetwork()
         net.switchFly(false)
 
         if not socket.isReady() then
-            LogUtil.d(TAG,".............................socket not ready,wait 40s.............................")
+            LogUtil.d(TAG,".............................socket not ready,wait "..MAX_IP_READY_WAIT_TIME)
             --等待网络环境准备就绪，超时时间是40秒
             sys.waitUntil("IP_READY_IND",MAX_IP_READY_WAIT_TIME)
         end
