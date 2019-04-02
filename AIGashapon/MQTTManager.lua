@@ -38,6 +38,7 @@ local MAX_FLY_MODE_WAIT_TIME = 3*Consts.ONE_SEC_IN_MS--实际1秒
 local MAX_IP_READY_WAIT_TIME = 9*Consts.ONE_SEC_IN_MS--实际7秒既可以
 local HTTP_WAIT_TIME=5*Consts.ONE_SEC_IN_MS
 
+local lastSystemTime=os.time()
 local KEEPALIVE,CLEANSESSION=60,0
 local CLEANSESSION_TRUE=1
 local MAX_RETRY_SESSION_COUNT=2--重试n次后，如果还事变，则清理服务端的消息
@@ -372,6 +373,7 @@ function loopPreviousMessage( mqttProtocolHandlerPool )
     log.info(TAG, "loopPreviousMessage done")
 end
 
+
 function loopMessage(mqttProtocolHandlerPool)
     while true do
         if not mqttc.connected then
@@ -380,6 +382,15 @@ function loopMessage(mqttProtocolHandlerPool)
             break
         end
 
+        --如果时间发生了倒转，重新同步下
+        local currentTime = os.time()
+        if lastSystemTime > currentTime then
+            LogUtil.d(TAG," time run backward,resync time now") 
+            local handle = GetTime:new()--mqtt连接成功后，同步自有服务器时间
+            handle:sendGetTime(currentTime)
+        end
+
+        lastSystemTime = currentTime
         local timeout = CLIENT_COMMAND_TIMEOUT
         if hasMessage() then
             timeout = CLIENT_COMMAND_SHORT_TIMEOUT
@@ -397,14 +408,14 @@ function loopMessage(mqttProtocolHandlerPool)
             if msgcache.addMsg2Cache(data) then
                 for k,v in pairs(mqttProtocolHandlerPool) do
                     if v:handle(data) then
-                        log.info(TAG, "reconnectCount="..reconnectCount.." ver=".._G.VERSION.." ostime="..os.time())
+                        log.info(TAG, "reconnectCount="..reconnectCount.." ver=".._G.VERSION.." ostime="..lastSystemTime)
                         break
                     end
                 end
             end
         else
             if data then
-                log.info(TAG, "msg = "..data.." reconn="..reconnectCount.." ver=".._G.VERSION.." ostime="..os.time())
+                log.info(TAG, "msg = "..data.." reconn="..reconnectCount.." ver=".._G.VERSION.." ostime="..lastSystemTime)
             end
             -- 发送待发送的消息，设定条数，防止出现多条带发送时，出现消息堆积
             publishMessageQueue(MAX_MSG_CNT_PER_REQ)
