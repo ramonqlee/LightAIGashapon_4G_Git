@@ -28,9 +28,9 @@ require "ConstsPrivate"
 
 local jsonex = require "jsonex"
 
-local MAX_FLY_MODE_RETRY_COUNT = 10--为了测试方便，设定了10次，实际设定为1次
-local MAX_FLY_MODE_WAIT_TIME = 4*Consts.ONE_SEC_IN_MS--实际2秒
-local MAX_IP_READY_WAIT_TIME = 15*Consts.ONE_SEC_IN_MS--实际10秒既可以
+local MAX_FLY_MODE_RETRY_COUNT = 100--为了测试方便，设定了10次，实际设定为1次
+local MAX_FLY_MODE_WAIT_TIME = 3*Consts.ONE_SEC_IN_MS--实际1秒
+local MAX_IP_READY_WAIT_TIME = 9*Consts.ONE_SEC_IN_MS--实际7秒既可以
 local HTTP_WAIT_TIME=5*Consts.ONE_SEC_IN_MS
 
 local KEEPALIVE,CLEANSESSION=60,0
