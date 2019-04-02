@@ -28,7 +28,12 @@ require "ConstsPrivate"
 
 local jsonex = require "jsonex"
 
-local MAX_FLY_MODE_RETRY_COUNT = 100--为了测试方便，设定了10次，实际设定为1次
+-- 断网重连的策略
+-- 1.先尝试切换到飞行模式，然后切换回正常模式，此过程耗时3秒
+-- 2.等待联网成功，此过程预计耗时9秒
+-- 3.以上过过程重复2次，无法联网，改为重启板子恢复联网
+
+local MAX_FLY_MODE_RETRY_COUNT = 2--为了测试方便，设定了10次，实际设定为2次
 local MAX_FLY_MODE_WAIT_TIME = 3*Consts.ONE_SEC_IN_MS--实际1秒
 local MAX_IP_READY_WAIT_TIME = 9*Consts.ONE_SEC_IN_MS--实际7秒既可以
 local HTTP_WAIT_TIME=5*Consts.ONE_SEC_IN_MS
