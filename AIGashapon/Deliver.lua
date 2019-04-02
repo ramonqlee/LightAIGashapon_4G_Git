@@ -182,6 +182,9 @@ function Deliver:handleContent( content )
     -- 如果收到订单时，已经过期或者本地时间不准:过早收到了订单，则直接上传超时
     local osTime = os.time()
     if osTime>expired or expired-osTime>ORDER_EXPIRED_SPAN then
+        --尝试同步下系统时间，万一时间错误可以恢复下
+        ntp.timeSync()--ntp系统时间
+
         LogUtil.d(TAG,TAG.." timeout orderId="..orderId.." expired ="..expired.." os.time()="..osTime)
         saleLogMap[CloudConsts.CTS]=osTime
         saleLogMap[UPLOAD_POSITION]=UPLOAD_TIMEOUT_ARRIVAL
