@@ -28,7 +28,7 @@ require "ConstsPrivate"
 
 local jsonex = require "jsonex"
 
-local MAX_FLY_MODE_RETRY_COUNT = 1
+local MAX_FLY_MODE_RETRY_COUNT = 10
 local MAX_FLY_MODE_WAIT_TIME = 20*Consts.ONE_SEC_IN_MS
 local MAX_IP_READY_WAIT_TIME = 40*Consts.ONE_SEC_IN_MS
 local HTTP_WAIT_TIME=5*Consts.ONE_SEC_IN_MS
@@ -156,7 +156,7 @@ end
 
 function checkNetwork()
     if socket.isReady() then
-        LogUtil.d(TAG,".............................socket ready.............................")
+        LogUtil.d(TAG,".............................checkNetwork socket.isReady,return.............................")
         return
     end
 
@@ -164,12 +164,14 @@ function checkNetwork()
     while true do
         --尝试离线模式，实在不行重启板子
         --进入飞行模式，20秒之后，退出飞行模式
+        LogUtil.d(TAG,".............................switchFly true.............................")
         net.switchFly(true)
         sys.wait(MAX_FLY_MODE_WAIT_TIME)
+        LogUtil.d(TAG,".............................switchFly false.............................")
         net.switchFly(false)
 
-        LogUtil.d(TAG,".............................socket not ready.............................")
         if not socket.isReady() then
+            LogUtil.d(TAG,".............................socket not ready,wait 40s.............................")
             --等待网络环境准备就绪，超时时间是40秒
             sys.waitUntil("IP_READY_IND",MAX_IP_READY_WAIT_TIME)
         end
@@ -180,7 +182,6 @@ function checkNetwork()
         end
 
         netFailCount = netFailCount+1
-
         if netFailCount>=MAX_FLY_MODE_RETRY_COUNT then
             sys.restart("netFailTooLong")--重启更新包生效
         end
