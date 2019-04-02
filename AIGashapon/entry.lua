@@ -311,7 +311,6 @@ end
 
 
 sys.taskInit(run)
-ntp.timeSync()
 
 
 

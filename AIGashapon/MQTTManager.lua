@@ -456,6 +456,7 @@ function startmqtt()
     while true do
         --检查网络，网络不可用时，会重启机器
         checkNetwork()
+        ntp.timeSync()--ntp系统时间
         local USERNAME,PASSWORD = checkMQTTUser()
         while not USERNAME or not PASSWORD or #USERNAME==0 or #PASSWORD==0 do 
             USERNAME,PASSWORD = checkMQTTUser()
@@ -495,6 +496,10 @@ function startmqtt()
         mqttc = mqtt.client(USERNAME,KEEPALIVE,USERNAME,PASSWORD,cleanSession)
 
         connectMQTT()
+        
+        local handle = GetTime:new()--mqtt连接成功后，同步自有服务器时间
+        handle:sendGetTime(os.time())
+
         loopPreviousMessage(mMqttProtocolHandlerPool)
         
         --先取消之前的订阅
