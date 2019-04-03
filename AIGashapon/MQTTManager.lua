@@ -60,6 +60,7 @@ local MAX_MQTT_RECEIVE_COUNT = 2
 local toHandleRequests={}
 local startmqtted = false
 local unsubscribe = false
+local lastSystemTimeSynced--上次的系统时间
 
 function emptyExtraRequest()
     toHandleRequests={}
@@ -70,20 +71,10 @@ function emptyMessageQueue()
       toPublishMessages={}
 end
 
+--定时校对时间，以内ntp可能出问题，一旦mqtt连接，用自有的时间进行校正
 function timeSync()
-    if Consts.timeSynced then
-        return
-    end
-
-    -- 如果超时过了重试次数，则停止，防止消息过多导致服务端消息堵塞
-    if Consts.timeSyncCount > Consts.MAX_TIME_SYNC_COUNT then
-        LogUtil.d(TAG," timeSync abort because count exceed,ignore this request")
-
-        if Consts.gTimerId and sys.timerIsActive(Consts.gTimerId) then
-            sys.timerStop(Consts.gTimerId)
-            Consts.gTimerId = nil
-        end
-        
+    --mqtt连接时，用自有时间进行校正
+    if not mqttc or not mqttc.connected then
         return
     end
 
@@ -91,23 +82,26 @@ function timeSync()
         return
     end
 
+    lastSystemTimeSynced = os.time()
+    
+    --每隔10秒定时查看下当前时间，如果系统时间发生了2倍的时间波动，则用自有时间服务进行校正
     Consts.gTimerId=sys.timerLoopStart(function()
-            Consts.timeSyncCount = Consts.timeSyncCount+1
-            if Consts.timeSyncCount > Consts.MAX_TIME_SYNC_COUNT then
-                LogUtil.d(TAG," timeSync abort because count exceed,stop timer")
+            local timeDiff = lastSystemTimeSynced-os.time()
+            if timeDiff < 0 then
+                timeDiff = -timeDiff
+            end
 
-                if Consts.gTimerId and sys.timerIsActive(Consts.gTimerId) then
-                    sys.timerStop(Consts.gTimerId)
-                    Consts.gTimerId = nil
-                end
-                
+            lastSystemTimeSynced = os.time()
+
+            --时间是否发生了波动
+            if timeDiff < 2*Consts.TIME_SYNC_INTERVAL_MS then
                 return
             end
 
             local handle = GetTime:new()
             handle:sendGetTime(os.time())
 
-            LogUtil.d(TAG,"timeSync count =="..Consts.timeSyncCount)
+            LogUtil.d(TAG,"selfTimeSync now")
 
         end,Consts.TIME_SYNC_INTERVAL_MS)
 end
@@ -281,7 +275,6 @@ end
 
 
 function handleRequst()
-    timeSync()
 
     if not toHandleRequests or 0 == MyUtils.getTableLen(toHandleRequests) then
         LogUtil.d(TAG,"empty handleRequst")
@@ -467,7 +460,10 @@ function startmqtt()
     while true do
         --检查网络，网络不可用时，会重启机器
         checkNetwork()
-        ntp.timeSync()--ntp系统时间
+        
+        ntp.timeSync()--联网成功了，ntp系统时间
+        timeSync()--启动自有时间同步
+
         local USERNAME,PASSWORD = checkMQTTUser()
         while not USERNAME or not PASSWORD or #USERNAME==0 or #PASSWORD==0 do 
             USERNAME,PASSWORD = checkMQTTUser()

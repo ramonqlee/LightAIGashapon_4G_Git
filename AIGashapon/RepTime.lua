@@ -9,14 +9,13 @@ require "CBase"
 require "LogUtil"
 require "misc"
 local jsonex = require "jsonex"
-
+local SYNC_TIME_OUT_IN_SEC = 10
 
 local TAG = "RepTime"
 
 RepTime = CBase:new{
     mServerTimestamp=0,
-    MY_TOPIC="reply_time",
-    TIME_OUT_IN_MILLS = 10 * 1000
+    MY_TOPIC="reply_time"
 }
 
 function RepTime:new(o)
@@ -43,39 +42,32 @@ end
 -- ]]
 function RepTime:handleContent( timestampInSec,content )
     local r = false
-    if timestampInSec<=0 then
+    -- 如果时间小于0或者发送超过了一定时间了，则忽略这次的时间同步
+    local cts = content[CloudConsts.CTS]
+     if not timestampInSec or timestampInSec<=0 or not cts or cts<=0 then
         LogUtil.d(TAG," illegal content or timestamp,handleContent return")
         return r
     end
 
-    r = true
-
-    if Consts.timeSynced then
-        LogUtil.d(TAG," timeSynced ignore reply_time")
-        return true
+    local timeDiff = cts-timestampInSec
+    if timeDiff < 0 then
+        timeDiff = -timeDiff
     end
 
-    self.mServerTimestamp = timestampInSec
+    if timeDiff>=SYNC_TIME_OUT_IN_SEC then
+        LogUtil.d(TAG," ignore too long timeSync,timeDiff = "..timeDiff)
+        return r
+    end
 
+    r = true
+    self.mServerTimestamp = timestampInSec
     -- 设置系统时间
     ntpTime=os.date("*t",timestampInSec)
+    misc.setClock(ntpTime)
+    LogUtil.d(TAG," timeSync ntpTime="..jsonex.encode(ntpTime).." changed to now ="..jsonex.encode(os.date("*t",os.time())))
 
-    -- 比对差多少秒
-    local offset = os.time() - timestampInSec
-    if offset < 0 then
-        offset = -offset
-    end
-
-    if offset > Consts.MIN_TIME_SYNC_OFFSET then
-        misc.setClock(ntpTime)
-        LogUtil.d(TAG," timeSync ntpTime="..jsonex.encode(ntpTime).." changed to now ="..jsonex.encode(os.date("*t",os.time())))
-    else
-        if Consts.gTimerId and sys.timerIsActive(Consts.gTimerId) then
-            sys.timerStop(Consts.gTimerId)
-        end
-        Consts.timeSynced = true
+    if not Consts.LAST_REBOOT then
         Consts.LAST_REBOOT = timestampInSec
-        LogUtil.d(TAG," timeSync finished")
     end
 
     return r
