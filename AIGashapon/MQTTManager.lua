@@ -61,6 +61,7 @@ local toHandleRequests={}
 local startmqtted = false
 local unsubscribe = false
 local lastSystemTimeSynced--上次的系统时间
+local sysNTPSynced=false
 
 function emptyExtraRequest()
     toHandleRequests={}
@@ -71,10 +72,15 @@ function emptyMessageQueue()
       toPublishMessages={}
 end
 
+--系统ntp是否成功，如果没成功，再次同步
+function timeSynced()
+    sysNTPSynced = true
+end
+
+--系统ntp开机后，只同步一次；后续都是在此基础上，通过自有服务器校对时间
 --定时校对时间，以内ntp可能出问题，一旦mqtt连接，用自有的时间进行校正
-function timeSync()
-    --mqtt连接时，用自有时间进行校正
-    if not mqttc or not mqttc.connected then
+function selfTimeSync()
+    if sysNTPSynced then
         return
     end
 
@@ -82,19 +88,24 @@ function timeSync()
         return
     end
 
+    ntp.timeSync(nil,timeSynced)--ntp系统时间
     lastSystemTimeSynced = os.time()
-    
+
     --每隔10秒定时查看下当前时间，如果系统时间发生了2倍的时间波动，则用自有时间服务进行校正
     Consts.gTimerId=sys.timerLoopStart(function()
             local timeDiff = lastSystemTimeSynced-os.time()
+            lastSystemTimeSynced = os.time()
+
             if timeDiff < 0 then
                 timeDiff = -timeDiff
             end
-
-            lastSystemTimeSynced = os.time()
-
             --时间是否发生了波动
             if timeDiff < 2*Consts.TIME_SYNC_INTERVAL_MS then
+                return
+            end
+
+            --mqtt连接时，用自有时间进行校正
+            if not mqttc or not mqttc.connected then
                 return
             end
 
@@ -374,14 +385,7 @@ function loopMessage(mqttProtocolHandlerPool)
             LogUtil.d(TAG," mqttc.disconnected and no message,mqttc:disconnect() and break") 
             break
         end
-
-        --如果时间发生了倒转，重新同步下
-        local currentTime = os.time()
-        if lastSystemTime > currentTime then
-            LogUtil.d(TAG," time run backward,resync time now") 
-            local handle = GetTime:new()--mqtt连接成功后，同步自有服务器时间
-            handle:sendGetTime(currentTime)
-        end
+        selfTimeSync()--启动时间同步
 
         lastSystemTime = currentTime
         local timeout = CLIENT_COMMAND_TIMEOUT
@@ -459,10 +463,8 @@ function startmqtt()
     local cleanSession = CLEANSESSION_TRUE--初始状态，清理session
     while true do
         --检查网络，网络不可用时，会重启机器
-        checkNetwork()
-        
-        ntp.timeSync()--联网成功了，ntp系统时间
-        timeSync()--启动自有时间同步
+        checkNetwork()   
+        sysNTPSynced = false--重新校对时间     
 
         local USERNAME,PASSWORD = checkMQTTUser()
         while not USERNAME or not PASSWORD or #USERNAME==0 or #PASSWORD==0 do 
@@ -504,9 +506,6 @@ function startmqtt()
 
         connectMQTT()
         
-        local handle = GetTime:new()--mqtt连接成功后，同步自有服务器时间
-        handle:sendGetTime(os.time())
-
         loopPreviousMessage(mMqttProtocolHandlerPool)
         
         --先取消之前的订阅
