@@ -387,7 +387,8 @@ function loopMessage(mqttProtocolHandlerPool)
         end
         selfTimeSync()--启动时间同步
 
-        lastSystemTime = currentTime
+        lastSystemTime = os.time()
+        
         local timeout = CLIENT_COMMAND_TIMEOUT
         if hasMessage() then
             timeout = CLIENT_COMMAND_SHORT_TIMEOUT
