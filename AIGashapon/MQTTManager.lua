@@ -38,7 +38,6 @@ local MAX_FLY_MODE_WAIT_TIME = 3*Consts.ONE_SEC_IN_MS--实际1秒
 local MAX_IP_READY_WAIT_TIME = 9*Consts.ONE_SEC_IN_MS--实际7秒既可以
 local HTTP_WAIT_TIME=5*Consts.ONE_SEC_IN_MS
 
-local lastSystemTime=os.time()
 local KEEPALIVE,CLEANSESSION=60,0
 local CLEANSESSION_TRUE=1
 local MAX_RETRY_SESSION_COUNT=2--重试n次后，如果还事变，则清理服务端的消息
@@ -60,8 +59,7 @@ local MAX_MQTT_RECEIVE_COUNT = 2
 local toHandleRequests={}
 local startmqtted = false
 local unsubscribe = false
-local lastSystemTimeSynced--上次的系统时间
-local sysNTPSynced=false
+local lastSystemTime--上次的系统时间
 
 function emptyExtraRequest()
     toHandleRequests={}
@@ -72,36 +70,30 @@ function emptyMessageQueue()
       toPublishMessages={}
 end
 
---系统ntp是否成功，如果没成功，再次同步
-function timeSynced()
-    sysNTPSynced = true
-end
-
 --系统ntp开机后，只同步一次；后续都是在此基础上，通过自有服务器校对时间
 --定时校对时间，以内ntp可能出问题，一旦mqtt连接，用自有的时间进行校正
 function selfTimeSync()
-    if sysNTPSynced then
-        return
-    end
-
     if Consts.gTimerId and sys.timerIsActive(Consts.gTimerId) then
         return
     end
 
-    ntp.timeSync(nil,timeSynced)--ntp系统时间
-    lastSystemTimeSynced = os.time()
+    lastSystemTime = os.time()
 
     --每隔10秒定时查看下当前时间，如果系统时间发生了2倍的时间波动，则用自有时间服务进行校正
     Consts.gTimerId=sys.timerLoopStart(function()
-            local timeDiff = lastSystemTimeSynced-os.time()
-            lastSystemTimeSynced = os.time()
+            local timeDiff = lastSystemTime-os.time()
+            lastSystemTime = os.time()
 
-            if timeDiff < 0 then
-                timeDiff = -timeDiff
-            end
-            --时间是否发生了波动
-            if timeDiff < 2*Consts.TIME_SYNC_INTERVAL_MS then
-                return
+            --时间是否同步:时间同步后，设定重启时间
+            if Consts.LAST_REBOOT then
+                -- 时间走偏了，重新校正
+                if timeDiff < 0 then
+                    timeDiff = -timeDiff
+                end
+                --时间是否发生了波动
+                if timeDiff < 2*Consts.TIME_SYNC_INTERVAL_MS then
+                    return
+                end
             end
 
             --mqtt连接时，用自有时间进行校正
@@ -386,8 +378,6 @@ function loopMessage(mqttProtocolHandlerPool)
             break
         end
         selfTimeSync()--启动时间同步
-
-        lastSystemTime = os.time()
         
         local timeout = CLIENT_COMMAND_TIMEOUT
         if hasMessage() then
@@ -406,14 +396,14 @@ function loopMessage(mqttProtocolHandlerPool)
             if msgcache.addMsg2Cache(data) then
                 for k,v in pairs(mqttProtocolHandlerPool) do
                     if v:handle(data) then
-                        log.info(TAG, "reconnectCount="..reconnectCount.." ver=".._G.VERSION.." ostime="..lastSystemTime)
+                        log.info(TAG, "reconnectCount="..reconnectCount.." ver=".._G.VERSION.." ostime="..os.time())
                         break
                     end
                 end
             end
         else
             if data then
-                log.info(TAG, "msg = "..data.." reconn="..reconnectCount.." ver=".._G.VERSION.." ostime="..lastSystemTime)
+                log.info(TAG, "msg = "..data.." reconn="..reconnectCount.." ver=".._G.VERSION.." ostime="..os.time())
             end
             -- 发送待发送的消息，设定条数，防止出现多条带发送时，出现消息堆积
             publishMessageQueue(MAX_MSG_CNT_PER_REQ)
@@ -465,7 +455,6 @@ function startmqtt()
     while true do
         --检查网络，网络不可用时，会重启机器
         checkNetwork()   
-        sysNTPSynced = false--重新校对时间     
 
         local USERNAME,PASSWORD = checkMQTTUser()
         while not USERNAME or not PASSWORD or #USERNAME==0 or #PASSWORD==0 do 
