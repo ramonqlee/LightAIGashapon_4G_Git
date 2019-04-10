@@ -60,6 +60,9 @@ local toHandleRequests={}
 local startmqtted = false
 local unsubscribe = false
 local lastSystemTime--上次的系统时间
+local lastMQTTTrafficTime--上次mqtt交互的时间
+local mqttMonitorTimer
+local lastRssi=10--默认低信号
 
 function emptyExtraRequest()
     toHandleRequests={}
@@ -109,6 +112,38 @@ function selfTimeSync()
         end,Consts.TIME_SYNC_INTERVAL_MS)
 end
 
+--监控mqtt网络流量OK
+function startMonitorMQTTTraffic()
+    --时间同步过了，才启动，防止因为时间同步导致的bug
+    if not Consts.LAST_REBOOT then
+        return
+    end
+
+    if mqttMonitorTimer and sys.timerIsActive(mqttMonitorTimer) then
+        return
+    end
+
+    mqttMonitorTimer = sys.timerLoopStart(function()
+        local timeOffset = os.time()-lastMQTTTrafficTime
+        
+        --如果超过了一定时间，没有mqtt消息了，则重启下板子,恢复服务
+        if timeOffset<2*CLIENT_COMMAND_TIMEOUT then
+            return
+        end
+
+        LogUtil.d(TAG,"noMQTTTrafficTooLong,restart now")
+        sys.restart("noMQTTTrafficTooLong")--重启更新包生效
+
+    end,Consts.ONE_SEC_IN_MS)
+end
+
+function stopMonitorMQTTTraffic()
+    if mqttMonitorTimer and sys.timerIsActive(mqttMonitorTimer) then
+        sys.timerStop(mqttMonitorTimer)
+        mqttMonitorTimer=nil
+    end
+end
+
 function getNodeIdAndPasswordFromServer()
     nodeId,password="",""
     -- TODO 
@@ -119,7 +154,7 @@ function getNodeIdAndPasswordFromServer()
     LogUtil.d(TAG,"url = "..url)
     http.request("GET",url,nil,nil,nil,nil,function(result,prompt,head,body )
         if result and body then
-            LogUtil.d(TAG,"http config body="..body)
+            -- LogUtil.d(TAG,"http config body="..body)
             bodyJson = jsonex.decode(body)
 
             if bodyJson then
@@ -170,14 +205,28 @@ function checkNetwork(forceReconnect)
         --进入飞行模式，20秒之后，退出飞行模式
         LogUtil.d(TAG,".............................switchFly true.............................")
         net.switchFly(true)
-        sys.wait(MAX_FLY_MODE_WAIT_TIME)
+
+        -- 如果信号较低，则多等会
+        local temp = MAX_FLY_MODE_WAIT_TIME
+        if lastRssi < 20 then
+            temp = 2*MAX_FLY_MODE_WAIT_TIME
+        end
+
+        sys.wait(temp)
+
         LogUtil.d(TAG,".............................switchFly false.............................")
         net.switchFly(false)
 
         if not socket.isReady() then
-            LogUtil.d(TAG,".............................socket not ready,wait "..MAX_IP_READY_WAIT_TIME)
+            -- 如果信号较低，则多等会
+            local waitTime = MAX_IP_READY_WAIT_TIME
+            if lastRssi < 20 then
+                waitTime = 2*MAX_IP_READY_WAIT_TIME
+            end
+
+            LogUtil.d(TAG,".............................socket not ready,waitTime= "..waitTime)
             --等待网络环境准备就绪，超时时间是40秒
-            sys.waitUntil("IP_READY_IND",MAX_IP_READY_WAIT_TIME)
+            sys.waitUntil("IP_READY_IND",waitTime)
         end
 
         if socket.isReady() then
@@ -369,7 +418,6 @@ function loopPreviousMessage( mqttProtocolHandlerPool )
     log.info(TAG, "loopPreviousMessage done")
 end
 
-
 function loopMessage(mqttProtocolHandlerPool)
     while true do
         if not mqttc.connected then
@@ -378,6 +426,7 @@ function loopMessage(mqttProtocolHandlerPool)
             break
         end
         selfTimeSync()--启动时间同步
+        startMonitorMQTTTraffic()
         
         local timeout = CLIENT_COMMAND_TIMEOUT
         if hasMessage() then
@@ -387,6 +436,7 @@ function loopMessage(mqttProtocolHandlerPool)
         log.info(TAG, "loopMessage mqttc to receive ostime="..os.time())
         
         local r, data = mqttc:receive(timeout)
+        lastMQTTTrafficTime = os.time()
 
         log.info(TAG, "loopMessage mqttc after receive ostime="..os.time())
 
@@ -429,6 +479,8 @@ function loopMessage(mqttProtocolHandlerPool)
             break
         end
     end
+
+    stopMonitorMQTTTraffic()
 end
 
 function disconnect()
@@ -463,7 +515,7 @@ function startmqtt()
     local cleanSession = CLEANSESSION_TRUE--初始状态，清理session
     while true do
         --检查网络，网络不可用时，会重启机器
-        checkNetwork(false)   
+        checkNetwork(false)
 
         local USERNAME,PASSWORD = checkMQTTUser()
         while not USERNAME or not PASSWORD or #USERNAME==0 or #PASSWORD==0 do 
@@ -519,6 +571,8 @@ function startmqtt()
         end
         
         if mqttc.connected and mqttc:subscribe(topics) then
+            lastRssi = net.getRssi()
+
             cleanSession = CLEANSESSION--一旦连接成功，保持session
             unsubscribe = false
             LogUtil.d(TAG,".............................subscribe topic ="..jsonex.encode(topics))
