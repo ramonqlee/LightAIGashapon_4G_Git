@@ -383,7 +383,12 @@ function loopMessage(mqttProtocolHandlerPool)
         if hasMessage() then
             timeout = CLIENT_COMMAND_SHORT_TIMEOUT
         end
+
+        log.info(TAG, "loopMessage mqttc to receive ostime="..os.time())
+        
         local r, data = mqttc:receive(timeout)
+
+        log.info(TAG, "loopMessage mqttc after receive ostime="..os.time())
 
         if not data then
             mqttc:disconnect()
@@ -391,26 +396,30 @@ function loopMessage(mqttProtocolHandlerPool)
             break
         end
 
-        if r and data then
+        log.info(TAG, "process data reconnectCount="..reconnectCount.." ver=".._G.VERSION.." ostime="..os.time())
+
+        if r and data then--成功收到消息了
             -- 去除重复的sn消息
             if msgcache.addMsg2Cache(data) then
                 for k,v in pairs(mqttProtocolHandlerPool) do
                     if v:handle(data) then
-                        log.info(TAG, "reconnectCount="..reconnectCount.." ver=".._G.VERSION.." ostime="..os.time())
                         break
                     end
                 end
             end
         else
-            if data then
-                log.info(TAG, "msg = "..data.." reconn="..reconnectCount.." ver=".._G.VERSION.." ostime="..os.time())
+            if data then--超时了
+                log.info(TAG, "msg = "..data.." ostime="..os.time())
+
+                -- 发送待发送的消息，设定条数，防止出现多条带发送时，出现消息堆积
+                publishMessageQueue(MAX_MSG_CNT_PER_REQ)
+                handleRequst() 
+            else--出错了
+                LogUtil.d(TAG," mqttc receive false and no message,mqttc:disconnect() and break")
+
+                mqttc:disconnect()
+                break
             end
-            -- 发送待发送的消息，设定条数，防止出现多条带发送时，出现消息堆积
-            publishMessageQueue(MAX_MSG_CNT_PER_REQ)
-            handleRequst()
-            -- collectgarbage("collect")
-            -- c = collectgarbage("count")
-            --LogUtil.d("Mem"," line:"..debug.getinfo(1).currentline.." memory count ="..c)
         end
 
         --oopse disconnect
