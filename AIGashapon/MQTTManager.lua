@@ -193,7 +193,6 @@ function checkNetwork(forceReconnect)
 end
 
 function connectMQTT()
-    local mqttFailCount = 0
     while not mqttc:connect(ADDR,PORT) do
         -- mywd.feed()--获取配置中，别忘了喂狗，否则会重启
         LogUtil.d(TAG,"fail to connect mqtt,mqttc:disconnect,try after 10s")
