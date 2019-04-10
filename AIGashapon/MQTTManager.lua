@@ -157,8 +157,9 @@ function checkMQTTUser()
     return username,password
 end
 
-function checkNetwork()
-    if socket.isReady() then
+--forceReconnect 强制重新连接
+function checkNetwork(forceReconnect)
+    if not forceReconnect and socket.isReady() then
         LogUtil.d(TAG,".............................checkNetwork socket.isReady,return.............................")
         return
     end
@@ -198,7 +199,7 @@ function connectMQTT()
         LogUtil.d(TAG,"fail to connect mqtt,mqttc:disconnect,try after 10s")
         mqttc:disconnect()
         
-        checkNetwork()
+        checkNetwork(true)
     end
 end
 
@@ -463,7 +464,7 @@ function startmqtt()
     local cleanSession = CLEANSESSION_TRUE--初始状态，清理session
     while true do
         --检查网络，网络不可用时，会重启机器
-        checkNetwork()   
+        checkNetwork(false)   
 
         local USERNAME,PASSWORD = checkMQTTUser()
         while not USERNAME or not PASSWORD or #USERNAME==0 or #PASSWORD==0 do 
