@@ -210,7 +210,7 @@ function checkNetwork(forceReconnect)
 
         -- 如果信号较低，则多等会
         local temp = MAX_FLY_MODE_WAIT_TIME
-        if lastRssi < 20 then
+        if lastRssi < Consts.LOW_RSSI then
             temp = 2*MAX_FLY_MODE_WAIT_TIME
         end
 
@@ -222,8 +222,8 @@ function checkNetwork(forceReconnect)
         if not socket.isReady() then
             -- 如果信号较低，则多等会
             local waitTime = MAX_IP_READY_WAIT_TIME
-            if lastRssi < 20 then
-                waitTime = 60*Consts.ONE_SEC_IN_MS--调整为1分钟
+            if lastRssi < Consts.LOW_RSSI then
+                waitTime = Consts.LOW_RSSI_WAIT_TIME
             end
 
             LogUtil.d(TAG,".............................socket not ready,waitTime= "..waitTime)
