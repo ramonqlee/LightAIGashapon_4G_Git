@@ -223,7 +223,7 @@ function checkNetwork(forceReconnect)
             -- 如果信号较低，则多等会
             local waitTime = MAX_IP_READY_WAIT_TIME
             if lastRssi < 20 then
-                waitTime = 2*MAX_IP_READY_WAIT_TIME
+                waitTime = 60*Consts.ONE_SEC_IN_MS--调整为1分钟
             end
 
             LogUtil.d(TAG,".............................socket not ready,waitTime= "..waitTime)
@@ -382,7 +382,6 @@ function publish(topic, payload)
         LogUtil.d(TAG,"add to publish queue,topic="..topic.." toPublishMessages len="..MyUtils.getTableLen(toPublishMessages))
     end
 end
-
 
 
 function loopPreviousMessage( mqttProtocolHandlerPool )
