@@ -306,7 +306,7 @@ function run()
 		LogUtil.d(TAG,"start twinkle task")
 		startTwinkleTask()
 
-	end,5*1000)  
+	end,30*1000)  
 end
 
 
