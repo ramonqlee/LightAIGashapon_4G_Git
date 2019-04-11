@@ -43,8 +43,8 @@ local CLEANSESSION_TRUE=1
 local MAX_RETRY_SESSION_COUNT=2--重试n次后，如果还事变，则清理服务端的消息
 local PROT,ADDR,PORT =ConstsPrivate.MQTT_PROTOCOL,ConstsPrivate.MQTT_ADDR,ConstsPrivate.MQTT_PORT
 local QOS,RETAIN=2,1
-local CLIENT_COMMAND_TIMEOUT = 5*Consts.ONE_SEC_IN_MS
-local CLIENT_COMMAND_SHORT_TIMEOUT = 1*Consts.ONE_SEC_IN_MS
+local CLIENT_COMMAND_TIMEOUT_MS = 5*Consts.ONE_SEC_IN_MS
+local CLIENT_COMMAND_SHORT_TIMEOUT_MS = 1*Consts.ONE_SEC_IN_MS
 local MAX_MSG_CNT_PER_REQ = 1--每次最多发送的消息数
 local mqttc = nil
 local toPublishMessages={}
@@ -116,18 +116,20 @@ end
 function startMonitorMQTTTraffic()
     --时间同步过了，才启动，防止因为时间同步导致的bug
     if not Consts.LAST_REBOOT then
+        LogUtil.d(TAG,"startMonitorMQTTTraffic not ready,return")
         return
     end
 
     if mqttMonitorTimer and sys.timerIsActive(mqttMonitorTimer) then
+        LogUtil.d(TAG,"startMonitorMQTTTraffic running now,return")
         return
     end
 
     mqttMonitorTimer = sys.timerLoopStart(function()
-        local timeOffset = os.time()-lastMQTTTrafficTime
+        local timeOffsetInSec = os.time()-lastMQTTTrafficTime
         
         --如果超过了一定时间，没有mqtt消息了，则重启下板子,恢复服务
-        if timeOffset<2*CLIENT_COMMAND_TIMEOUT then
+        if timeOffsetInSec*Consts.ONE_SEC_IN_MS<2*CLIENT_COMMAND_TIMEOUT_MS then
             return
         end
 
@@ -391,7 +393,7 @@ function loopPreviousMessage( mqttProtocolHandlerPool )
             break
         end
 
-        local r, data = mqttc:receive(CLIENT_COMMAND_TIMEOUT)
+        local r, data = mqttc:receive(CLIENT_COMMAND_TIMEOUT_MS)
 
         if not data then
             break
@@ -428,9 +430,9 @@ function loopMessage(mqttProtocolHandlerPool)
         selfTimeSync()--启动时间同步
         startMonitorMQTTTraffic()
         
-        local timeout = CLIENT_COMMAND_TIMEOUT
+        local timeout = CLIENT_COMMAND_TIMEOUT_MS
         if hasMessage() then
-            timeout = CLIENT_COMMAND_SHORT_TIMEOUT
+            timeout = CLIENT_COMMAND_SHORT_TIMEOUT_MS
         end
 
         log.info(TAG, "loopMessage mqttc to receive ostime="..os.time())
