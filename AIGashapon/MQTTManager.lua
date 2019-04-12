@@ -33,9 +33,11 @@ local jsonex = require "jsonex"
 -- 2.等待联网成功，此过程预计耗时9秒
 -- 3.以上过过程重复2次，无法联网，改为重启板子恢复联网
 
-local MAX_FLY_MODE_RETRY_COUNT = 2--为了测试方便，设定了10次，实际设定为2次
+local MAX_FLY_MODE_RETRY_COUNT = 3--为了测试方便，设定了10次，实际设定为2次
 local MAX_FLY_MODE_WAIT_TIME = 3*Consts.ONE_SEC_IN_MS--实际1秒
-local MAX_IP_READY_WAIT_TIME = 9*Consts.ONE_SEC_IN_MS--实际7秒既可以
+local IP_READY_NORMAL_WAIT_TIME = 10*Consts.ONE_SEC_IN_MS--实际7秒既可以
+local IP_READY_LOW_RSSI_WAIT_TIME = 30*Consts.ONE_SEC_IN_MS--实际7秒既可以
+
 local HTTP_WAIT_TIME=5*Consts.ONE_SEC_IN_MS
 
 local KEEPALIVE,CLEANSESSION=60,0
@@ -129,14 +131,13 @@ function startMonitorMQTTTraffic()
         local timeOffsetInSec = os.time()-lastMQTTTrafficTime
         
         --如果超过了一定时间，没有mqtt消息了，则重启下板子,恢复服务
-        if timeOffsetInSec*Consts.ONE_SEC_IN_MS<3*CLIENT_COMMAND_TIMEOUT_MS then
+        if timeOffsetInSec*Consts.ONE_SEC_IN_MS<30*Consts.ONE_SEC_IN_MS then
             return
         end
 
         LogUtil.d(TAG,"noMQTTTrafficTooLong,restart now")
 
         stopMonitorMQTTTraffic()--先停止定时器
-        sys.wait(2*Consts.ONE_SEC_IN_MS)
         sys.restart("noMQTTTrafficTooLong")--重启更新包生效
 
     end,Consts.ONE_SEC_IN_MS)
@@ -205,6 +206,9 @@ function checkNetwork(forceReconnect)
     end
 
     local netFailCount = 0
+    --采用递进增加的方式
+    local lastWaitTime = 0
+
     while true do
         --尝试离线模式，实在不行重启板子
         --进入飞行模式，20秒之后，退出飞行模式
@@ -223,15 +227,16 @@ function checkNetwork(forceReconnect)
         net.switchFly(false)
 
         if not socket.isReady() then
-            -- 如果信号较低，则多等会
-            local waitTime = MAX_IP_READY_WAIT_TIME
+            -- 如果信号较低，则多等会；每进入一次，递增一下等待的时间
             if lastRssi < Consts.LOW_RSSI then
-                waitTime = Consts.LOW_RSSI_WAIT_TIME
+                lastWaitTime = lastWaitTime + IP_READY_LOW_RSSI_WAIT_TIME
+            else
+                lastWaitTime = lastWaitTime + IP_READY_NORMAL_WAIT_TIME
             end
 
-            LogUtil.d(TAG,".............................socket not ready,waitTime= "..waitTime)
+            LogUtil.d(TAG,".............................socket not ready,lastWaitTime= "..lastWaitTime)
             --等待网络环境准备就绪，超时时间是40秒
-            sys.waitUntil("IP_READY_IND",waitTime)
+            sys.waitUntil("IP_READY_IND",lastWaitTime)
         end
 
         if socket.isReady() then
