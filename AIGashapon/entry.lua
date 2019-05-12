@@ -24,6 +24,7 @@ require "UARTLightup"
 
 local TAG="Entry"
 local timerId=nil
+local keepAliveTimer
 -- local retryIdentifyTimerId=nil
 local candidateRunTimerId=nil
 local timedTaskId = nil
@@ -306,9 +307,17 @@ function run()
 
 		LogUtil.d(TAG,"start twinkle task")
 		startTwinkleTask()
-
-		UartMgr.startKeepUartAlive()
+		
 	end,60*1000)  
+
+	sys.timerStart(function()
+		LogUtil.d(TAG,"start to keep uart alive")
+
+		sys.taskInit(function()
+			UartMgr.startKeepUartAlive()  
+		end)
+
+	end,100*1000)--初始化uart后90秒
 end
 
 

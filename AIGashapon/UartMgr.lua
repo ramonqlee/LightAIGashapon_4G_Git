@@ -266,6 +266,12 @@ function  keepUartAliveCallback(masterBoardId)
 end
 
 function UartMgr.startKeepUartAlive()
+	LogUtil.d(TAG," UartMgr.startKeepUartAlive")
+	
+	if not lastKeepAliveTime then
+		lastKeepAliveTime = os.time()
+	end
+
 	if keepUartTimer and sys.timerIsActive(keepUartTimer) then
         LogUtil.d(TAG," UartMgr.startKeepUartAlive running,return")
         return
