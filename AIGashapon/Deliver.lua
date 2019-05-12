@@ -487,10 +487,10 @@ end
 
     -- 有用户未扭，并且没有订单了
     if timeOutOrderFound and 0 == getTableLen(gBusyMap) then
-        -- local delay= 10
-        -- local r = UARTShutDown.encode(delay)--5秒后重启
-        -- UartMgr.publishMessage(r)
-        -- LogUtil.d(TAG,"......exception found ,shutdown after "..delay.."seconds, it will poweron")
+        local delay= 10
+        local r = UARTShutDown.encode(delay)--x秒后重启
+        UartMgr.publishMessage(r)
+        LogUtil.d(TAG,"......exception found ,shutdown after "..delay.."seconds, it will poweron")
     end 
 end   
 
