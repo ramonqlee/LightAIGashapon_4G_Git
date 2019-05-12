@@ -41,5 +41,6 @@ EANBLE_MERGE_BOARD_ID = false--是否合并所有获得的小板子id
 REPLY_INIT_CONFIG=false --暂时不回应板子初始化，待修改完毕后，再回应
 LOW_RSSI = 15
 LOOP_UART_INTERVAL_MS = 1000--轮训uart的时间间隔
+UART_NO_DATA_INTERVAL_MS = 3000--如果3秒内没有读取过，则主动读取数据
    
 

@@ -104,11 +104,16 @@ end
 
 local readDataCache=""
 local isReading=false--是否正在读取数据中
+local accessUARTTime
 
 -- uart读取函数
-function  uart_read()
+function  uart_read(uid)
+	if not uid then
+		LogUtil.d(TAG,"uart_read null uart_id")
+	end
+
 	if isReading then
-		LogUtil.d(TAG,"uart uart_reading,return")
+		LogUtil.d(TAG,"uart_reading,return")
 		return
 	end
 
@@ -124,8 +129,10 @@ function  uart_read()
 	local MAX_CACHE_SIZE=256
 	while true do
 		-- 将协议数据进行缓存，然后逐步处理	
-		LogUtil.d(TAG,"uart start to read from uart_id ="..UartMgr.devicePath)
-		data = uart.read(UartMgr.devicePath,"*l")
+		LogUtil.d(TAG,"uart start to read from uart_id ="..uid)
+
+		accessUARTTime = os.time()
+		data = uart.read(uid,100)
 		-- TODO 
 		if not data or #data == 0 then 
 			LogUtil.d(TAG,"empty data")
@@ -211,28 +218,41 @@ function UartMgr.init( devicePath, baudRate)
 	UartMgr.devicePath = devicePath
 	-- pm.wake("testUart")
 	--注册串口的数据接收函数，串口收到数据后，会以中断方式，调用read接口读取数据
-	-- uart.on(UartMgr.devicePath, "receive", uart_read)
+	uart.on(UartMgr.devicePath, "receive", uart_read)
 	
 	--配置并且打开串口:替换为轮询的方式，不再用中断方式,因为中断有时竟然不可靠
 	uart.setup(UartMgr.devicePath,baudRate,8,uart.PAR_NONE,uart.STOP_1,1)--修改为主动轮询方式，不主动上报
-
-	UartMgr.loopMessage()
-	UartMgr.startLoopData()
-	-- 发送获取从板id的指令，初始化系统的一部分
 	LogUtil.d(TAG,"UartMgr.init done")
+
+	--延时从串口读取后者写入消息
+	sys.timerStart(function()
+        UartMgr.loopMessage()
+		UartMgr.startLoopData(devicePath)    
+    end,5*1000)	
 end 
 
 local loopTimerId
-function UartMgr.startLoopData()
+function UartMgr.startLoopData(uid)
 	if loopTimerId and sys.timerIsActive(loopTimerId) then
         LogUtil.d(TAG," UartMgr.startLoopData running,return")
         return
     end
 
 	loopTimerId = sys.timerLoopStart(function()
-			LogUtil.d(TAG,"UartMgr.startLoopData")
-            uart_read()
-        end,Consts.LOOP_UART_INTERVAL_MS)
+		if not uid then
+			return
+		end
+
+		LogUtil.d(TAG,"UartMgr.startLoopData,uart_uid="..uid)
+
+		if accessUARTTime and os.time()-accessUARTTime < Consts.UART_NO_DATA_INTERVAL_MS then
+			LogUtil.d(TAG,"UartMgr.startLoopData,too often read,return")
+			return
+		end
+
+        uart_read(uid)
+
+    end,Consts.LOOP_UART_INTERVAL_MS)
 end
 
 
