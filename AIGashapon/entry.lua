@@ -278,7 +278,8 @@ function run()
 		sys.taskInit(function()
 			--首先初始化本地环境，然后成功后，启动mqtt
 			UartMgr.init(Consts.UART_ID,Consts.baudRate)
-				--获取所有板子id
+
+			--获取所有板子id
 			UartMgr.initSlaves(allInfoCallback,false)    
 		end)
 
