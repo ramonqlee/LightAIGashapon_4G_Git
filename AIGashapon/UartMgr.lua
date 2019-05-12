@@ -245,7 +245,7 @@ function UartMgr.startLoopData(uid)
 
 		LogUtil.d(TAG,"UartMgr.startLoopData,uart_uid="..uid)
 
-		if accessUARTTime and os.time()-accessUARTTime < Consts.UART_NO_DATA_INTERVAL_MS then
+		if accessUARTTime and os.time()-accessUARTTime < Consts.UART_NO_DATA_INTERVAL_SEC then
 			LogUtil.d(TAG,"UartMgr.startLoopData,too often read,return")
 			return
 		end
