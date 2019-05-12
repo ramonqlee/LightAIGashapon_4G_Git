@@ -99,7 +99,7 @@ function uart_write(s)
 	end
 
 	uart.write(UartMgr.devicePath,s)
-	LogUtil.d(TAG,"uart write = "..string.toHex(s))
+	LogUtil.d(TAG,"uart_write = "..string.toHex(s))
 end
 
 local readDataCache=""
@@ -146,7 +146,7 @@ function  uart_read(uid)
 			readDataCache = string.sub(readDataCache,MAX_CACHE_SIZE-MIN_CACHE_SIZE) 
 		end
 
-		LogUtil.d(TAG,"uart read = "..string.toHex(data))
+		LogUtil.d(TAG,"uart_read = "..string.toHex(data))
 		readDataCache = readDataCache..data
 
 		-- 循环处理数据，防止出现无法处理的情况，导致阻塞
@@ -246,7 +246,7 @@ function UartMgr.startLoopData(uid)
 		LogUtil.d(TAG,"UartMgr.startLoopData,uart_uid="..uid)
 
 		if accessUARTTime and os.time()-accessUARTTime < Consts.UART_NO_DATA_INTERVAL_SEC then
-			LogUtil.d(TAG,"UartMgr.startLoopData,too often read,return")
+			-- LogUtil.d(TAG,"UartMgr.startLoopData,too often read,return")
 			return
 		end
 
