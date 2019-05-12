@@ -214,7 +214,7 @@ function UartMgr.init( devicePath, baudRate)
 	-- uart.on(UartMgr.devicePath, "receive", uart_read)
 	
 	--配置并且打开串口:替换为轮询的方式，不再用中断方式,因为中断有时竟然不可靠
-	-- uart.setup(UartMgr.devicePath,baudRate,8,uart.PAR_NONE,uart.STOP_1)
+	uart.setup(UartMgr.devicePath,baudRate,8,uart.PAR_NONE,uart.STOP_1,1)--修改为主动轮询方式，不主动上报
 
 	UartMgr.loopMessage()
 	UartMgr.startLoopData()
