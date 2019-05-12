@@ -103,9 +103,16 @@ function uart_write(s)
 end
 
 local readDataCache=""
+local isReading=false--是否正在读取数据中
+
 -- uart读取函数
 function  uart_read()
+	if isReading then
+		LogUtil.d(TAG,"uart uart_reading,return")
+		return
+	end
 
+	isReading=true
 	-- TODO 待根据具体的协议数据，进行解析
 	local data = ""
 	--底层core中，串口收到数据时：
@@ -122,6 +129,7 @@ function  uart_read()
 		-- TODO 
 		if not data or #data == 0 then 
 			LogUtil.d(TAG,"empty data")
+			isReading = false
 			break
 		end
 
@@ -176,8 +184,6 @@ function  uart_read()
 				end
 			end
 		end
-
-
 	end
 end
 
@@ -205,14 +211,30 @@ function UartMgr.init( devicePath, baudRate)
 	UartMgr.devicePath = devicePath
 	-- pm.wake("testUart")
 	--注册串口的数据接收函数，串口收到数据后，会以中断方式，调用read接口读取数据
-	uart.on(UartMgr.devicePath, "receive", uart_read)
-	--配置并且打开串口
-	uart.setup(UartMgr.devicePath,baudRate,8,uart.PAR_NONE,uart.STOP_1)
+	-- uart.on(UartMgr.devicePath, "receive", uart_read)
+	
+	--配置并且打开串口:替换为轮询的方式，不再用中断方式,因为中断有时竟然不可靠
+	-- uart.setup(UartMgr.devicePath,baudRate,8,uart.PAR_NONE,uart.STOP_1)
 
 	UartMgr.loopMessage()
+	UartMgr.startLoopData()
 	-- 发送获取从板id的指令，初始化系统的一部分
 	LogUtil.d(TAG,"UartMgr.init done")
 end 
+
+local loopTimerId
+function UartMgr.startLoopData()
+	if loopTimerId and sys.timerIsActive(loopTimerId) then
+        LogUtil.d(TAG," UartMgr.startLoopData running,return")
+        return
+    end
+
+	loopTimerId = sys.timerLoopStart(function()
+			LogUtil.d(TAG,"UartMgr.startLoopData")
+            uart_read()
+        end,Consts.LOOP_UART_INTERVAL_MS)
+end
+
 
 local uartMsgQueueLooping = false
 
