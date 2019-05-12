@@ -282,7 +282,7 @@ function run()
 			UartMgr.initSlaves(allInfoCallback,false)    
 		end)
 
-	end,60*1000)
+	end,10*1000)
 		
 	
 	-- 延时启动mqtt服务
