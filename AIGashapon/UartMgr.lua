@@ -129,7 +129,7 @@ function  uart_read(uid)
 	local MAX_CACHE_SIZE=256
 	while true do
 		-- 将协议数据进行缓存，然后逐步处理	
-		LogUtil.d(TAG,"uart start to read from uart_id ="..uid)
+		LogUtil.d(TAG,"uart_read from uart_id ="..uid)
 
 		accessUARTTime = os.time()
 		data = uart.read(uid,100)
@@ -243,13 +243,11 @@ function UartMgr.startLoopData(uid)
 			return
 		end
 
-		LogUtil.d(TAG,"UartMgr.startLoopData,uart_uid="..uid)
-
 		if accessUARTTime and os.time()-accessUARTTime < Consts.UART_NO_DATA_INTERVAL_SEC then
 			-- LogUtil.d(TAG,"UartMgr.startLoopData,too often read,return")
 			return
 		end
-
+		LogUtil.d(TAG,"UartMgr.startLoopData,uart_uid="..uid)
         uart_read(uid)
 
     end,Consts.LOOP_UART_INTERVAL_MS)
