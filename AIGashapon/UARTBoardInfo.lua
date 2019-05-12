@@ -99,7 +99,7 @@ function UARTBoardInfo.handle(bins)
 	end
 
 	masterBoardId = string.sub(bins,idPos,idPos+idLen-1)
-	--LogUtil.d(TAG,"masterBoardId = "..string.toHex(masterBoardId))
+	LogUtil.d(TAG,"masterBoardId = "..string.toHex(masterBoardId))
 	-- softi d ignore
 	if myCallback then
 		myCallback(masterBoardId)

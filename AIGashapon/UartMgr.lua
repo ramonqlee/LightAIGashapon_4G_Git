@@ -11,6 +11,7 @@ require "UARTStatRep"
 require "UARTAllInfoRep"
 require "UARTBoardInfo"
 require "UARTGetAllInfo"
+require "UARTGetBoardInfo"
 require "MyUtils"
 require "pm"
 
@@ -18,7 +19,8 @@ local msgQueue={}
 
 local TAG = "UartMgr"
 UartMgr={
-	devicePath=nil
+	devicePath=nil,
+	baudRate=nil
 }
 
 
@@ -217,6 +219,8 @@ function UartMgr.init( devicePath, baudRate)
  	--保持系统处于唤醒状态，此处只是为了测试需要，所以此模块没有地方调用pm.sleep("test")休眠，不会进入低功耗休眠状态
 	--在开发“要求功耗低”的项目时，一定要想办法保证pm.wake("test")后，在不需要串口时调用pm.sleep("test")
 	UartMgr.devicePath = devicePath
+	UartMgr.baudRate=baudRate
+
 	pm.wake("myuartwake")
 	--注册串口的数据接收函数，串口收到数据后，会以中断方式，调用read接口读取数据
 	uart.on(UartMgr.devicePath, "receive", uart_read)
@@ -228,7 +232,7 @@ function UartMgr.init( devicePath, baudRate)
 	--延时从串口读取后者写入消息
 	sys.timerStart(function()
         UartMgr.loopMessage()
-		UartMgr.startLoopData(devicePath)    
+		UartMgr.startLoopData(devicePath)  
     end,5*1000)	
 end 
 
@@ -252,6 +256,49 @@ function UartMgr.startLoopData(uid)
         uart_read(uid)
 
     end,Consts.LOOP_UART_INTERVAL_MS)
+end
+
+local keepUartTimer
+local lastKeepAliveTime--上次心跳回复的时间
+function  keepUartAliveCallback(masterBoardId)
+	lastKeepAliveTime = os.time()
+	LogUtil.d(TAG," UartMgr.keepUartAliveCallback")
+end
+
+function UartMgr.startKeepUartAlive()
+	if keepUartTimer and sys.timerIsActive(keepUartTimer) then
+        LogUtil.d(TAG," UartMgr.startKeepUartAlive running,return")
+        return
+    end
+
+    --发送心跳
+	keepUartTimer = sys.timerLoopStart(function()
+		if Deliver.isDelivering() or Lightup.isLightuping() then
+			LogUtil.d(TAG,TAG.." Deliver.isDelivering or Lightup.isLightuping,ignore keepalive for uart")
+			return
+		end
+
+		--设置心跳的回调
+		UARTBoardInfo.setCallback(keepUartAliveCallback)
+		
+		--发送心跳
+        r = UARTGetBoardInfo.encode()
+        UartMgr.publishMessage(r)
+
+    end,Consts.KEEP_UART_ALIVE_INTERVAL_MS)
+
+    -- 检测心跳
+    sys.timerLoopStart(function()
+    	if not lastKeepAliveTime then
+    		return
+    	end
+
+		if os.time()-lastKeepAliveTime > Consts.DETECT_UART_ALIVE_INTERVAL_MS then
+			LogUtil.d(TAG," UartMgr uart down,restart uart now")
+			UartMgr.restart()
+			Consts.UART_BROKE_COUNT = Consts.UART_BROKE_COUNT+1
+		end
+    end,Consts.ONE_SEC_IN_MS)
 end
 
 
@@ -298,6 +345,21 @@ function UartMgr.close( devicePath )
 
 	-- pm.sleep("test")
 	uart.close(devicePath)
+end
+
+function UartMgr.restart()
+	sys.taskInit(function( )
+		LogUtil.d(TAG," UartMgr.restart")
+
+		uart.close(UartMgr.devicePath)
+
+		pm.wake("myuartwake")
+		--注册串口的数据接收函数，串口收到数据后，会以中断方式，调用read接口读取数据
+		uart.on(UartMgr.devicePath, "receive", uart_read)
+	
+		--配置并且打开串口:替换为轮询的方式，不再用中断方式,因为中断有时竟然不可靠
+		uart.setup(UartMgr.devicePath,UartMgr.baudRate,8,uart.PAR_NONE,uart.STOP_1,1)--修改为主动轮询方式，不主动上报
+	end)
 end
 
 function UartMgr.initSlaves( callback ,retry)

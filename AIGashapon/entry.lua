@@ -307,6 +307,7 @@ function run()
 		LogUtil.d(TAG,"start twinkle task")
 		startTwinkleTask()
 
+		UartMgr.startKeepUartAlive()
 	end,60*1000)  
 end
 
