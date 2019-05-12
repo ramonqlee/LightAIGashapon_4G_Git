@@ -414,6 +414,7 @@ function TimerFunc(id)
     -- 1. 订单对应的出货，超过了超时时间；
     --修改为下次同一弹仓出货时，移除这次的或者等待底层硬件上报出货成功后，移除
     local toRemove = {}
+    local timeOutOrderFound=false--是否有用户未扭订单，如果出现了，则在上报后，没有订单的空隙，重启机器
 
     local systemTime = os.time()
     for key,saleTable in pairs(gBusyMap) do
@@ -465,6 +466,7 @@ function TimerFunc(id)
                     saleLogHandler:send(CRBase.NOT_ROTATE)
 
                     toRemove[key] = 1
+                    timeOutOrderFound = true
                 end
 
                 end
@@ -482,6 +484,14 @@ end
         end
         LogUtil.d(TAG,TAG.." in TimerFunc after remove gBusyMap len="..getTableLen(gBusyMap))
     end
+
+    -- 有用户未扭，并且没有订单了
+    if timeOutOrderFound and 0 == getTableLen(gBusyMap) then
+        lolca delay= 5
+        local r = UARTShutDown.encode(delay)--5秒后重启
+        UartMgr.publishMessage(r)
+        LogUtil.d(TAG,"......exception found ,shutdown after "..delay.."seconds, it will poweron")
+    end 
 end   
 
   
