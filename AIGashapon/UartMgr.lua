@@ -12,6 +12,7 @@ require "UARTAllInfoRep"
 require "UARTBoardInfo"
 require "UARTGetAllInfo"
 require "MyUtils"
+require "pm"
 
 local msgQueue={}
 
