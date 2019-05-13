@@ -21,6 +21,8 @@ local jsonex = require "jsonex"
 local TAG = "Deliver"
 local gBusyMap={}--是否在占用的记录
 local ORDER_EXPIRED_SPAN = 5*60--订单超期时间和系统当前当前时间的偏差
+local ORDER_EXPIRED_IN_SEC = 2*60+10--订单超时的时间
+
 local mTimerId = nil
 Deliver = CBase:new{
     MY_TOPIC = "deliver",
@@ -35,7 +37,6 @@ Deliver = CBase:new{
     LOOP_TIME_IN_MS = 5*1000,-- 检查是否超时的时间间隔
     -- FIXME TEMP CODE
     ORDER_EXTRA_TIMEOUT_IN_SEC = 0--一个location的订单，如果超过了这个时间，则认为订单周期结束了(真的超时了)
-    
 }
 
 -- 上传销售日志的的位置
@@ -127,6 +128,17 @@ end
 
 function Deliver:handleContent( content )
  	-- TODO to be coded
+    -- 如果还没同步时间或者订单超时的2分钟之内，暂时不能出货
+    if not Consts.LAST_REBOOT then
+        LogUtil.d(TAG,TAG.." handleContent timeNotSync,ignore deliver")
+        return
+    end
+
+    if os.time()- Consts.LAST_REBOOT <= ORDER_EXPIRED_IN_SEC then
+        LogUtil.d(TAG,TAG.." handleContent order ignored for reboot order")
+        return
+    end
+
     -- 出货
     -- 监听出货情况
     -- 超时未出货，上传超时错误
