@@ -259,17 +259,16 @@ function UartMgr.startLoopData(uid)
 end
 
 local keepUartTimer
-local lastKeepAliveTime--上次心跳回复的时间
 function  keepUartAliveCallback(masterBoardId)
-	lastKeepAliveTime = os.time()
+	Consts.lastKeepAliveTime = os.time()
 	LogUtil.d(TAG," UartMgr.keepUartAliveCallback")
 end
 
 function UartMgr.startKeepUartAlive()
 	LogUtil.d(TAG," UartMgr.startKeepUartAlive")
-	
-	if not lastKeepAliveTime then
-		lastKeepAliveTime = os.time()
+
+	if not Consts.lastKeepAliveTime then
+		Consts.lastKeepAliveTime = os.time()
 	end
 
 	if keepUartTimer and sys.timerIsActive(keepUartTimer) then
@@ -295,11 +294,11 @@ function UartMgr.startKeepUartAlive()
 
     -- 检测心跳
     sys.timerLoopStart(function()
-    	if not lastKeepAliveTime then
+    	if not Consts.lastKeepAliveTime then
     		return
     	end
 
-		if os.time()-lastKeepAliveTime > Consts.DETECT_UART_ALIVE_INTERVAL_MS then
+		if os.time()-Consts.lastKeepAliveTime > Consts.DETECT_UART_ALIVE_INTERVAL_MS then
 			LogUtil.d(TAG," UartMgr uart down,restart uart now")
 			UartMgr.restart()
 			Consts.UART_BROKE_COUNT = Consts.UART_BROKE_COUNT+1

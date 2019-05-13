@@ -42,8 +42,9 @@ function RepMachVars:addExtraPayloadContent( content )
 	end
 	
 	content["uart_broke_time"]=Consts.UART_BROKE_COUNT--uart 断开的次数
+	content["uart_keep_alive_time"]=Consts.lastKeepAliveTime--最近一次心跳的时间
 	Consts.UART_BROKE_COUNT = 0
-	
+
 	content["last_reboot"] =  t --0--用户标识时间未同步
 	-- FIXME 待赋值
 	content["signal_strength"]=net.getRssi()
