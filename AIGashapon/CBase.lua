@@ -63,6 +63,14 @@ function CBase:handle( obj )
       self.mTimestampInSec = 0
     end
 
+    --如果是出货指令，但是在机器重启前的时间，则说明是机器重启前的订单，忽略
+    if ( string.upper(self:name()) == string.upper("deliver") ) then
+        if Consts.LAST_REBOOT and self.mTimestampInSec<Consts.LAST_REBOOT then
+          LogUtil.d(TAG,TAG.." handleContent order ignored for reboot order")
+          return r
+        end
+    end
+
     -- if ( string.upper(self:name()) == string.upper(RepTime.MY_TOPIC) ) then
     local mycontent=payloadJson[CloudConsts.CONTENT]
     local arriveTime = tableObj[CloudConsts.ARRIVE_TIME]--指令到达的时间

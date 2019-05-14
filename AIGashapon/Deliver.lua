@@ -128,14 +128,9 @@ end
 
 function Deliver:handleContent( content )
  	-- TODO to be coded
-    -- 如果还没同步时间或者订单超时的2分钟之内，暂时不能出货
+    -- 如果还没同步时间或者机器重启前的订单，忽略
     if not Consts.LAST_REBOOT then
         LogUtil.d(TAG,TAG.." handleContent timeNotSync,ignore deliver")
-        return
-    end
-
-    if os.time()- Consts.LAST_REBOOT <= ORDER_EXPIRED_IN_SEC then
-        LogUtil.d(TAG,TAG.." handleContent order ignored for reboot order")
         return
     end
 
