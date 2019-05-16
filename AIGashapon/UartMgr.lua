@@ -261,7 +261,9 @@ end
 local keepUartTimer
 function  keepUartAliveCallback(masterBoardId)
 	Consts.lastKeepAliveTime = os.time()
-	LogUtil.d(TAG," UartMgr.keepUartAliveCallback")
+	
+	Consts.masterBoardId = masterBoardId
+	LogUtil.d(TAG," UartMgr.keepUartAliveCallback "..masterBoardId)
 end
 
 function UartMgr.startKeepUartAlive()

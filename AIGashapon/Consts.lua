@@ -46,5 +46,6 @@ KEEP_UART_ALIVE_INTERVAL_MS = 2000
 DETECT_UART_ALIVE_INTERVAL_MS = 5*KEEP_UART_ALIVE_INTERVAL_MS--uart无响应的时间
 UART_BROKE_COUNT=0
 lastKeepAliveTime=nil--上次心跳回复的时间
+masterBoardId=nil
    
 
