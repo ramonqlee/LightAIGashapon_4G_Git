@@ -75,6 +75,10 @@ function emptyMessageQueue()
       toPublishMessages={}
 end
 
+function getLastSavedSystemTime()
+    return lastSystemTime
+end
+
 --系统ntp开机后，只同步一次；后续都是在此基础上，通过自有服务器校对时间
 --定时校对时间，以内ntp可能出问题，一旦mqtt连接，用自有的时间进行校正
 function selfTimeSync()
