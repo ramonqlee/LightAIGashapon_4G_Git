@@ -41,9 +41,9 @@ function RepMachVars:addExtraPayloadContent( content )
 		t = os.time()
 	end
 
-	if Consts.masterBoardId then
-		content["masterBoardId"]=Consts.masterBoardId
-	end
+	-- if Consts.masterBoardId then
+		-- content["masterBoardId"]=Consts.masterBoardId
+	-- end
 	
 	content["uart_broke_time"]=Consts.UART_BROKE_COUNT--uart 断开的次数
 	content["uart_keep_alive_time"]=Consts.lastKeepAliveTime--最近一次心跳的时间
