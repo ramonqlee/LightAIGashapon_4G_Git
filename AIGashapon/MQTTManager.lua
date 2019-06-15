@@ -52,7 +52,8 @@ local mqttc = nil
 local toPublishMessages={}
 
 local TAG = "MQTTManager"
-local reconnectCount = 0
+local reconnectCount = 0--连续重试的次数，如果中间成功了，则重新开始计数
+
 
 -- MQTT request
 local MQTT_DISCONNECT_REQUEST ="disconnect"
@@ -585,7 +586,7 @@ function startmqtt()
         
         if mqttc.connected and mqttc:subscribe(topics) then
             lastRssi = net.getRssi()
-
+            reconnectCount = 0--连接成功了，reset
             cleanSession = CLEANSESSION--一旦连接成功，保持session
             unsubscribe = false
             LogUtil.d(TAG,".............................subscribe topic ="..jsonex.encode(topics))
