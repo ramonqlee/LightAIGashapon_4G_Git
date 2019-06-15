@@ -23,7 +23,8 @@ local gBusyMap={}--是否在占用的记录
 local ORDER_EXPIRED_SPAN = 5*60--订单超期时间和系统当前当前时间的偏差
 local ORDER_EXPIRED_IN_SEC = 2*60+10--订单超时的时间
 
-local mTimerId = nil
+local gTimeoutTimerId = nil
+
 Deliver = CBase:new{
     MY_TOPIC = "deliver",
     ORDER_TIMEOUT_TIME_IN_SEC = "orderTimeOutTime",
@@ -34,7 +35,7 @@ Deliver = CBase:new{
     DEFAULT_EXPIRE_TIME_IN_SEC=10,
     REOPEN_EXPIRE_TIME_IN_SEC=30,
     DEFAULT_CHECK_DELAY_TIME_IN_SEC=10,
-    LOOP_TIME_IN_MS = 5*1000,-- 检查是否超时的时间间隔
+    TIME_OUT_TIMER_PERIOD_SEC = 30,-- 检查是否超时的时间间隔
     -- FIXME TEMP CODE
     ORDER_EXTRA_TIMEOUT_IN_SEC = 0--一个location的订单，如果超过了这个时间，则认为订单周期结束了(真的超时了)
 }
@@ -134,6 +135,7 @@ function Deliver:handleContent( content )
         return
     end
 
+    local systemTime = os.time()
     -- 出货
     -- 监听出货情况
     -- 超时未出货，上传超时错误
@@ -161,6 +163,14 @@ function Deliver:handleContent( content )
         return
     end
 
+    --有订单时，则先停止检查超时，延时启动检查,防止出现订单处理和超时处理冲突的问题
+    if gTimeoutTimerId and sys.timerIsActive(gTimeoutTimerId) then
+        sys.timerStop(gTimeoutTimerId)
+    end
+    --启动订单超时检查
+    gTimeoutTimerId = sys.timerLoopStart(TimerFunc,Deliver.TIME_OUT_TIMER_PERIOD_SEC*1000)
+
+
     -- 是否存在第三层
     if "3"==location then
         Config.saveValue(CloudConsts.THIRD_LEVEL_KEY,CloudConsts.THIRD_LEVEL_KEY)
@@ -187,7 +197,7 @@ function Deliver:handleContent( content )
     saleLogMap[LOCK_OPEN_STATE] = LOCK_STATE_CLOSED--出货时设置锁的状态为关闭
 
     -- 如果收到订单时，已经过期或者本地时间不准:过早收到了订单，则直接上传超时
-    local osTime = os.time()
+    local osTime = systemTime
     if osTime>expired or expired-osTime>=ORDER_EXPIRED_SPAN then
 
         --同步本很保存的最近一次系统时间，确认下是否确实超时了，并且发起一次时间同步请求
@@ -211,7 +221,7 @@ function Deliver:handleContent( content )
 
         --重新同步下系统时间
         local handle = GetTime:new()
-        handle:sendGetTime(os.time())
+        handle:sendGetTime(systemTime)
         return
     end
 
@@ -222,6 +232,8 @@ function Deliver:handleContent( content )
     if arriveTime then
         map[CloudConsts.ARRIVE_TIME]= arriveTime    
     end
+
+    --发送收到出货的通知
     MQTTReplyMgr.replyWith(RepDeliver.MY_TOPIC,map)
     
     timeoutInSec = expired-osTime
@@ -268,7 +280,6 @@ function Deliver:handleContent( content )
         end
     end 
 
-
     -- 开锁
     local addr = nil
     if "string" == type(device_seq) then
@@ -279,39 +290,27 @@ function Deliver:handleContent( content )
 
     if not addr then
         LogUtil.d(TAG,TAG.." invalid orderId="..orderId)
-        saleLogMap[CloudConsts.CTS]=os.time()
+        saleLogMap[CloudConsts.CTS]=systemTime
         saleLogMap[UPLOAD_POSITION]=UPLOAD_INVALID_ARRIVAL
         saleLogHandler = UploadSaleLog:new()
         saleLogHandler:setMap(saleLogMap)
         saleLogHandler:send(CRBase.TIMEOUT_WHEN_ARRIVE)--超时的话，直接上报失败状态
         return
     end
-        saleLogMap[LOCK_OPEN_TIME]=os.time()
-        UARTStatRep.setCallback(openLockCallback)
-        r = UARTControlInd.encode(addr,location,timeoutInSec)
+    
+    saleLogMap[LOCK_OPEN_TIME]=systemTime
+    UARTStatRep.setCallback(openLockCallback)
+    local r = UARTControlInd.encode(addr,location,timeoutInSec)
+    UartMgr.publishMessage(r)
 
-        UartMgr.publishMessage(r)
+    LogUtil.d(TAG,TAG.." Deliver openLock,addr = "..string.toHex(addr))
 
-        LogUtil.d(TAG,TAG.." Deliver openLock,addr = "..string.toHex(addr))
-        
-        local key = device_seq.."_"..location
-        gBusyMap[key]=saleLogMap
-
-        -- LogUtil.d(TAG,TAG.." add to gBusyMap len="..getTableLen(gBusyMap))
-
-        if Consts.DEVICE_ENV then
-            --start timer monitor already
-            if mTimerId and sys.timerIsActive(mTimerId) then
-                LogUtil.d(TAG,TAG.." timer_is_active id ="..mTimerId)
-            else
-                mTimerId = sys.timerLoopStart(TimerFunc,self.LOOP_TIME_IN_MS)
-                LogUtil.d(TAG,TAG.." timer_loop_start id ="..mTimerId)
-            end
+    local key = device_seq.."_"..location
+    gBusyMap[key]=saleLogMap
             
-            -- 播放出货声音
-            local r = UARTPlayAudio.encode(UARTPlayAudio.OPENLOCK_AUDIO)
-            UartMgr.publishMessage(r)
-        end
+    -- 播放出货声音
+    r = UARTPlayAudio.encode(UARTPlayAudio.OPENLOCK_AUDIO)
+    UartMgr.publishMessage(r)
 end 
 
 -- 开锁的回调
@@ -428,6 +427,8 @@ function  openLockCallback(addr,flagsTable)
 end
 
 function TimerFunc(id)
+    local systemTime = os.time()
+
     if 0 == getTableLen(gBusyMap) then
         LogUtil.d(TAG,TAG.." in TimerFunc empty gBusyMap")
         return
@@ -439,42 +440,17 @@ function TimerFunc(id)
     local toRemove = {}
     local timeOutOrderFound=false--是否有用户未扭订单，如果出现了，则在上报后，没有订单的空隙，重启机器
 
-    local systemTime = os.time()
     for key,saleTable in pairs(gBusyMap) do
         lastDeliverTime = systemTime
+
         if saleTable then
-            orderId = saleTable[CloudConsts.ONLINE_ORDER_ID]
-            seq = saleTable[CloudConsts.DEVICE_SEQ]
-            loc = saleTable[CloudConsts.LOCATION]
-
-            --TODO 是否已经发送过重试开锁指令
-            --TODO 是否已经发送过重试开锁指令，并且在指定的时间内没有收到开锁成功的指令
-            local openTime = saleTable[LOCK_OPEN_TIME]
-            if Consts.RETRY_OPEN_LOCK and openTime and os.time()-openTime < Deliver.DEFAULT_CHECK_DELAY_TIME_IN_SEC and saleTable[LOCK_OPEN_STATE] ~= LOCK_STATE_OPEN then
-                if not saleTable[CloudConsts.RETRY_OPEN_LOCK_KEY] then
-                    -- 开锁
-                    local addr = nil
-                    if "string" == type(seq) then
-                        addr = string.fromhex(seq)--pack.pack("b3",0x00,0x00,0x06)  
-                    elseif "number"==type(seq) then
-                        addr = string.format("%2X",seq)
-                    end
-
-                    if  addr then
-                        r = UARTControlInd.encode(addr,loc,Deliver.REOPEN_EXPIRE_TIME_IN_SEC)
-                        UartMgr.publishMessage(r)
-
-                        LogUtil.d(TAG,TAG.." Deliver reopenLock, orderId = "..orderId)
-                    end
-
-                    saleTable[CloudConsts.RETRY_OPEN_LOCK_KEY] = "1"
-                end
-            end
-
            -- 是否超时了
            orderTimeoutTime=saleTable[Deliver.ORDER_TIMEOUT_TIME_IN_SEC]
            if orderTimeoutTime then
-               
+               orderId = saleTable[CloudConsts.ONLINE_ORDER_ID]
+               seq = saleTable[CloudConsts.DEVICE_SEQ]
+               loc = saleTable[CloudConsts.LOCATION]
+
                LogUtil.d(TAG,"TimeoutTable orderId = "..orderId.." seq = "..seq.." loc="..loc.." timeout at "..orderTimeoutTime.." nowTime = "..systemTime)
                if systemTime > orderTimeoutTime or orderTimeoutTime-systemTime>ORDER_EXPIRED_SPAN then
                 LogUtil.d(TAG,TAG.."in TimerFunc timeouted orderId ="..orderId)
@@ -491,13 +467,12 @@ function TimerFunc(id)
                     toRemove[key] = 1
                     timeOutOrderFound = true
                 end
-
                 end
-          end
+            end
+        end
     end
-end
 
---删除已经出货的订单,需要从最大到最小删除，
+    --删除已经出货的订单,需要从最大到最小删除，
     if getTableLen(toRemove)>0 then
         lastDeliverTime = os.time()
         LogUtil.d(TAG,TAG.." in TimerFunc to remove gBusyMap len="..getTableLen(gBusyMap))
@@ -508,13 +483,6 @@ end
         LogUtil.d(TAG,TAG.." in TimerFunc after remove gBusyMap len="..getTableLen(gBusyMap))
     end
 
-    -- 有用户未扭，并且没有订单了
-    if timeOutOrderFound and 0 == getTableLen(gBusyMap) then
-        local delay= 10
-        local r = UARTShutDown.encode(delay)--x秒后重启
-        UartMgr.publishMessage(r)
-        LogUtil.d(TAG,"......exception found ,shutdown after "..delay.."seconds, it will poweron")
-    end 
 end   
 
   
