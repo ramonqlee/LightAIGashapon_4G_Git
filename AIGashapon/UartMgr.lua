@@ -308,7 +308,7 @@ function UartMgr.startKeepUartAlive()
 			UartMgr.restart()
 			Consts.UART_BROKE_COUNT = Consts.UART_BROKE_COUNT+1
 		end
-    end,Consts.ONE_SEC_IN_MS)
+    end,10*Consts.ONE_SEC_IN_MS)
 end
 
 
