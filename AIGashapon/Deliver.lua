@@ -483,6 +483,14 @@ function TimerFunc(id)
         LogUtil.d(TAG,TAG.." in TimerFunc after remove gBusyMap len="..getTableLen(gBusyMap))
     end
 
+    -- 有用户未扭，并且没有订单了，尝试重启板子，恢复下
+    if timeOutOrderFound and 0 == getTableLen(gBusyMap) then
+        local delay= 10
+        local r = UARTShutDown.encode(delay)--x秒后重启
+        UartMgr.publishMessage(r)
+        LogUtil.d(TAG,"......exception found ,shutdown after "..delay.."seconds, it will poweron")
+    end
+
 end   
 
   
