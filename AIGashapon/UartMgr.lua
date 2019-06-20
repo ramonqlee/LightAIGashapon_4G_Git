@@ -252,6 +252,7 @@ function UartMgr.startLoopData(uid)
 			-- LogUtil.d(TAG,"UartMgr.startLoopData,too often read,return")
 			return
 		end
+		
 		LogUtil.d(TAG,"UartMgr.startLoopData,uart_uid="..uid)
         uart_read(uid)
 

@@ -24,6 +24,7 @@ require "GetTime"
 require "RepTime"
 require "SetConfig"
 require "MyUtils"
+require "UARTShutDown"
 require "ConstsPrivate"
 
 local jsonex = require "jsonex"
@@ -348,13 +349,15 @@ end
 
 function handleRequst()
 
-    if not toHandleRequests or 0 == MyUtils.getTableLen(toHandleRequests) then
+    local messageLength = MyUtils.getTableLen(toHandleRequests)
+
+    if not toHandleRequests or 0 == messageLength then
         LogUtil.d(TAG,"empty handleRequst")
         return
     end
 
     local toRemove={}
-    LogUtil.d(TAG,"mqtt handleRequst")
+    LogUtil.d(TAG,"handleRequst,messageLength="..messageLength)
     for key,req in pairs(toHandleRequests) do
 
         -- 对于断开mqtt的请求，需要先清空消息队列
@@ -372,6 +375,9 @@ function handleRequst()
             local delay= 1
             local r = UARTShutDown.encode(delay)--x秒后重启
             UartMgr.publishMessage(r)
+            toRemove[key]=1
+
+            LogUtil.d(TAG,"mqtt REBOOT_DEVICE_REQUEST")
         end
 
     end
@@ -519,7 +525,7 @@ function disconnect()
     end
 
     toHandleRequests[#toHandleRequests+1] = MQTT_DISCONNECT_REQUEST
-    LogUtil.d(TAG,"add to request queur,request="..MQTT_DISCONNECT_REQUEST.." #toHandleRequests="..#toHandleRequests)
+    LogUtil.d(TAG,"add to request queue,request="..MQTT_DISCONNECT_REQUEST.." #toHandleRequests="..#toHandleRequests)
 end  
 
 
@@ -529,7 +535,7 @@ function rebootWhenIdle()
     end
 
     toHandleRequests[#toHandleRequests+1] = REBOOT_DEVICE_REQUEST
-    LogUtil.d(TAG,"add to request queur,request="..REBOOT_DEVICE_REQUEST.." #toHandleRequests="..#toHandleRequests)
+    LogUtil.d(TAG,"add to request queue,request="..REBOOT_DEVICE_REQUEST.." #toHandleRequests="..#toHandleRequests)
 end
 
 
