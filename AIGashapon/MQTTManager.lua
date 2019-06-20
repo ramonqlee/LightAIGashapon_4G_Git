@@ -348,16 +348,14 @@ end
 
 
 function handleRequst()
-
-    local messageLength = MyUtils.getTableLen(toHandleRequests)
-
-    if not toHandleRequests or 0 == messageLength then
+    --no request,return
+    if not toHandleRequests or 0 == MyUtils.getTableLen(toHandleRequests) then
         LogUtil.d(TAG,"empty handleRequst")
         return
     end
 
     local toRemove={}
-    LogUtil.d(TAG,"handleRequst,messageLength="..messageLength)
+    LogUtil.d(TAG,"handleRequst")
     for key,req in pairs(toHandleRequests) do
 
         -- 对于断开mqtt的请求，需要先清空消息队列
@@ -370,8 +368,8 @@ function handleRequst()
             toRemove[key]=1
         end
 
-        --仅剩余当前最后一条重启消息
-        if REBOOT_DEVICE_REQUEST == req and 1== MQTTManager.getMessageQueueSize() then 
+        --没有需要发送的mqtt消息了
+        if REBOOT_DEVICE_REQUEST == req and not MQTTManager.hasMessage() then 
             local delay= 1
             local r = UARTShutDown.encode(delay)--x秒后重启
             UartMgr.publishMessage(r)
