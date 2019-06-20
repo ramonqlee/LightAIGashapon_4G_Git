@@ -103,7 +103,7 @@ function selfTimeSync()
                     timeDiff = -timeDiff
                 end
                 --时间是否发生了波动
-                if timeDiff < 2*Consts.TIME_SYNC_INTERVAL_MS then
+                if timeDiff < 2*Consts.TIME_SYNC_INTERVAL_SEC then
                     return
                 end
             end
@@ -373,6 +373,7 @@ function handleRequst()
             local delay = 5
             local r = UARTShutDown.encode(delay)--x秒后重启
             UartMgr.publishMessage(r)
+            
             toRemove[key]=1
 
             LogUtil.d(TAG,"mqtt REBOOT_DEVICE_REQUEST")
