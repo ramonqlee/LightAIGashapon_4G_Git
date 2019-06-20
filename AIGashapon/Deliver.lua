@@ -9,6 +9,7 @@ require "Consts"
 require "UartMgr"
 require "UARTUtils"
 require "CloudConsts"
+require "MQTTManager"
 require "UARTControlInd"
 require "UARTPlayAudio"
 require "CBase"
@@ -485,10 +486,8 @@ function TimerFunc(id)
 
     -- 有用户未扭，并且没有订单了，尝试重启板子，恢复下
     if timeOutOrderFound and 0 == getTableLen(gBusyMap) then
-        local delay= 10
-        local r = UARTShutDown.encode(delay)--x秒后重启
-        UartMgr.publishMessage(r)
-        LogUtil.d(TAG,"......exception found ,shutdown after "..delay.."seconds, it will poweron")
+        MQTTManager.rebootWhenIdle()
+        LogUtil.d(TAG,"......timeout order found ,it will poweron when device is idle")
     end
 
 end   

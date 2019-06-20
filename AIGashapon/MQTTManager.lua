@@ -57,6 +57,7 @@ local reconnectCount = 0--连续重试的次数，如果中间成功了，则重
 
 -- MQTT request
 local MQTT_DISCONNECT_REQUEST ="disconnect"
+local REBOOT_DEVICE_REQUEST = "rebootDevice"
 local MAX_MQTT_RECEIVE_COUNT = 2
 
 local toHandleRequests={}
@@ -266,8 +267,12 @@ function connectMQTT()
     end
 end
 
+function getMessageQueueSize()
+    return MyUtils.getTableLen(toPublishMessages)
+end
+
 function hasMessage()
-    return toPublishMessages and  0~= MyUtils.getTableLen(toPublishMessages)
+    return 0~= MyUtils.getTableLen(toPublishMessages)
 end
 
 --控制每次调用，发送的消息数，防止发送消息，影响了收取消息
@@ -360,6 +365,13 @@ function handleRequst()
             end
 
             toRemove[key]=1
+        end
+
+        --仅剩余当前最后一条重启消息
+        if REBOOT_DEVICE_REQUEST == req and 1== MQTTManager.getMessageQueueSize() then 
+            local delay= 1
+            local r = UARTShutDown.encode(delay)--x秒后重启
+            UartMgr.publishMessage(r)
         end
 
     end
@@ -509,6 +521,16 @@ function disconnect()
     toHandleRequests[#toHandleRequests+1] = MQTT_DISCONNECT_REQUEST
     LogUtil.d(TAG,"add to request queur,request="..MQTT_DISCONNECT_REQUEST.." #toHandleRequests="..#toHandleRequests)
 end  
+
+
+function rebootWhenIdle()
+    if not toHandleRequests then
+        toHandleRequests = {}
+    end
+
+    toHandleRequests[#toHandleRequests+1] = REBOOT_DEVICE_REQUEST
+    LogUtil.d(TAG,"add to request queur,request="..REBOOT_DEVICE_REQUEST.." #toHandleRequests="..#toHandleRequests)
+end
 
 
 function startmqtt()
