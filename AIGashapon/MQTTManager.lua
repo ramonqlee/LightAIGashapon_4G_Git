@@ -370,7 +370,7 @@ function handleRequst()
 
         --没有需要发送的mqtt消息了
         if REBOOT_DEVICE_REQUEST == req and not MQTTManager.hasMessage() then 
-            local delay= 1
+            local delay = 5
             local r = UARTShutDown.encode(delay)--x秒后重启
             UartMgr.publishMessage(r)
             toRemove[key]=1
