@@ -43,15 +43,16 @@ end
 function RepTime:handleContent( timestampInSec,content )
     local r = false
     -- 如果时间小于0或者发送超过了一定时间了，则忽略这次的时间同步
-    local cts = content[CloudConsts.CTS]
+    local cts = content[CloudConsts.CTS]--上次的本地时间
      if not timestampInSec or timestampInSec<=0 or not cts or cts<=0 then
         LogUtil.d(TAG," illegal content or timestamp,handleContent return")
         return r
     end
 
-    local timeDiff = cts-timestampInSec
+    --按照本地时间计算，如果发送出去的时间，距离返回的时间，超过了一定时间，说明消息已经超时了，直接忽略
+    local timeDiff = os.time()-cts--两次本地时间做对比
     if timeDiff < 0 then
-        timeDiff = -timeDiff
+        return r--时间倒转了
     end
 
     if timeDiff>=SYNC_TIME_OUT_IN_SEC then
