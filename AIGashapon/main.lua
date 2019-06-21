@@ -5,6 +5,7 @@ PROJECT = "AIGashapon"
 
 VERSION = "1.1.246"
 
+
 --[[
 使用Luat物联云平台固件升级的功能，必须按照以下步骤操作：
 1、打开Luat物联云平台前端页面：https://iot.openluat.com/
