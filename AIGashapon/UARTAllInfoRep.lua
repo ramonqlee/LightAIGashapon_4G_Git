@@ -173,7 +173,7 @@ end
 
 function UARTAllInfoRep.notifiyCallback()
 	-- 是否保留之前获得的id
-	if Consts.EANBLE_MERGE_BOARD_ID then
+	if Consts.ENABLE_MERGE_BOARD_ID then
 		tmp = Config.getValue(BOARDIDS)
 		-- TODO 获取数据，并解析 StringSplit
 		if tmp and "string"==type(tmp) and #tmp>0 then
