@@ -34,7 +34,7 @@ local jsonex = require "jsonex"
 -- 2.等待联网成功，此过程预计耗时9秒
 -- 3.以上过过程重复2次，无法联网，改为重启板子恢复联网
 
-local MAX_FLY_MODE_RETRY_COUNT = 3--为了测试方便，设定了10次，实际设定为2次
+local MAX_FLY_MODE_RETRY_COUNT = 10--为了测试方便，设定了10次，实际设定为2次
 local MAX_FLY_MODE_WAIT_TIME = 3*Consts.ONE_SEC_IN_MS--实际1秒
 local IP_READY_NORMAL_WAIT_TIME = 10*Consts.ONE_SEC_IN_MS--实际7秒既可以
 local IP_READY_LOW_RSSI_WAIT_TIME = 30*Consts.ONE_SEC_IN_MS--实际7秒既可以
