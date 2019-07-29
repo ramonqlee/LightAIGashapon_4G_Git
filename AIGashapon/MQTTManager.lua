@@ -246,6 +246,13 @@ function checkNetwork(forceReconnect)
             sys.waitUntil("IP_READY_IND",lastWaitTime)
         end
 
+        sys.wait(temp)--再延时几秒，等待网络OK
+        if socket.isReady() then
+            LogUtil.d(TAG,".............................socket ready after retry.............................")
+            return
+        end
+
+        sys.wait(temp)--再延时几秒，等待网络OK
         if socket.isReady() then
             LogUtil.d(TAG,".............................socket ready after retry.............................")
             return
