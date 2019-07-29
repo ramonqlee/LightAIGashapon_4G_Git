@@ -35,9 +35,8 @@ local jsonex = require "jsonex"
 -- 3.以上过过程重复2次，无法联网，改为重启板子恢复联网
 
 local MAX_FLY_MODE_RETRY_COUNT = 10--为了测试方便，设定了10次，实际设定为2次
-local MAX_FLY_MODE_WAIT_TIME = 3*Consts.ONE_SEC_IN_MS--实际1秒
-local IP_READY_NORMAL_WAIT_TIME = 10*Consts.ONE_SEC_IN_MS--实际7秒既可以
-local IP_READY_LOW_RSSI_WAIT_TIME = 30*Consts.ONE_SEC_IN_MS--实际7秒既可以
+local MAX_FLY_MODE_WAIT_TIME = 20*Consts.ONE_SEC_IN_MS--
+local IP_READY_NORMAL_WAIT_TIME = 2*60*Consts.ONE_SEC_IN_MS--实际7秒既可以
 
 local HTTP_WAIT_TIME=5*Consts.ONE_SEC_IN_MS
 
@@ -222,42 +221,26 @@ function checkNetwork(forceReconnect)
         LogUtil.d(TAG,".............................switchFly true.............................")
         net.switchFly(true)
 
-        -- 如果信号较低，则多等会
-        local temp = MAX_FLY_MODE_WAIT_TIME
-        if lastRssi < Consts.LOW_RSSI then
-            temp = 2*MAX_FLY_MODE_WAIT_TIME
-        end
-
-        sys.wait(temp)
+        sys.wait(MAX_FLY_MODE_WAIT_TIME)
 
         LogUtil.d(TAG,".............................switchFly false.............................")
         net.switchFly(false)
 
         if not socket.isReady() then
             -- 如果信号较低，则多等会；每进入一次，递增一下等待的时间
-            if lastRssi < Consts.LOW_RSSI then
-                lastWaitTime = lastWaitTime + IP_READY_LOW_RSSI_WAIT_TIME
-            else
-                lastWaitTime = lastWaitTime + IP_READY_NORMAL_WAIT_TIME
-            end
-
+            lastWaitTime = lastWaitTime + IP_READY_NORMAL_WAIT_TIME
             LogUtil.d(TAG,".............................socket not ready,lastWaitTime= "..lastWaitTime)
-            --等待网络环境准备就绪，超时时间是40秒
+            --等待网络环境准备就绪，超时时间是300秒
             sys.waitUntil("IP_READY_IND",lastWaitTime)
+            LogUtil.d(TAG,".............................timeout lastWaitTime= "..lastWaitTime)
         end
-
-        sys.wait(temp)--再延时几秒，等待网络OK
+        
         if socket.isReady() then
             LogUtil.d(TAG,".............................socket ready after retry.............................")
             return
         end
 
-        sys.wait(temp)--再延时几秒，等待网络OK
-        if socket.isReady() then
-            LogUtil.d(TAG,".............................socket ready after retry.............................")
-            return
-        end
-
+        LogUtil.d(TAG,".............................socket not ready after retry.............................")
         netFailCount = netFailCount+1
         if netFailCount>=MAX_FLY_MODE_RETRY_COUNT then
             sys.restart("netFailTooLong")--重启更新包生效
