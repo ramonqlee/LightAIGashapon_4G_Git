@@ -53,6 +53,7 @@ function GetMachVars:handleContent( content )
     
  	MQTTReplyMgr.replyWith(RepMachVars.MY_TOPIC,map)
  	
+ 	update.request() -- 检测是否有更新包
  	return true
 end       
 

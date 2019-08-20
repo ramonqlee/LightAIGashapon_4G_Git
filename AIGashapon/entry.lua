@@ -57,45 +57,19 @@ function startTimedTask()
     end
 
     timedTaskId = sys.timerLoopStart(function()
-            if MQTTManager.hasMessage() then
-            	return
-            end
-
             checkTask()
             checkUpdate()
             
         end,Consts.TIMED_TASK_INTERVAL_MS)
-
-    --开机先检测一次升级
-    sys.timerStart(function()
-            if MQTTManager.hasMessage() then
-            	return
-            end
-
-            checkTask()
-            checkUpdate()
-            
-        end,5*1000)
 end
 
 -- 自动升级检测
 function checkUpdate()
-    if Deliver.isDelivering() then
-        LogUtil.d(TAG,TAG.." Deliver.isDelivering or Lightup.isLightuping,delay update")
-        return
-    end
-
     update.request() -- 检测是否有更新包
 end
 
-
 --任务检测
 function checkTask()
-    if Deliver.isDelivering() then
-        LogUtil.d(TAG,TAG.." Deliver.isDelivering or Lightup.isLightuping,delay taskCheck")
-        return
-    end
-
     Task.getTask()               -- 检测是否有新任务 
 end
 
