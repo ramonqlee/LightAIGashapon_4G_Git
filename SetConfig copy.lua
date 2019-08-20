@@ -139,9 +139,6 @@ function SetConfig:handleContent( content )
 
                 content["setHaltTime"]=shutdownTimeInSec
                 content["setBootTime"]=rebootTimeInSec
-
-                Config.saveValue(CloudConsts.HALT_SCHEDULE,shutdownTimeInSec)
-                Config.saveValue(CloudConsts.REBOOT_SCHEDULE,rebootTimeInSec)
             end
         end
 
@@ -189,12 +186,6 @@ function SetConfig:startRebootSchedule()
         if MQTTManager.hasMessage() or Deliver.isDelivering() then
             LogUtil.d(TAG," checking reboot schedule,but mqtt has message or is delivering")
             return
-        end
-
-        if not shutdownTimeInSec or not rebootTimeInSec or 0==shutdownTimeInSec or 0==rebootTimeInSec then
-            --尝试初始化
-            shutdownTimeInSec = Config.getValue(CloudConsts.HALT_SCHEDULE)
-            rebootTimeInSec = Config.getValue(CloudConsts.REBOOT_SCHEDULE)
         end
 
         if not shutdownTimeInSec or not rebootTimeInSec or 0==shutdownTimeInSec or 0==rebootTimeInSec then
