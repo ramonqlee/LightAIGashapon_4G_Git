@@ -36,7 +36,7 @@ local jsonex = require "jsonex"
 
 local MAX_FLY_MODE_RETRY_COUNT = 10--为了测试方便，设定了10次，实际设定为2次
 local MAX_FLY_MODE_WAIT_TIME = 20*Consts.ONE_SEC_IN_MS--
-local IP_READY_NORMAL_WAIT_TIME = 2*60*Consts.ONE_SEC_IN_MS--实际7秒既可以
+local IP_READY_NORMAL_WAIT_TIME = 5*60*Consts.ONE_SEC_IN_MS--实际7秒既可以
 
 local HTTP_WAIT_TIME=5*Consts.ONE_SEC_IN_MS
 
@@ -588,6 +588,7 @@ function startmqtt()
 
         connectMQTT()
         
+        SetConfig.startRebootSchedule()
         loopPreviousMessage(mMqttProtocolHandlerPool)
         
         --先取消之前的订阅
