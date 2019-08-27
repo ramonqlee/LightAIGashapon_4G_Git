@@ -200,10 +200,18 @@ function SetConfig:startRebootSchedule()
         if not shutdownTimeInSec or not rebootTimeInSec or 0==shutdownTimeInSec or 0==rebootTimeInSec then
             return
         end
-        
-        if shutdownTimeInSec > os.time() then
-            return
+
+        --如果是关机时间，早于开机时间，判断是否需要关机
+        if shutdownTimeInSec < rebootTimeInSec then
+            if os.time() < shutdownTimeInSec or os.time()> rebootTimeInSec then
+                return
+            end
+        else--如果是关机时间晚于开机时间的，判断是否需要关机
+            if os.time()>rebootTimeInSec and os.time()<shutdownTimeInSec then
+                return
+            end
         end
+
 
         --关机，并设定下次开机的时间
         local delay = rebootTimeInSec - shutdownTimeInSec
