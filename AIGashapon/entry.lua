@@ -49,6 +49,7 @@ local RETRY_BOARD_COUNT = 1--识别的数量小于这个，就重试
 local boardIdentified = 0
 local retryCount = 0
 local twinkleTimerId = nil
+local twinkeAllowedByBackstage = false
 
 function startTimedTask()
     if timedTaskId and sys.timerIsActive(timedTaskId) then
@@ -57,10 +58,17 @@ function startTimedTask()
     end
 
     timedTaskId = sys.timerLoopStart(function()
+    		checkTwinkleSwitch()
             checkTask()
             checkUpdate()
             
         end,Consts.TIMED_TASK_INTERVAL_MS)
+end
+
+function checkTwinkleSwitch()
+	twinkeAllowedByBackstage = false;
+	--TODO 待根据后台开关，设定是否允许闪灯
+	
 end
 
 -- 自动升级检测
@@ -150,8 +158,14 @@ function startTwinkleTask( )
 		return
 	end
 
+
 	-- 启动一个定时器，负责闪灯，当出货时停止闪灯
 	twinkleTimerId = sys.timerLoopStart(function()
+			--TODO 后台是否开启了闪灯开关
+			if not twinkeAllowedByBackstage then 
+				return
+			end
+
 			--出货中，不集体闪灯
 			if Deliver.isDelivering() or Lightup.isLightuping() then
 				LogUtil.d(TAG,TAG.." Deliver.isDelivering or Lightup.isLightuping")
