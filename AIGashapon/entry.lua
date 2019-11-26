@@ -20,6 +20,8 @@ require "Deliver"
 require "MQTTManager"
 require "Lightup"
 require "UARTLightup"
+require "MyUtils"
+require "ConstsPrivate"
 
 
 local TAG="Entry"
@@ -48,8 +50,14 @@ local MAX_RETRY_COUNT = 3
 local RETRY_BOARD_COUNT = 1--识别的数量小于这个，就重试
 local boardIdentified = 0
 local retryCount = 0
+
+local TWINKLE_TYPE_STILL   = 0 --不闪灯
+local TWINKLE_TYPE_TWINKLE = 1 --间隔4秒，整行闪灯
+local TWINKLE_TYPE_COUNT = 2--twinkle种类的数量，用于防止出现越界的情况
+
 local twinkleTimerId = nil
-local twinkeAllowedByBackstage = false
+local twinkleOption = TWINKLE_TYPE_STILL
+
 
 function startTimedTask()
     if timedTaskId and sys.timerIsActive(timedTaskId) then
@@ -66,9 +74,33 @@ function startTimedTask()
 end
 
 function checkTwinkleSwitch()
-	twinkeAllowedByBackstage = false;
+	local nodeId = MyUtils.getUserName(false)
+    if not nodeId or 0 == #nodeId then
+        LogUtil.d(TAG,"checkTwinkleSwitch return for unbound node")
+        return
+    end 
+
 	--TODO 待根据后台开关，设定是否允许闪灯
-	
+	url = string.format(ConstsPrivate.MQTT_TWINKLE_URL_FORMATTER,nodeId)
+    LogUtil.d(TAG,"url = "..url)
+    http.request("GET",url,nil,nil,nil,nil,function(result,prompt,head,body )
+        if result and body then
+            -- LogUtil.d(TAG,"http config body="..body)
+            bodyJson = jsonex.decode(body)
+
+            if not bodyJson then
+                return
+            end
+
+            twinkleOption = bodyJson['twinkleOption']
+            if not twinkleOption then
+				twinkleOption = TWINKLE_TYPE_STILL
+            end
+
+            twinkleOption = twinkleOption%TWINKLE_TYPE_COUNT
+        end
+        
+    end)
 end
 
 -- 自动升级检测
@@ -162,7 +194,7 @@ function startTwinkleTask( )
 	-- 启动一个定时器，负责闪灯，当出货时停止闪灯
 	twinkleTimerId = sys.timerLoopStart(function()
 			--TODO 后台是否开启了闪灯开关
-			if not twinkeAllowedByBackstage then 
+			if TWINKLE_TYPE_STILL==twinkleOption then 
 				return
 			end
 
