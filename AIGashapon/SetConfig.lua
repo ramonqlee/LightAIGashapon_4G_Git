@@ -30,7 +30,7 @@ local function formTimeWithHourMin( timeStr )
     local ONE_HOUR_IN_SEC = 60*60
     local ONE_DAY_IN_SEC = 24*ONE_HOUR_IN_SEC
 
-    if not timeStr then
+    if not timeStr or 0 == #timeStr then
         return 0
     end
 
@@ -115,9 +115,11 @@ function SetConfig:handleContent( content )
 
     --TOOD 加入误操作机制
     --如果收到的关机时间已经过了，则忽略
-    if not rebootTime or not haltTimeTemp then
+    if not rebootTime or not haltTimeTemp or 0==#rebootTime or 0==#haltTimeTemp then
         rebootTimeInSec = 0
         shutdownTimeInSec = 0
+        Config.saveValue(CloudConsts.HALT_SCHEDULE,shutdownTimeInSec)
+        Config.saveValue(CloudConsts.REBOOT_SCHEDULE,rebootTimeInSec)
     else
         local tempTime = formTimeWithHourMin(haltTimeTemp)
         if tempTime > os.time() then
