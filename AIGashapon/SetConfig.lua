@@ -66,6 +66,7 @@ local function formTimeWithHourMin( timeStr )
     return os.time()
 end
 
+
 SetConfig = CBase:new{
     MY_TOPIC = "set_config"
 }
@@ -116,16 +117,18 @@ function SetConfig:handleContent( content )
     --TOOD 加入误操作机制
     --如果收到的关机时间已经过了，则忽略
     if not rebootTime or not haltTimeTemp or 0==#rebootTime or 0==#haltTimeTemp then
-        rebootTimeInSec = 0
-        shutdownTimeInSec = 0
-        Config.saveValue(CloudConsts.HALT_SCHEDULE,shutdownTimeInSec)
-        Config.saveValue(CloudConsts.REBOOT_SCHEDULE,rebootTimeInSec)
+        Config.saveValue(CloudConsts.HALT_SCHEDULE,"")
+        Config.saveValue(CloudConsts.REBOOT_SCHEDULE,"")
     else
         local tempTime = formTimeWithHourMin(haltTimeTemp)
         if tempTime > os.time() then
             local haltTime = haltTimeTemp
 
             if rebootTime or haltTime then
+                --更新定时开关机策略
+                Config.saveValue(CloudConsts.HALT_SCHEDULE,haltTime)
+                Config.saveValue(CloudConsts.REBOOT_SCHEDULE,rebootTime)
+
                 LogUtil.d(TAG,"rebootTime = "..rebootTime.." haltTime="..haltTime)
 
                 rebootTimeInSec = formTimeWithHourMin(rebootTime)
@@ -141,9 +144,6 @@ function SetConfig:handleContent( content )
 
                 content["setHaltTime"]=shutdownTimeInSec
                 content["setBootTime"]=rebootTimeInSec
-
-                Config.saveValue(CloudConsts.HALT_SCHEDULE,shutdownTimeInSec)
-                Config.saveValue(CloudConsts.REBOOT_SCHEDULE,rebootTimeInSec)
             end
         end
 
@@ -193,11 +193,25 @@ function SetConfig:startRebootSchedule()
             return
         end
 
-        if not shutdownTimeInSec or not rebootTimeInSec or 0==shutdownTimeInSec or 0==rebootTimeInSec then
-            --尝试初始化
-            shutdownTimeInSec = Config.getValue(CloudConsts.HALT_SCHEDULE)
-            rebootTimeInSec = Config.getValue(CloudConsts.REBOOT_SCHEDULE)
+        local haltTime = Config.getValue(CloudConsts.HALT_SCHEDULE)
+        local rebootTime = Config.getValue(CloudConsts.REBOOT_SCHEDULE)
+
+        if not rebootTime or not haltTime or 0 == #rebootTime || 0 == #haltTime then
+            return
         end
+
+        --转换为当前时间
+        LogUtil.d(TAG,"rebootTime = "..rebootTime.." haltTime="..haltTime)
+
+        rebootTimeInSec = formTimeWithHourMin(rebootTime)
+        shutdownTimeInSec = formTimeWithHourMin(haltTime)
+        --理论上开机时间应该在关机时间之后，所以需要处理下
+        if rebootTimeInSec < shutdownTimeInSec then
+            --将开机时间推迟到第二天
+            LogUtil.d(TAG," origin rebootTimeInSec= "..rebootTimeInSec)
+            rebootTimeInSec = rebootTimeInSec+24*60*60
+        end
+
 
         if not shutdownTimeInSec or not rebootTimeInSec or 0==shutdownTimeInSec or 0==rebootTimeInSec then
             return
