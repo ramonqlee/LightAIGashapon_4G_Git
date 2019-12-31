@@ -196,7 +196,7 @@ function SetConfig:startRebootSchedule()
         local haltTime = Config.getValue(CloudConsts.HALT_SCHEDULE)
         local rebootTime = Config.getValue(CloudConsts.REBOOT_SCHEDULE)
 
-        if not rebootTime or not haltTime or 0 == #rebootTime || 0 == #haltTime then
+        if not rebootTime or not haltTime or 0 == #rebootTime or 0 == #haltTime then
             return
         end
 
