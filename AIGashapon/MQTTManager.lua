@@ -136,6 +136,7 @@ function startMonitorMQTTTraffic()
     mqttMonitorTimer = sys.timerLoopStart(function()
         local timeOffsetInSec = os.time()-lastMQTTTrafficTime
         
+        LogUtil.d(TAG,"startMonitorMQTTTrafficing")
         --如果超过了一定时间，没有mqtt消息了，则重启下板子,恢复服务
         if timeOffsetInSec*Consts.ONE_SEC_IN_MS<30*Consts.ONE_SEC_IN_MS then
             return
@@ -146,11 +147,12 @@ function startMonitorMQTTTraffic()
         stopMonitorMQTTTraffic()--先停止定时器
         sys.restart("noMQTTTrafficTooLong")--重启更新包生效
 
-    end,Consts.ONE_SEC_IN_MS)
+    end,5*Consts.ONE_SEC_IN_MS)
 end
 
 function stopMonitorMQTTTraffic()
     if mqttMonitorTimer and sys.timerIsActive(mqttMonitorTimer) then
+        LogUtil.d(TAG,"stopMonitorMQTTTraffic")
         sys.timerStop(mqttMonitorTimer)
         mqttMonitorTimer=nil
     end
