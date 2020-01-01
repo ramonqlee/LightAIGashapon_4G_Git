@@ -22,6 +22,8 @@ local TAG = "Deliver"
 local gBusyMap={}--是否在占用的记录
 local ORDER_EXPIRED_SPAN = 5*60--订单超期时间和系统当前当前时间的偏差
 local ORDER_EXPIRED_IN_SEC = 2*60+10--订单超时的时间
+local MIN_DELIVER_SN_LEN = 24
+local deliveredOrderIds={}--最近出货的记录，保留5条，防止出现重复开锁的情况
 
 local gTimeoutTimerId = nil
 
@@ -77,6 +79,33 @@ local function getTableLen( tab )
     end 
 
     return count
+end
+
+local function keepLastestDeliverOrders()
+    if getTableLen(deliveredOrderIds)<=MIN_DELIVER_SN_LEN then
+        return
+    end
+
+    local toRemoveOrderId=nil
+    local toRemoveOrderTime=nil
+    for orderId,time in pairs(deliveredOrderIds) do
+        if not toRemoveOrderId then
+            toRemoveOrderId = orderId
+            toRemoveOrderTime = time
+        end
+
+        if toRemoveOrderId and orderId and toRemoveOrderTime and time then
+            if time<toRemoveOrderTime then
+                toRemoveOrderTime = time
+            end
+        end
+    end
+
+    -- 清除已经成功的消息
+    if toRemoveOrderId and toRemoveOrderTime then
+        deliveredOrderIds[toRemoveOrderId]=nil
+        LogUtil.d(TAG,TAG.." remove order from store with orderId ="..toRemoveOrderId)
+    end
 end
 
 function Deliver:isDelivering()
@@ -162,6 +191,16 @@ function Deliver:handleContent( content )
         LogUtil.d(TAG,TAG.." oopse,missing key")
         return
     end
+
+    if deliveredOrderIds[orderId] then
+        LogUtil.d(TAG,TAG.." ignore dupicate deliver orderId ="..orderId)
+        return
+    end
+
+    --缓存最近的订单id，防止收到重复消息，重复出货
+    deliveredOrderIds[orderId]=os.time()
+    keepLastestDeliverOrders()
+
 
     --有订单时，则先停止检查超时，延时启动检查,防止出现订单处理和超时处理冲突的问题
     if gTimeoutTimerId and sys.timerIsActive(gTimeoutTimerId) then
