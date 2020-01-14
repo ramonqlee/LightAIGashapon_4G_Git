@@ -138,7 +138,7 @@ function startMonitorMQTTTraffic()
         
         LogUtil.d(TAG,"startMonitorMQTTTrafficing")
         --如果超过了一定时间，没有mqtt消息了，则重启下板子,恢复服务
-        if timeOffsetInSec*Consts.ONE_SEC_IN_MS<30*Consts.ONE_SEC_IN_MS then
+        if timeOffsetInSec*Consts.ONE_SEC_IN_MS<MAX_FLY_MODE_RETRY_COUNT*IP_READY_NORMAL_WAIT_TIME then
             return
         end
 
