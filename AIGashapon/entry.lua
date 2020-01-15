@@ -22,6 +22,7 @@ require "Lightup"
 require "UARTLightup"
 require "MyUtils"
 require "ConstsPrivate"
+require "UARTAllInfoRep"
 
 
 local TAG="Entry"
@@ -116,6 +117,11 @@ end
 
 function allInfoCallback( boardIDArray )
 	boardIdentified = MyUtils.getTableLen(boardIDArray)
+	
+	--是否有无效的id
+	if UARTAllInfoRep.hasIds("000000") then
+		boardIdentified = 0
+	end
 
 	--取消定时器 
 	if timerId and sys.timerIsActive(timerId) then
