@@ -203,6 +203,7 @@ function startAllBoardCheck()
 	LogUtil.d(TAG,"start startAllBoardCheck")
 
 end
+
 function startTwinkleTask( )
 	if twinkleTimerId and sys.timerIsActive(twinkleTimerId) then
 		LogUtil.d(TAG,"twinkle started")
