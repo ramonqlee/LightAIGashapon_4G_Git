@@ -42,7 +42,7 @@ function RepMachVars:addExtraPayloadContent( content )
 	end
 
 	if Consts.masterBoardId then
-		-- content["masterBoardId"]=Consts.masterBoardId
+		content["masterBoardId"]=Consts.masterBoardId
 	end
 	
 	content["all_board_count"]=Consts.ALL_BOARD_COUNT
@@ -60,7 +60,7 @@ function RepMachVars:addExtraPayloadContent( content )
 
 	local CATEGORY = "sem"
 	bds = UARTAllInfoRep.getAllBoardIds(true)
-	if bds and table.getn(bds) >0 then
+	if bds and #bds >0 then
 		for _,v in pairs(bds) do
 			local device ={}
 			device["category"]=CATEGORY
@@ -74,13 +74,13 @@ function RepMachVars:addExtraPayloadContent( content )
 
 			device["variables"]=arr
 
-			devices[table.getn(devices)+1]=device
+			devices[#devices+1]=device
 
 			--LogUtil.d(TAG,"RepMachVars device = "..v)
 		end
 	end
 
-	if 0 == table.getn(devices) then
+	if 0 == #devices then
 		local device ={}
 		device["category"]=CATEGORY
 		device["seq"]=0
