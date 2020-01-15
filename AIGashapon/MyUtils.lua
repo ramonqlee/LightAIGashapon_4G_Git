@@ -48,21 +48,11 @@ function StringSplit(str,split)
 end
 
 function getTableLen( tab )
-    local count = 0  
-
-    if not tab then
+    if not tab or "table"~=type(tab) then
         return 0
     end
 
-    if "table"~=type(tab) then
-        return count
-    end
-
-    for k,_ in pairs(tab) do  
-        count = count + 1  
-    end 
-
-    return count
+    return table.getn(tab)
 end
 
 

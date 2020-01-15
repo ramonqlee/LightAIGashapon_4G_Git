@@ -120,7 +120,6 @@ function UARTAllInfoRep.handle(bins)
 			-- temp = pack.pack("b3",id1,id2,id3)
 			temp = id1..id2..id3
 			if not UARTAllInfoRep.hasIds(temp) then
-				-- mAllBoardIds[#mAllBoardIds+1]=temp
 				table.insert(mAllBoardIds,temp)
 				LogUtil.d(TAG,"find device = "..temp)
 			end
@@ -180,7 +179,7 @@ function UARTAllInfoRep.notifiyCallback()
 		-- TODO 获取数据，并解析 StringSplit
 		if tmp and "string"==type(tmp) and #tmp>0 then
 			local existAllBoardIds = MyUtils.StringSplit(tmp,SPLIT_CHAR)
-			if existAllBoardIds and #existAllBoardIds >0 then
+			if existAllBoardIds and table.getn(existAllBoardIds) >0 then
 				for _,addr in pairs(existAllBoardIds) do
 					if not UARTAllInfoRep.hasIds(addr) then
 						-- mAllBoardIds[#mAllBoardIds+1]=addr
