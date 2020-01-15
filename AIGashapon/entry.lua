@@ -57,6 +57,7 @@ local TWINKLE_TYPE_COUNT = 2--twinkle种类的数量，用于防止出现越界�
 
 local twinkleTimerId = nil
 local twinkleOption = TWINKLE_TYPE_STILL
+local allBoardCheckTimer = nil
 
 
 function startTimedTask()
@@ -113,10 +114,8 @@ function checkTask()
     Task.getTask()               -- 检测是否有新任务 
 end
 
-function allInfoCallback( ids )
-	if ids and #ids > 0 then
-		boardIdentified = #ids
-	end
+function allInfoCallback( boardIDArray )
+	boardIdentified = MyUtils.getTableLen(boardIDArray)
 
 	--取消定时器 
 	if timerId and sys.timerIsActive(timerId) then
@@ -184,6 +183,26 @@ function twinkle( addrs,pos,times )
 	end
 end
 
+function startAllBoardCheck()
+	if allBoardCheckTimer and sys.timerIsActive(allBoardCheckTimer) then
+		LogUtil.d(TAG,"allBoardCheckTimer started")
+		return
+	end
+
+	allBoardCheckTimer = sys.timerLoopStart(function()
+		if boardIdentified >0 or Consts.BOARD_CHECK_COUNT > Consts.MAX_BOARD_CHECK_COUNT then
+			if allBoardCheckTimer and sys.timerIsActive(allBoardCheckTimer) then
+				sys.timerStop(allBoardCheckTimer)
+			end
+			LogUtil.d(TAG,"boardIdentified,stop loop check")
+			return
+		end
+
+		UartMgr.initSlaves(allInfoCallback,true)
+	end,Consts.ALL_BOARD_CHECKC_INTERVAL)
+	LogUtil.d(TAG,"start startAllBoardCheck")
+
+end
 function startTwinkleTask( )
 	if twinkleTimerId and sys.timerIsActive(twinkleTimerId) then
 		LogUtil.d(TAG,"twinkle started")
@@ -258,10 +277,11 @@ function run()
 			UartMgr.init(Consts.UART_ID,Consts.baudRate)
 
 			--获取所有板子id
-			UartMgr.initSlaves(allInfoCallback,false)    
+			UartMgr.initSlaves(allInfoCallback,true)    
+			startAllBoardCheck()--增加一个定时获取的，防止出现一次失败的情况
 		end)
 
-	end,10*1000)
+	end,60*1000)
 		
 	
 	-- 延时启动mqtt服务

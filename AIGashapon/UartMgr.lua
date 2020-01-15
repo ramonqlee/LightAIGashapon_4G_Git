@@ -384,6 +384,10 @@ function UartMgr.initSlaves( callback ,retry)
 	end
 	LogUtil.d(TAG,"UartMgr.initSlaves")
 
+	if Consts.BOARD_CHECK_COUNT < Consts.MAX_BOARD_CHECK_COUNT then
+		Consts.BOARD_CHECK_COUNT = Consts.BOARD_CHECK_COUNT+1
+	end
+
 	r = UARTGetAllInfo.encode()--获取所有板子id
 	if callback then
 		UARTAllInfoRep.setCallback(callback)

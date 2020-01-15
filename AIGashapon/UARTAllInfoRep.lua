@@ -93,6 +93,8 @@ function UARTAllInfoRep.handle(bins)
 	idsLen = string.byte(bins,dataPos+1)
 	idsPos = dataPos+2
 
+	Consts.ALL_BOARD_COUNT = idsLen/3--每个小板子id占据3个字节
+	
 	if 0 == idsLen then
 		LogUtil.d(TAG,"no ids returned")
 		UARTAllInfoRep.notifiyCallback()

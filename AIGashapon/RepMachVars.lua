@@ -42,9 +42,12 @@ function RepMachVars:addExtraPayloadContent( content )
 	end
 
 	if Consts.masterBoardId then
-		content["masterBoardId"]=Consts.masterBoardId
+		-- content["masterBoardId"]=Consts.masterBoardId
 	end
 	
+	content["all_board_count"]=Consts.ALL_BOARD_COUNT
+	content["board_check_count"]=Consts.BOARD_CHECK_COUNT
+
 	content["uart_broke_time"]=Consts.UART_BROKE_COUNT--uart 断开的次数
 	content["uart_keep_alive_time"]=Consts.lastKeepAliveTime--最近一次心跳的时间
 	Consts.UART_BROKE_COUNT = 0
