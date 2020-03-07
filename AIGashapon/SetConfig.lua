@@ -38,7 +38,7 @@ local function formTimeWithHourMin( timeStr )
     local tabLen = MyUtils.getTableLen(timeTab)
 
     -- 形如"7：30"的支持
-    if 2 == tabLen and not timeTab[1] and not timeTab[2] then
+    if 2 == tabLen then
         local time = misc.getClock()
         return os.time({year =time.year, month = time.month, day =time.day, hour =tonumber(timeTab[1]), min =tonumber(timeTab[2])})
     end
