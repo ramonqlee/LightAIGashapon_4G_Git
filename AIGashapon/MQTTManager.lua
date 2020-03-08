@@ -34,7 +34,7 @@ local jsonex = require "jsonex"
 -- 2.等待联网成功，此过程预计耗时9秒
 -- 3.以上过过程重复2次，无法联网，改为重启板子恢复联网
 
-local MAX_FLY_MODE_RETRY_COUNT = 2
+local MAX_FLY_MODE_RETRY_COUNT = 10
 local MAX_FLY_MODE_WAIT_TIME = 20*Consts.ONE_SEC_IN_MS--
 local IP_READY_NORMAL_WAIT_TIME = 5*60*Consts.ONE_SEC_IN_MS--实际7秒既可以
 
@@ -64,7 +64,7 @@ local toHandleRequests={}
 local startmqtted = false
 local unsubscribe = false
 local lastSystemTime--上次的系统时间
-local lastMQTTTrafficTime--上次mqtt交互的时间
+local lastMQTTTrafficTime=0--上次mqtt交互的时间
 local mqttMonitorTimer
 local lastRssi=10--默认低信号
 
@@ -134,7 +134,7 @@ function startMonitorMQTTTraffic()
     end
 
     mqttMonitorTimer = sys.timerLoopStart(function()
-        if 0==lastMQTTTrafficTime then 
+        if not lastMQTTTrafficTime or 0==lastMQTTTrafficTime then 
             return
         end
 
@@ -587,6 +587,7 @@ function startmqtt()
             -- emptyMessageQueue()
             -- emptyExtraRequest()
             reconnectCount = 0
+            sys.wait(HTTP_WAIT_TIME)--等待一会，确保资源已经释放完毕，再进行后续操作
             LogUtil.d(TAG,".............................startmqtt CLEANSESSION all ".." reconnectCount = "..reconnectCount)
         end
 
