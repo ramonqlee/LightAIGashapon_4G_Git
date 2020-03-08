@@ -12,7 +12,7 @@ UARTBoardInfo = {
 	MT = 0x90
 }
 
-local masterBoardId
+local masterBoardId="UNDEF"
 local myCallback = nil
 
 function  UARTBoardInfo.setCallback( callback )
@@ -98,9 +98,10 @@ function UARTBoardInfo.handle(bins)
 		return chkPos+1,startPos
 	end
 
-	masterBoardId = string.sub(bins,idPos,idPos+idLen-1)
-	masterBoardId = string.toHex(masterBoardId)
-	LogUtil.d(TAG,"masterBoardId = "..masterBoardId)
+	local boardIdTemp = string.sub(bins,idPos,idPos+idLen-1)
+	if boardIdTemp and type(boardIdTemp)=="string" and #boardIdTemp>0 then
+		masterBoardId = string.toHex(boardIdTemp)
+	end
 	-- softi d ignore
 	if myCallback then
 		myCallback(masterBoardId)
