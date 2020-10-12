@@ -36,6 +36,7 @@ local jsonex = require "jsonex"
 local MAX_MQTT_RETRY_COUNT = 3
 local MAX_FLY_MODE_RETRY_COUNT = 10
 local MAX_FLY_MODE_WAIT_TIME = 20*Consts.ONE_SEC_IN_MS--
+local MAX_HTTP_WAIT_TIME = 5*Consts.ONE_SEC_IN_MS--
 local IP_READY_NORMAL_WAIT_TIME = 5*60*Consts.ONE_SEC_IN_MS--实际7秒既可以
 
 local HTTP_WAIT_TIME=5*Consts.ONE_SEC_IN_MS
@@ -236,6 +237,7 @@ function checkNetwork(forceReconnect)
             LogUtil.d(TAG,".............................timeout lastWaitTime= "..lastWaitTime)
         end
         
+        -- socket.isReady不太靠谱，修改为http的方式
         LogUtil.d(TAG,".............................socket ready,test baidu.com now.............................")
         http.request("GET","https://www.baidu.com",nil,nil,nil,nil,function(result,prompt,head,body )
             httpOK = result
@@ -243,13 +245,15 @@ function checkNetwork(forceReconnect)
         end)
 
         sys.wait(MAX_HTTP_WAIT_TIME)
-        -- socket.isReady不太靠谱，修改为http的方式
-        if not httpOK then
-            netFailCount = netFailCount+1
-            if netFailCount>=MAX_FLY_MODE_RETRY_COUNT then
-                LogUtil.d(TAG,".............................socket not ready after retry.............................")
-                sys.restart("netFailTooLong")--重启更新包生效
-            end
+        
+        if httpOK then
+            return
+        end
+
+        netFailCount = netFailCount+1
+        if netFailCount>=MAX_FLY_MODE_RETRY_COUNT then
+            LogUtil.d(TAG,".............................socket not ready after retry.............................")
+            sys.restart("netFailTooLong")--重启更新包生效
         end
     end
 end
