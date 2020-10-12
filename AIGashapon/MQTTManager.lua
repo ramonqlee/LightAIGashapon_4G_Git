@@ -213,6 +213,11 @@ end
 
 --forceReconnect 强制重新连接
 function checkNetwork(forceReconnect)
+    if not forceReconnect and socket.isReady() then
+        LogUtil.d(TAG,".............................checkNetwork socket.isReady,return.............................")
+        return
+    end
+    
     local netFailCount = 0
     --采用递进增加的方式
     local lastWaitTime = 0
