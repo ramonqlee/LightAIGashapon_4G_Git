@@ -82,6 +82,8 @@ function Task.getTask()
 					sys.wait(5000)--等待大板子发送消息完毕，目前大板子发送消息的间隔是500ms
 			    	LogUtil.d(TAG,"publish cmd = "..Consts.REBOOT_DEVICE_CMD)
 			    	sys.publish(Consts.REBOOT_DEVICE_CMD)
+
+			    	sys.restart("taskReboot")
 			    end
 	        end
     	end)
