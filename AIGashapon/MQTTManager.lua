@@ -34,7 +34,7 @@ local jsonex = require "jsonex"
 -- 2.等待联网成功，此过程预计耗时9秒
 -- 3.以上过过程重复2次，无法联网，改为重启板子恢复联网
 local MAX_MQTT_RETRY_COUNT = 3
-local MAX_FLY_MODE_RETRY_COUNT = 10
+local MAX_FLY_MODE_RETRY_COUNT = 3
 local MAX_FLY_MODE_WAIT_TIME = 20*Consts.ONE_SEC_IN_MS--
 local MAX_HTTP_WAIT_TIME = 5*Consts.ONE_SEC_IN_MS--
 local IP_READY_NORMAL_WAIT_TIME = 5*60*Consts.ONE_SEC_IN_MS--实际7秒既可以
@@ -212,55 +212,13 @@ function checkMQTTUser()
 end
 
 --forceReconnect 强制重新连接
-function checkNetwork(forceReconnect)
-    if not forceReconnect and socket.isReady() then
+function checkNetwork()
+    if socket.isReady() then
         LogUtil.d(TAG,".............................checkNetwork socket.isReady,return.............................")
         return
     end
-    
-    local netFailCount = 0
-    --采用递进增加的方式
-    local lastWaitTime = 0
 
-    while true do
-        --尝试离线模式，实在不行重启板子
-        --进入飞行模式，20秒之后，退出飞行模式
-        LogUtil.d(TAG,".............................switchFly true.............................")
-        net.switchFly(true)
-
-        sys.wait(MAX_FLY_MODE_WAIT_TIME)
-
-        LogUtil.d(TAG,".............................switchFly false.............................")
-        net.switchFly(false)
-
-        if not socket.isReady() then
-            -- 如果信号较低，则多等会；每进入一次，递增一下等待的时间
-            lastWaitTime = lastWaitTime + IP_READY_NORMAL_WAIT_TIME
-            LogUtil.d(TAG,".............................socket not ready,lastWaitTime= "..lastWaitTime)
-            --等待网络环境准备就绪，超时时间是300秒
-            sys.waitUntil("IP_READY_IND",lastWaitTime)
-            LogUtil.d(TAG,".............................timeout lastWaitTime= "..lastWaitTime)
-        end
-        
-        -- socket.isReady不太靠谱，修改为http的方式
-        LogUtil.d(TAG,".............................socket ready,test baidu.com now.............................")
-        http.request("GET","https://www.baidu.com",nil,nil,nil,nil,function(result,prompt,head,body )
-            httpOK = result
-            LogUtil.d(TAG,".............................http testCallback httpOK="..httpOK)
-        end)
-
-        sys.wait(MAX_HTTP_WAIT_TIME)
-        
-        if httpOK then
-            return
-        end
-
-        netFailCount = netFailCount+1
-        if netFailCount>=MAX_FLY_MODE_RETRY_COUNT then
-            LogUtil.d(TAG,".............................socket not ready after retry.............................")
-            sys.restart("netFailTooLong")--重启更新包生效
-        end
-    end
+    sys.waitUntil("IP_READY_IND",MAX_FLY_MODE_WAIT_TIME)
 end
 
 function connectMQTT()
@@ -272,10 +230,10 @@ function connectMQTT()
         mqttc:disconnect()
         sys.wait(HTTP_WAIT_TIME)--等待一会，确保资源已经释放完毕，再进行后续操作
         
-        checkNetwork(true)
+        checkNetwork()
 
         netFailCount = netFailCount+1
-        if netFailCount>=MAX_MQTT_RETRY_COUNT then
+        if netFailCount>MAX_MQTT_RETRY_COUNT then
             sys.restart("mqttFailTooLong")--重启更新包生效
         end
     end
@@ -569,7 +527,7 @@ function startmqtt()
     local cleanSession = CLEANSESSION_TRUE--初始状态，清理session
     while true do
         --检查网络，网络不可用时，会重启机器
-        checkNetwork(false)
+        checkNetwork()
 
         local USERNAME,PASSWORD = checkMQTTUser()
         while not USERNAME or not PASSWORD or #USERNAME==0 or #PASSWORD==0 do 
