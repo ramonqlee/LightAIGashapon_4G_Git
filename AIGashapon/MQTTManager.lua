@@ -211,7 +211,6 @@ function checkMQTTUser()
     return username,password
 end
 
---forceReconnect 强制重新连接
 function checkNetwork()
     if socket.isReady() then
         LogUtil.d(TAG,".............................checkNetwork socket.isReady,return.............................")
