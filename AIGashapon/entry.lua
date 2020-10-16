@@ -67,6 +67,7 @@ function startTimedTask()
         return
     end
 
+    checkUpdate()
     timedTaskId = sys.timerLoopStart(function()
     		checkTwinkleSwitch()
             checkTask()
