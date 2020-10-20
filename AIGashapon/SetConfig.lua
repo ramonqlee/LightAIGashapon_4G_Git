@@ -30,6 +30,12 @@ local function formTimeWithHourMin( timeStr )
     local ONE_HOUR_IN_SEC = 60*60
     local ONE_DAY_IN_SEC = 24*ONE_HOUR_IN_SEC
 
+    --检查类型是否合法
+    if type(timeStr)~='string' then
+        LogUtil.d(TAG,"timeStr's type is not string ")
+        return
+    end
+
     if not timeStr or 0 == #timeStr then
         return 0
     end
@@ -175,6 +181,19 @@ function SetConfig:startRebootSchedule()
 
         local haltTime = Config.getValue(CloudConsts.HALT_SCHEDULE)
         local rebootTime = Config.getValue(CloudConsts.REBOOT_SCHEDULE)
+
+        --检查类型是否合法
+        if type(haltTime)~='string' then
+            Config.saveValue(CloudConsts.HALT_SCHEDULE,"")
+            LogUtil.d(TAG,"haltTime's type is not string ")
+            return
+        end
+
+        if type(rebootTime)~='string' then
+            Config.saveValue(CloudConsts.REBOOT_SCHEDULE,"")
+            LogUtil.d(TAG,"rebootTime's type is not string ")
+            return
+        end
 
         if not rebootTime or not haltTime or 0 == #rebootTime or 0 == #haltTime then
             return
