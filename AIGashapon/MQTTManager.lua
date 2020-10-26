@@ -507,6 +507,9 @@ function rebootWhenIdle()
     LogUtil.d(TAG,"add to request queue,request="..REBOOT_DEVICE_REQUEST.." #toHandleRequests="..#toHandleRequests)
 end
 
+function mqttStarted()
+    return startmqtted
+end
 
 function startmqtt()
     if startmqtted then

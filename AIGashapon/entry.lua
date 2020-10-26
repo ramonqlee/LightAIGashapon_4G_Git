@@ -31,8 +31,6 @@ local keepAliveTimer
 -- local retryIdentifyTimerId=nil
 local candidateRunTimerId=nil
 local timedTaskId = nil
-
-local mqttStarted=false
 local TWINKLE_POS_1 = 1
 local TWINKLE_POS_2 = 2
 local TWINKLE_POS_3 = 3
@@ -131,8 +129,7 @@ function allInfoCallback( boardIDArray )
 		LogUtil.d(TAG,"init slaves done")
 	end 
 
-	if not mqttStarted then
-		mqttStarted = true
+	if not MQTTManager.mqttStarted() then
 		sys.taskInit(MQTTManager.startmqtt)
 	end
 
@@ -305,8 +302,7 @@ function run()
 		-- 	retryIdentify()
 		-- end
 
-		if not mqttStarted then
-			mqttStarted = true
+		if not MQTTManager.mqttStarted() then
 			sys.taskInit(MQTTManager.startmqtt)
 		end
 
