@@ -27,9 +27,6 @@ local rebootTimeInSec
 local shutdownTimeInSec
 
 local function formTimeWithHourMin( timeStr )
-    local ONE_HOUR_IN_SEC = 60*60
-    local ONE_DAY_IN_SEC = 24*ONE_HOUR_IN_SEC
-
     --检查类型是否合法
     if type(timeStr)~='string' then
         LogUtil.d(TAG,"timeStr's type is not string ")
@@ -227,11 +224,10 @@ function SetConfig:startRebootSchedule()
             end
         end
 
-
-        --关机，并设定下次开机的时间
-        local delay = rebootTimeInSec - shutdownTimeInSec
+        --距离下次开机的时间：从当前时间开始计算才比较准确
+        local delay = rebootTimeInSec - os.time()
         if delay < 0 then
-            delay = -delay
+            return
         end
 
         local r = UARTShutDown.encode(delay)
