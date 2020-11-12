@@ -159,10 +159,10 @@ end
 function Deliver:handleContent( content )
  	-- TODO to be coded
     -- 如果还没同步时间或者机器重启前的订单，忽略
-    if not Consts.LAST_REBOOT then
-        LogUtil.d(TAG,TAG.." handleContent timeNotSync,ignore deliver")
-        return
-    end
+    -- if not Consts.LAST_REBOOT then
+    --     LogUtil.d(TAG,TAG.." handleContent timeNotSync,ignore deliver")
+    --     return
+    -- end
 
     local systemTime = os.time()
     -- 出货
