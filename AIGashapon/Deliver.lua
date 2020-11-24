@@ -238,25 +238,12 @@ function Deliver:handleContent( content )
     -- 如果收到订单时，已经过期或者本地时间不准:过早收到了订单，则直接上传超时
     local osTime = systemTime
     if osTime>expired or expired-osTime>=ORDER_EXPIRED_SPAN then
-
-        --同步本很保存的最近一次系统时间，确认下是否确实超时了，并且发起一次时间同步请求
-        local timeDiff = ORDER_EXPIRED_SPAN--设置为超时时间
-        local lastSystemTime = MQTTManager.getLastSavedSystemTime()
-        if lastSystemTime then
-            timeDiff = lastSystemTime - expired
-            if timeDiff < 0 then
-                timeDiff = - timeDiff
-            end
-        end
-
-        if timeDiff >= ORDER_EXPIRED_SPAN then
-            LogUtil.d(TAG,TAG.." timeout orderId="..orderId.." expired ="..expired.." os.time()="..osTime)
-            saleLogMap[CloudConsts.CTS]=osTime
-            saleLogMap[UPLOAD_POSITION]=UPLOAD_TIMEOUT_ARRIVAL
-            saleLogHandler = UploadSaleLog:new()
-            saleLogHandler:setMap(saleLogMap)
-            saleLogHandler:send(CRBase.TIMEOUT_WHEN_ARRIVE)--超时的话，直接上报失败状态
-        end 
+        LogUtil.d(TAG,TAG.." timeout orderId="..orderId.." expired ="..expired.." os.time()="..osTime)
+        saleLogMap[CloudConsts.CTS]=osTime
+        saleLogMap[UPLOAD_POSITION]=UPLOAD_TIMEOUT_ARRIVAL
+        saleLogHandler = UploadSaleLog:new()
+        saleLogHandler:setMap(saleLogMap)
+        saleLogHandler:send(CRBase.TIMEOUT_WHEN_ARRIVE)--超时的话，直接上报失败状态
 
         --重新同步下系统时间
         local handle = GetTime:new()
