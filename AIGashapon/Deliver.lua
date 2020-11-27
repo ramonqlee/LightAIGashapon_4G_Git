@@ -16,6 +16,7 @@ require "RepDeliver"
 require "UploadSaleLog"
 require "CRBase"
 require "UploadDetect"
+require "UARTQueryLockState"
 
 local jsonex = require "jsonex"
 local TAG = "Deliver"
@@ -24,7 +25,7 @@ local ORDER_EXPIRED_SPAN = 5*60--订单超期时间和系统当前当前时间�
 local ORDER_EXPIRED_IN_SEC = 2*60+10--订单超时的时间
 local MIN_DELIVER_SN_LEN = 24
 local deliveredOrderIds={}--最近出货的记录，保留5条，防止出现重复开锁的情况
-
+local gQueryLockStateTimerId = nil
 local gTimeoutTimerId = nil
 
 Deliver = CBase:new{
@@ -37,6 +38,7 @@ Deliver = CBase:new{
     DEFAULT_EXPIRE_TIME_IN_SEC=10,
     REOPEN_EXPIRE_TIME_IN_SEC=30,
     DEFAULT_CHECK_DELAY_TIME_IN_SEC=10,
+    QUERY_LOCK_STATE_PERIOD_SEC = 5,
     TIME_OUT_TIMER_PERIOD_SEC = 30,-- 检查是否超时的时间间隔
     -- FIXME TEMP CODE
     ORDER_EXTRA_TIMEOUT_IN_SEC = 0--一个location的订单，如果超过了这个时间，则认为订单周期结束了(真的超时了)
@@ -337,7 +339,19 @@ function Deliver:handleContent( content )
     -- 播放出货声音
     r = UARTPlayAudio.encode(UARTPlayAudio.OPENLOCK_AUDIO)
     UartMgr.publishMessage(r)
+
+    --TODO 启动开锁状态查询
+    if not gQueryLockStateTimerId then
+        gQueryLockStateTimerId = sys.timerLoopStart(queryLockStateFunc,Deliver.QUERY_LOCK_STATE_PERIOD_SEC*1000)
+    end
 end 
+
+function queryLockStateFunc()
+    if getTableLen(gBusyMap)>0 then
+        local r = UARTQueryLockState.encode()
+        UartMgr.publishMessage(r)
+    end
+end
 
 -- 开锁的回调
 -- flagTable:二维数组
