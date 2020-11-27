@@ -340,10 +340,10 @@ function Deliver:handleContent( content )
     r = UARTPlayAudio.encode(UARTPlayAudio.OPENLOCK_AUDIO)
     UartMgr.publishMessage(r)
 
-    --TODO 启动开锁状态查询
-    if not gQueryLockStateTimerId then
-        gQueryLockStateTimerId = sys.timerLoopStart(queryLockStateFunc,Deliver.QUERY_LOCK_STATE_PERIOD_SEC*1000)
-    end
+    -- 启动开锁状态查询
+    -- if not gQueryLockStateTimerId then
+        -- gQueryLockStateTimerId = sys.timerLoopStart(queryLockStateFunc,Deliver.QUERY_LOCK_STATE_PERIOD_SEC*1000)
+    -- end
 end 
 
 function queryLockStateFunc()
