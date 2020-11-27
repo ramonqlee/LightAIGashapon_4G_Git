@@ -174,6 +174,8 @@ function Deliver:handleContent( content )
         LogUtil.d(TAG,TAG.." handleContent content="..jsonex.encode(content))
     end
 
+    Consts.BOARD_CHECK_COUNT = Consts.MAX_BOARD_CHECK_COUNT--如果已经开始出货了，就不再检测从板子id
+
     local r = false
     if (not content) then
         return

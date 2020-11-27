@@ -194,7 +194,7 @@ function startAllBoardCheck()
 	end
 
 	allBoardCheckTimer = sys.timerLoopStart(function()
-		if boardIdentified >0 or Consts.BOARD_CHECK_COUNT > Consts.MAX_BOARD_CHECK_COUNT then
+		if boardIdentified >0 or Consts.BOARD_CHECK_COUNT >= Consts.MAX_BOARD_CHECK_COUNT then
 			if allBoardCheckTimer and sys.timerIsActive(allBoardCheckTimer) then
 				sys.timerStop(allBoardCheckTimer)
 			end
