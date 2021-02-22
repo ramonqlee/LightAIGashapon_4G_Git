@@ -143,12 +143,7 @@ end
 -----------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------
 local gBusyMap={}--是否在占用的记录
-local ORDER_EXPIRED_SPAN = 5*60--订单超期时间和系统当前当前时间的偏差
 local ORDER_EXPIRED_IN_SEC = 30--订单超时的时间
-local MIN_DELIVER_SN_LEN = 24
-local deliveredOrderIds={}--最近出货的记录，保留5条，防止出现重复开锁的情况
-local gQueryLockStateTimerId = nil
-local gTimeoutTimerId = nil
 
 -- 上传销售日志的的位置
 local UPLOAD_POSITION="uploadPos"
@@ -205,6 +200,11 @@ function testLockFunc(id)
 	end
 	LogUtil.d(TAG,TAG.." loopTest count="..MyUtils.getTableLen(addrs))
 
+	--是否已经超过了，否则的话，从头再来
+	if parallelCount > MyUtils.getTableLen(addrs) then
+		parallelCount=1
+	end
+
 	for _,device_seq in pairs(addrs) do
 		if timeOutOrderFound then
 			LogUtil.d(TAG,TAG.." loopTest stopped")
@@ -213,7 +213,7 @@ function testLockFunc(id)
 
 		local addr = nil
 		if "string" == type(device_seq) then
-        addr = string.fromHex(device_seq)--pack.pack("b3",0x00,0x00,0x06)  
+        	addr = string.fromHex(device_seq)--pack.pack("b3",0x00,0x00,0x06)  
         elseif "number"==type(device_seq) then
         	addr = string.format("%2X",device_seq)
         end
@@ -221,14 +221,11 @@ function testLockFunc(id)
         addrArray[#addrArray+1]=addr
 
 		--批量开锁
-		if parallelCount > MyUtils.getTableLen(addrArray) then
-			parallelCount=1
-		end
-
 		if parallelCount == MyUtils.getTableLen(addrArray) then
 			baseOrderId = baseOrderId + loopUnlock(addrArray,baseOrderId)
 			addrArray = {}--clear
 			parallelCount = parallelCount + 1
+			return
 		end
 	end
 
@@ -250,13 +247,18 @@ function loopUnlock( addrArray ,baseOrderId)
 			orderCount = orderCount+1
 		    saleLogMap[CloudConsts.ONLINE_ORDER_ID]=string.format("%d",(baseOrderId+orderCount))--当前测试的序号，作为orderID
 		    saleLogMap[LOCK_OPEN_TIME]=os.time()
+		    saleLogMap[CloudConsts.DEVICE_SEQ]=addr
+            saleLogMap[CloudConsts.VM_ORDER_ID]=saleLogMap[CloudConsts.ONLINE_ORDER_ID]
+
 		    saleLogMap[Deliver.ORDER_TIMEOUT_TIME_IN_SEC]= os.time()+ORDER_EXPIRED_IN_SEC
 		    
 		    local location = string.format("%d",pos)
+		    saleLogMap[CloudConsts.LOCATION]=location
+
 		    local r = UARTControlInd.encode(addr,location,ORDER_EXPIRED_IN_SEC)
 		    UartMgr.publishMessage(r)
 		    LogUtil.d(TAG,TAG.." loopTest openLock,addr = "..string.toHex(addr).." location="..location)
-		    local key = device_seq.."_"..location
+		    local key = addr.."_"..location
 		    gBusyMap[key]=saleLogMap
 		end
 	end
