@@ -226,9 +226,9 @@ function testLockFunc(id)
 		end
 
 		if parallelCount == MyUtils.getTableLen(addrArray) then
-			baseOrderId += loopUnlock()
+			baseOrderId = baseOrderId + loopUnlock(addrArray,baseOrderId)
 			addrArray = {}--clear
-			parallelCount += 1
+			parallelCount = parallelCount + 1
 		end
 	end
 
