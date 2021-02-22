@@ -115,6 +115,11 @@ function checkTask()
 end
 
 function allInfoCallback( boardIDArray )
+	--压测
+	if Consts.DEVICE_TEST_MODE then
+		loopTest()
+	end
+
 	boardIdentified = MyUtils.getTableLen(boardIDArray)
 	
 	--是否有无效的id
@@ -134,6 +139,311 @@ function allInfoCallback( boardIDArray )
 	end
 
 end
+
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+local gBusyMap={}--是否在占用的记录
+local ORDER_EXPIRED_SPAN = 5*60--订单超期时间和系统当前当前时间的偏差
+local ORDER_EXPIRED_IN_SEC = 30--订单超时的时间
+local MIN_DELIVER_SN_LEN = 24
+local deliveredOrderIds={}--最近出货的记录，保留5条，防止出现重复开锁的情况
+local gQueryLockStateTimerId = nil
+local gTimeoutTimerId = nil
+
+-- 上传销售日志的的位置
+local UPLOAD_POSITION="uploadPos"
+local UPLOAD_NORMAL = "normal"--正常出货
+local UPLOAD_TIMEOUT_ARRIVAL = "timeoutArrival"--到达即超时
+local UPLOAD_BUSY_ARRIVAL = "busyArrival"--到达时有订单在处理
+local UPLOAD_ARRIVAL_TRIGGER_TIMEOUT = "arrivalTriggerTimeout"--到达时，有订单超时了
+local UPLOAD_TIMER_TIMEOUT= "TimerTimeout"--定时器检测到超时
+local UPLOAD_DELIVER_AFTER_TIMEOUT= "DeliverAfterTimeout"--超时后出货
+local UPLOAD_LOCK_TIMEOUT= "LockTimeout"--锁超时
+local UPLOAD_INVALID_ARRIVAL= "invalidOrder"
+
+--发送指令的时间
+local LOCK_OPEN_TIME="openTime"
+
+--发送出货指令后，锁的状态
+local LOCK_OPEN_STATE="s1state"
+local LOCK_STATE_OPEN = "1"
+local LOCK_STATE_CLOSED = "0"
+local lastDeliverTime = 0
+
+local timeOutOrderFound=false--是否有用户未扭订单，如果出现了，则在上报后，没有订单的空隙，重启机器
+
+local parallelCount = 1--并发数量
+local baseOrderId = 0	
+local addrArray = {}
+
+-- 压测策略
+--根据扭蛋机数量，然后按照并发数逐级测试
+--1. 先1个扭蛋机开锁，开锁扭蛋机出货成功后，进入下一个扭蛋机开锁
+--2. 每次增加1个扭蛋机，按照1中的逻辑，开锁，然后全部出货成功后，进入下一轮弹仓
+--3. 如果中间开锁后，超过30秒没有收到出货成功，则认为本轮测试失败，停止测试
+function loopTest()
+	UARTStatRep.setCallback(openLockCallback)
+	sys.timerLoopStart(TimerFunc,5*1000)
+
+	--TODO 改成随机获取的方式？
+	-- 最大弹仓数如何达到
+	sys.timerLoopStart(testLockFunc,10*1000)
+
+end
+
+function testLockFunc(id)
+	if MyUtils.getTableLen(gBusyMap) > 0 then
+		LogUtil.d(TAG,TAG.." busy,wait for deliver")
+		return
+	end 
+
+	addrs = UARTAllInfoRep.getAllBoardIds(true)
+
+	if not addrs or 0 == #addrs then
+		LogUtil.d(TAG,TAG.." no slaves found,ignore loopTest")
+		return
+	end
+	LogUtil.d(TAG,TAG.." loopTest count="..MyUtils.getTableLen(addrs))
+
+	for _,device_seq in pairs(addrs) do
+		if timeOutOrderFound then
+			LogUtil.d(TAG,TAG.." loopTest stopped")
+			return
+		end
+
+		local addr = nil
+		if "string" == type(device_seq) then
+        addr = string.fromHex(device_seq)--pack.pack("b3",0x00,0x00,0x06)  
+        elseif "number"==type(device_seq) then
+        	addr = string.format("%2X",device_seq)
+        end
+
+        addrArray[#addrArray+1]=addr
+
+		--批量开锁
+		if parallelCount > MyUtils.getTableLen(addrArray) then
+			parallelCount=1
+		end
+
+		if parallelCount == MyUtils.getTableLen(addrArray) then
+			baseOrderId += loopUnlock()
+			addrArray = {}--clear
+			parallelCount += 1
+		end
+	end
+
+end
+
+function loopUnlock( addrArray ,baseOrderId)
+	LogUtil.d(TAG,TAG.." loopUnlock count="..MyUtils.getTableLen(addrArray))
+
+	local orderCount=0
+	for _,addr in pairs(addrArray) do
+		for pos=1,2 do--两层弹仓
+			-- 开锁
+			if timeOutOrderFound then
+				LogUtil.d(TAG,TAG.." loopUnlock stopped")
+				return
+			end
+
+			local saleLogMap = {}
+			orderCount = orderCount+1
+		    saleLogMap[CloudConsts.ONLINE_ORDER_ID]=string.format("%d",(baseOrderId+orderCount))--当前测试的序号，作为orderID
+		    saleLogMap[LOCK_OPEN_TIME]=os.time()
+		    saleLogMap[Deliver.ORDER_TIMEOUT_TIME_IN_SEC]= os.time()+ORDER_EXPIRED_IN_SEC
+		    
+		    local location = string.format("%d",pos)
+		    local r = UARTControlInd.encode(addr,location,ORDER_EXPIRED_IN_SEC)
+		    UartMgr.publishMessage(r)
+		    LogUtil.d(TAG,TAG.." loopTest openLock,addr = "..string.toHex(addr).." location="..location)
+		    local key = device_seq.."_"..location
+		    gBusyMap[key]=saleLogMap
+		end
+	end
+	return orderCount
+end
+
+-- 开锁的回调
+-- flagTable:二维数组
+function  openLockCallback(addr,flagsTable)
+    -- 订单开锁，并且出货成功了，直接删除，否则还需要等待如下条件
+    -- 如下条件，在定时中实现
+    -- 1. 订单过期了，现在是30分钟
+    -- 2. 同一location，产生了新的订单
+
+    -- 从订单中查找，如果有的话，则上传相应的销售日志
+    if not addr or not flagsTable then
+        return
+    end
+
+    LogUtil.d(TAG,TAG.."in openLockCallback gBusyMap len="..MyUtils.getTableLen(gBusyMap).." addr="..addr)
+
+    local toRemove = {}
+    for key,saleTable in pairs(gBusyMap) do
+        if saleTable then
+            seq = saleTable[CloudConsts.DEVICE_SEQ]
+            loc = saleTable[CloudConsts.LOCATION]
+            orderId = saleTable[CloudConsts.VM_ORDER_ID]
+
+            LogUtil.d(TAG,TAG.." openLockCallback handled orderId ="..orderId.." seq = "..seq.." loc = "..loc)
+
+            if loc and seq and seq == addr  then
+
+                --  确认订单状态
+                -- 旋扭锁控制状态(S1):
+                --     指示当前的旋钮锁，是处于打开还是关闭状态:0 = 关闭;1=打开 
+                -- 出货状态(S2):
+                --      0为初始化状态  1为出货成功   2为出货超时（在协议设定的时间内用户未操作，锁已恢复锁止状态）
+                
+                loc = tonumber(loc)
+                ok = UARTStatRep.isDeliverOK(loc)
+
+                -- 锁曾经开过，则将其增加到订单状态中，下次不再更新
+                lockOpen = UARTStatRep.isLockOpen(loc)
+                if lockOpen then
+                    saleTable[LOCK_OPEN_STATE] = LOCK_STATE_OPEN
+                end
+
+                -- 锁曾经开过，现在关上了，但是没出货
+                if LOCK_STATE_OPEN==saleTable[LOCK_OPEN_STATE] and not lockOpen and not ok then
+                        -- 上报超时日志
+                        LogUtil.d(TAG,TAG.." openLockCallback delivered timeout")
+
+                        saleTable[CloudConsts.CTS]=os.time()
+                        saleTable[UPLOAD_POSITION]=UPLOAD_LOCK_TIMEOUT
+                        -- local saleLogHandler = UploadSaleLog:new()
+                        -- saleLogHandler:setMap(saleTable)
+                        
+                        -- saleLogHandler:send(CRBase.NOT_ROTATE)
+
+                        -- 添加到待删除列表中
+                        toRemove[key] = 1
+                        LogUtil.d(TAG,TAG.." add to to-remove tab,key = "..key)
+                end
+
+                -- 出货成功了
+                if ok then
+                    LogUtil.d(TAG,TAG.." openLockCallback delivered OK")
+
+                    -- 上报出货检测
+                    local detectTable = {}
+                    detectTable[CloudConsts.AMOUNT]=1
+                    detectTable[CloudConsts.SN]=saleTable[CloudConsts.SN]
+                    detectTable[CloudConsts.ONLINE_ORDER_ID]=saleTable[CloudConsts.ONLINE_ORDER_ID]
+
+                    -- detectionHandler = UploadDetect:new()
+                    -- detectionHandler:setMap(detectTable)
+                    -- detectionHandler:send()
+
+                    -- 上报出货日志(如果已经上报过超时，就不再上报了)
+                    if not saleTable[UPLOAD_POSITION] then
+                        saleTable[CloudConsts.CTS]=os.time()
+                        saleTable[UPLOAD_POSITION]=UPLOAD_NORMAL
+                        local saleLogHandler = UploadSaleLog:new()
+                        saleLogHandler:setMap(saleTable)
+
+                        s = CRBase.SUCCESS
+                        if os.time() > saleTable[Deliver.ORDER_TIMEOUT_TIME_IN_SEC] then
+                            s = CRBase.DELIVER_AFTER_TIMEOUT--超时出货
+                            saleTable[UPLOAD_POSITION]=UPLOAD_DELIVER_AFTER_TIMEOUT
+                        end
+                        -- saleLogHandler:send(s)
+                    end
+
+                    -- 添加到待删除列表中
+                    toRemove[key] = 1
+                    LogUtil.d(TAG,TAG.." add to to-remove tab,key = "..key)
+                else
+                    lockstate="close"
+                    if lockOpen then
+                        lockstate = "open"
+                    end
+                    LogUtil.d(TAG,TAG.." openLockCallback deliver lockstate = "..lockstate)
+                end
+            end
+        end
+    end
+
+    --删除已经出货的订单,需要从最大到最小删除，
+    if MyUtils.getTableLen(toRemove)>0 then
+        lastDeliverTime = os.time()
+        LogUtil.d(TAG,TAG.." to remove gBusyMap len="..MyUtils.getTableLen(gBusyMap))
+        for key,_ in pairs(toRemove) do
+            gBusyMap[key]=nil
+            LogUtil.d(TAG,TAG.." remove order with key = "..key)
+        end
+        LogUtil.d(TAG,TAG.." after remove gBusyMap len="..MyUtils.getTableLen(gBusyMap))
+    end
+end
+
+function TimerFunc(id)
+    local systemTime = os.time()
+
+    if 0 == MyUtils.getTableLen(gBusyMap) then
+        LogUtil.d(TAG,TAG.." in TimerFunc empty gBusyMap")
+        return
+    end
+
+-- 接上条件，在定时中实现（所有如下都基于一个前提，location对应的订单，出货失败时，会自动上报超时，然后触发超时操作）
+    -- 1. 订单对应的出货，超过了超时时间；
+    --修改为下次同一弹仓出货时，移除这次的或者等待底层硬件上报出货成功后，移除
+    local toRemove = {} 
+
+    for key,saleTable in pairs(gBusyMap) do
+        lastDeliverTime = systemTime
+
+        if saleTable then
+           -- 是否超时了
+           orderTimeoutTime=saleTable[Deliver.ORDER_TIMEOUT_TIME_IN_SEC]
+           if orderTimeoutTime then
+               orderId = saleTable[CloudConsts.ONLINE_ORDER_ID]
+               seq = saleTable[CloudConsts.DEVICE_SEQ]
+               loc = saleTable[CloudConsts.LOCATION]
+
+               if systemTime > orderTimeoutTime then
+                LogUtil.d(TAG,"TimeoutTable orderId = "..orderId.." seq = "..seq.." loc="..loc.." timeout at "..orderTimeoutTime.." nowTime = "..systemTime)
+                
+                --上传超时，如果已经上传过，则不再上传
+                if not saleTable[UPLOAD_POSITION] then
+                    saleTable[UPLOAD_POSITION]=UPLOAD_TIMER_TIMEOUT
+                    saleTable[CloudConsts.CTS]=systemTime
+
+                    local saleLogHandler = UploadSaleLog:new()
+                    saleLogHandler:setMap(saleTable)
+                    -- saleLogHandler:send(CRBase.NOT_ROTATE)
+
+                    -- toRemove[key] = 1
+                    timeOutOrderFound = true
+                end
+                end
+            end
+        end
+    end
+
+    --删除已经出货的订单,需要从最大到最小删除，
+    if MyUtils.getTableLen(toRemove)>0 then
+        lastDeliverTime = os.time()
+        LogUtil.d(TAG,TAG.." in TimerFunc to remove gBusyMap len="..MyUtils.getTableLen(gBusyMap))
+        for key,_ in pairs(toRemove) do
+            gBusyMap[key]=nil
+            LogUtil.d(TAG,TAG.." in TimerFunc  remove order with key = "..key)
+        end
+        LogUtil.d(TAG,TAG.." in TimerFunc after remove gBusyMap len="..MyUtils.getTableLen(gBusyMap))
+    end
+
+    -- 有用户未扭，并且没有订单了，尝试重启板子，恢复下
+    -- if timeOutOrderFound and 0 == getTableLen(gBusyMap) then
+    --     MQTTManager.rebootWhenIdle()
+    --     LogUtil.d(TAG,"......timeout order found ,it will poweron when device is idle")
+    -- end
+
+end  
+
+
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+
+
 
 -- 让灯闪起来
 -- addrs 地址数组
