@@ -247,7 +247,7 @@ function loopUnlock( addrArray ,baseOrderId)
 			orderCount = orderCount+1
 		    saleLogMap[CloudConsts.ONLINE_ORDER_ID]=string.format("%d",(baseOrderId+orderCount))--当前测试的序号，作为orderID
 		    saleLogMap[LOCK_OPEN_TIME]=os.time()
-		    saleLogMap[CloudConsts.DEVICE_SEQ]=addr
+		    saleLogMap[CloudConsts.DEVICE_SEQ]=string.toHex(addr)
             saleLogMap[CloudConsts.VM_ORDER_ID]=saleLogMap[CloudConsts.ONLINE_ORDER_ID]
 
 		    saleLogMap[Deliver.ORDER_TIMEOUT_TIME_IN_SEC]= os.time()+ORDER_EXPIRED_IN_SEC
@@ -273,12 +273,13 @@ function  openLockCallback(addr,flagsTable)
     -- 1. 订单过期了，现在是30分钟
     -- 2. 同一location，产生了新的订单
 
+   
     -- 从订单中查找，如果有的话，则上传相应的销售日志
     if not addr or not flagsTable then
         return
     end
 
-    LogUtil.d(TAG,TAG.."in openLockCallback gBusyMap len="..MyUtils.getTableLen(gBusyMap).." addr="..addr)
+    LogUtil.d(TAG,TAG.." in openLockCallback gBusyMap len="..MyUtils.getTableLen(gBusyMap).." addr="..addr)
 
     local toRemove = {}
     for key,saleTable in pairs(gBusyMap) do
@@ -386,6 +387,9 @@ function TimerFunc(id)
         return
     end
 
+    if timeOutOrderFound then
+    	return
+    end
 -- 接上条件，在定时中实现（所有如下都基于一个前提，location对应的订单，出货失败时，会自动上报超时，然后触发超时操作）
     -- 1. 订单对应的出货，超过了超时时间；
     --修改为下次同一弹仓出货时，移除这次的或者等待底层硬件上报出货成功后，移除
@@ -405,6 +409,7 @@ function TimerFunc(id)
                if systemTime > orderTimeoutTime then
                 LogUtil.d(TAG,"TimeoutTable orderId = "..orderId.." seq = "..seq.." loc="..loc.." timeout at "..orderTimeoutTime.." nowTime = "..systemTime)
                 
+                timeOutOrderFound = true
                 --上传超时，如果已经上传过，则不再上传
                 if not saleTable[UPLOAD_POSITION] then
                     saleTable[UPLOAD_POSITION]=UPLOAD_TIMER_TIMEOUT
@@ -415,7 +420,6 @@ function TimerFunc(id)
                     -- saleLogHandler:send(CRBase.NOT_ROTATE)
 
                     -- toRemove[key] = 1
-                    timeOutOrderFound = true
                 end
                 end
             end
