@@ -170,6 +170,7 @@ local timeOutOrderFound=false--是否有用户未扭订单，如果出现了，�
 local parallelCount = 1--并发数量
 local baseOrderId = 0	
 local addrArray = {}
+local location = 1
 
 -- 压测策略
 --根据扭蛋机数量，然后按照并发数逐级测试
@@ -203,6 +204,9 @@ function testLockFunc(id)
 	--是否已经超过了，否则的话，从头再来
 	if parallelCount > MyUtils.getTableLen(addrs) then
 		parallelCount=1
+        -- 切换弹仓
+        
+        location = (location==2 and 1 or 2);
 	end
 
 	for _,device_seq in pairs(addrs) do
@@ -236,7 +240,7 @@ function loopUnlock( addrArray ,baseOrderId)
 
 	local orderCount=0
 	for _,addr in pairs(addrArray) do
-		for pos=1,2 do--两层弹仓
+		-- for pos=1,2 do--两层弹仓
 			-- 开锁
 			if timeOutOrderFound then
 				LogUtil.d(TAG,TAG.." loopUnlock stopped")
@@ -252,7 +256,6 @@ function loopUnlock( addrArray ,baseOrderId)
 
 		    saleLogMap[Deliver.ORDER_TIMEOUT_TIME_IN_SEC]= os.time()+ORDER_EXPIRED_IN_SEC
 		    
-		    local location = string.format("%d",pos)
 		    saleLogMap[CloudConsts.LOCATION]=location
 
 		    local r = UARTControlInd.encode(addr,location,ORDER_EXPIRED_IN_SEC)
@@ -260,7 +263,7 @@ function loopUnlock( addrArray ,baseOrderId)
 		    LogUtil.d(TAG,TAG.." loopTest openLock,addr = "..string.toHex(addr).." location="..location)
 		    local key = addr.."_"..location
 		    gBusyMap[key]=saleLogMap
-		end
+		-- end
 	end
 	return orderCount
 end
