@@ -191,7 +191,7 @@ function testLockFunc(id)
 		return
 	end 
 
-    UARTStatRep.setCallback(openLockCallback)--设置开锁的回调函数
+    UARTStatRep.setCallback(openLockCallbackInEntry)--设置开锁的回调函数
 
 	addrs = UARTAllInfoRep.getAllBoardIds(true)
 
@@ -274,7 +274,7 @@ end
 
 -- 开锁的回调
 -- flagTable:二维数组
-function  openLockCallback(addr,flagsTable)
+function  openLockCallbackInEntry(addr,flagsTable)
     -- 订单开锁，并且出货成功了，直接删除，否则还需要等待如下条件
     -- 如下条件，在定时中实现
     -- 1. 订单过期了，现在是30分钟
@@ -286,7 +286,7 @@ function  openLockCallback(addr,flagsTable)
         return
     end
 
-    LogUtil.d(TAG,TAG.." in openLockCallback gBusyMap len="..MyUtils.getTableLen(Consts.gBusyMap).." callback addr="..addr)
+    LogUtil.d(TAG,TAG.." in openLockCallbackInEntry gBusyMap len="..MyUtils.getTableLen(Consts.gBusyMap).." callback addr="..addr)
 
     local toRemove = {}
     for key,saleTable in pairs(Consts.gBusyMap) do
@@ -317,7 +317,7 @@ function  openLockCallback(addr,flagsTable)
                 -- 锁曾经开过，现在关上了，但是没出货
                 if LOCK_STATE_OPEN==saleTable[LOCK_OPEN_STATE] and not lockOpen and not ok then
                         -- 上报超时日志
-                        LogUtil.d(TAG,TAG.." openLockCallback delivered timeout")
+                        LogUtil.d(TAG,TAG.." openLockCallbackInEntry delivered timeout")
 
                         saleTable[CloudConsts.CTS]=os.time()
                         saleTable[UPLOAD_POSITION]=UPLOAD_LOCK_TIMEOUT
@@ -333,7 +333,7 @@ function  openLockCallback(addr,flagsTable)
 
                 -- 出货成功了
                 if ok then
-                    LogUtil.d(TAG,TAG.." openLockCallback delivered OK")
+                    LogUtil.d(TAG,TAG.." openLockCallbackInEntry delivered OK")
 
                     -- 上报出货检测
                     local detectTable = {}
@@ -368,7 +368,7 @@ function  openLockCallback(addr,flagsTable)
                     if lockOpen then
                         lockstate = "open"
                     end
-                    LogUtil.d(TAG,TAG.." openLockCallback deliver lockstate = "..lockstate)
+                    LogUtil.d(TAG,TAG.." openLockCallbackInEntry deliver lockstate = "..lockstate)
                 end
             end
         end
