@@ -20,7 +20,6 @@ require "UARTQueryLockState"
 
 local jsonex = require "jsonex"
 local TAG = "Deliver"
-local gBusyMap={}--是否在占用的记录
 local ORDER_EXPIRED_SPAN = 5*60--订单超期时间和系统当前当前时间的偏差
 local ORDER_EXPIRED_IN_SEC = 2*60+10--订单超时的时间
 local MIN_DELIVER_SN_LEN = 24
@@ -111,7 +110,7 @@ local function keepLastestDeliverOrders()
 end
 
 function Deliver:isDelivering()
-    if  getTableLen(gBusyMap)>0 then
+    if  getTableLen(Consts.gBusyMap)>0 then
         return true
     end
 
@@ -270,7 +269,7 @@ function Deliver:handleContent( content )
     LogUtil.d(TAG," expired ="..expired.." orderId="..orderId.." device_seq="..device_seq.." location="..location.." timeoutInSec ="..timeoutInSec)
 
     -- 2. 同一location，产生了新的订单(新的订单id),之前较早是的location对应的订单就该删除了
-    for key,saleTable in pairs(gBusyMap) do
+    for key,saleTable in pairs(Consts.gBusyMap) do
         if saleTable then
             -- 同一个弹仓，如果没超过订单本身的expired，则认为当前location对应的上次订单还没处理完，则将当前订单报繁忙(如果是出货成功了，则不会在这个缓存列表中)
             -- 如果超过订单本身的expired，则认为可以处理下一个出货了
@@ -302,7 +301,7 @@ function Deliver:handleContent( content )
                     saleLogHandler:setMap(saleTable)
                     saleLogHandler:send(CRBase.NOT_ROTATE)
 
-                    gBusyMap[key]=nil
+                    Consts.gBusyMap[key]=nil
                     LogUtil.d(TAG,TAG.." in deliver, previous order timeout, orderId ="..tmpOrderId)
                     break
                 end
@@ -333,10 +332,10 @@ function Deliver:handleContent( content )
     local r = UARTControlInd.encode(addr,location,timeoutInSec)
     UartMgr.publishMessage(r)
 
-    LogUtil.d(TAG,TAG.." Deliver openLock,addr = "..string.toHex(addr))
+    LogUtil.d(TAG,TAG.." In Deliver openLock,addr = "..string.toHex(addr).." location="..location)
 
     local key = device_seq.."_"..location
-    gBusyMap[key]=saleLogMap
+    Consts.gBusyMap[key]=saleLogMap
             
     -- 播放出货声音
     r = UARTPlayAudio.encode(UARTPlayAudio.OPENLOCK_AUDIO)
@@ -349,7 +348,7 @@ function Deliver:handleContent( content )
 end 
 
 function queryLockStateFunc()
-    if getTableLen(gBusyMap)>0 then
+    if getTableLen(Consts.gBusyMap)>0 then
         local r = UARTQueryLockState.encode()
         UartMgr.publishMessage(r)
     end
@@ -368,10 +367,10 @@ function  openLockCallback(addr,flagsTable)
         return
     end
 
-    LogUtil.d(TAG,TAG.."in openLockCallback gBusyMap len="..getTableLen(gBusyMap).." addr="..addr)
+    LogUtil.d(TAG,TAG.."in openLockCallback Consts.gBusyMap len="..getTableLen(gBusyMap).." addr="..addr)
 
     local toRemove = {}
-    for key,saleTable in pairs(gBusyMap) do
+    for key,saleTable in pairs(Consts.gBusyMap) do
         if saleTable then
             seq = saleTable[CloudConsts.DEVICE_SEQ]
             loc = saleTable[CloudConsts.LOCATION]
@@ -459,20 +458,20 @@ function  openLockCallback(addr,flagsTable)
     --删除已经出货的订单,需要从最大到最小删除，
     if getTableLen(toRemove)>0 then
         lastDeliverTime = os.time()
-        LogUtil.d(TAG,TAG.." to remove gBusyMap len="..getTableLen(gBusyMap))
+        LogUtil.d(TAG,TAG.." to remove Consts.gBusyMap len="..getTableLen(gBusyMap))
         for key,_ in pairs(toRemove) do
-            gBusyMap[key]=nil
+            Consts.gBusyMap[key]=nil
             LogUtil.d(TAG,TAG.." remove order with key = "..key)
         end
-        LogUtil.d(TAG,TAG.." after remove gBusyMap len="..getTableLen(gBusyMap))
+        LogUtil.d(TAG,TAG.." after remove gBusyMap len="..getTableLen(Consts.gBusyMap))
     end
 end
 
 function TimerFunc(id)
     local systemTime = os.time()
 
-    if 0 == getTableLen(gBusyMap) then
-        LogUtil.d(TAG,TAG.." in TimerFunc empty gBusyMap")
+    if 0 == getTableLen(Consts.gBusyMap) then
+        LogUtil.d(TAG,TAG.." in TimerFunc empty Consts.gBusyMap")
         return
     end
 
@@ -482,7 +481,7 @@ function TimerFunc(id)
     local toRemove = {}
     local timeOutOrderFound=false--是否有用户未扭订单，如果出现了，则在上报后，没有订单的空隙，重启机器
 
-    for key,saleTable in pairs(gBusyMap) do
+    for key,saleTable in pairs(Consts.gBusyMap) do
         lastDeliverTime = systemTime
 
         if saleTable then
@@ -517,16 +516,16 @@ function TimerFunc(id)
     --删除已经出货的订单,需要从最大到最小删除，
     if getTableLen(toRemove)>0 then
         lastDeliverTime = os.time()
-        LogUtil.d(TAG,TAG.." in TimerFunc to remove gBusyMap len="..getTableLen(gBusyMap))
+        LogUtil.d(TAG,TAG.." in TimerFunc to remove Consts.gBusyMap len="..getTableLen(Consts.gBusyMap))
         for key,_ in pairs(toRemove) do
-            gBusyMap[key]=nil
+            Consts.gBusyMap[key]=nil
             LogUtil.d(TAG,TAG.." in TimerFunc  remove order with key = "..key)
         end
-        LogUtil.d(TAG,TAG.." in TimerFunc after remove gBusyMap len="..getTableLen(gBusyMap))
+        LogUtil.d(TAG,TAG.." in TimerFunc after remove Consts.gBusyMap len="..getTableLen(Consts.gBusyMap))
     end
 
     -- 有用户未扭，并且没有订单了，尝试重启板子，恢复下
-    if timeOutOrderFound and 0 == getTableLen(gBusyMap) then
+    if timeOutOrderFound and 0 == getTableLen(Consts.gBusyMap) then
         MQTTManager.rebootWhenIdle()
         LogUtil.d(TAG,"......timeout order found ,it will poweron when device is idle")
     end

@@ -142,7 +142,6 @@ end
 
 -----------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------
-local gBusyMap={}--是否在占用的记录
 local ORDER_EXPIRED_IN_SEC = 30--订单超时的时间
 
 -- 上传销售日志的的位置
@@ -178,7 +177,6 @@ local location = 1
 --2. 每次增加1个扭蛋机，按照1中的逻辑，开锁，然后全部出货成功后，进入下一轮弹仓
 --3. 如果中间开锁后，超过30秒没有收到出货成功，则认为本轮测试失败，停止测试
 function loopTest()
-	UARTStatRep.setCallback(openLockCallback)
 	sys.timerLoopStart(TimerFunc,5*1000)
 
 	--TODO 改成随机获取的方式？
@@ -188,10 +186,12 @@ function loopTest()
 end
 
 function testLockFunc(id)
-	if MyUtils.getTableLen(gBusyMap) > 0 then
+	if MyUtils.getTableLen(Consts.gBusyMap) > 0 then
 		LogUtil.d(TAG,TAG.." busy,wait for deliver")
 		return
 	end 
+
+    UARTStatRep.setCallback(openLockCallback)--设置开锁的回调函数
 
 	addrs = UARTAllInfoRep.getAllBoardIds(true)
 
@@ -199,6 +199,7 @@ function testLockFunc(id)
 		LogUtil.d(TAG,TAG.." no slaves found,ignore loopTest")
 		return
 	end
+
 	LogUtil.d(TAG,TAG.." loopTest count="..MyUtils.getTableLen(addrs))
 
 	--是否已经超过了，否则的话，从头再来
@@ -209,28 +210,31 @@ function testLockFunc(id)
         location = (location==2 and 1 or 2);
 	end
 
+    local pos = 1
 	for _,device_seq in pairs(addrs) do
 		if timeOutOrderFound then
 			LogUtil.d(TAG,TAG.." loopTest stopped")
 			return
 		end
 
-		local addr = nil
-		if "string" == type(device_seq) then
-        	addr = string.fromHex(device_seq)--pack.pack("b3",0x00,0x00,0x06)  
-        elseif "number"==type(device_seq) then
-        	addr = string.format("%2X",device_seq)
+        if pos == parallelCount then
+            local addr = nil
+            if "string" == type(device_seq) then
+                addr = string.fromHex(device_seq)--pack.pack("b3",0x00,0x00,0x06)  
+            elseif "number"==type(device_seq) then
+                addr = string.format("%2X",device_seq)
+            end
+
+            addrArray[#addrArray+1]=addr
+
+            --批量开锁
+            baseOrderId = baseOrderId + loopUnlock(addrArray,baseOrderId)
+            addrArray = {}--clear
+            parallelCount = parallelCount + 1
+            return
         end
 
-        addrArray[#addrArray+1]=addr
-
-		--批量开锁
-		if parallelCount == MyUtils.getTableLen(addrArray) then
-			baseOrderId = baseOrderId + loopUnlock(addrArray,baseOrderId)
-			addrArray = {}--clear
-			parallelCount = parallelCount + 1
-			return
-		end
+        pos = pos + 1
 	end
 
 end
@@ -262,7 +266,7 @@ function loopUnlock( addrArray ,baseOrderId)
 		    UartMgr.publishMessage(r)
 		    LogUtil.d(TAG,TAG.." loopTest openLock,addr = "..string.toHex(addr).." location="..location)
 		    local key = addr.."_"..location
-		    gBusyMap[key]=saleLogMap
+		    Consts.gBusyMap[key]=saleLogMap
 		-- end
 	end
 	return orderCount
@@ -282,16 +286,16 @@ function  openLockCallback(addr,flagsTable)
         return
     end
 
-    LogUtil.d(TAG,TAG.." in openLockCallback gBusyMap len="..MyUtils.getTableLen(gBusyMap).." addr="..addr)
+    LogUtil.d(TAG,TAG.." in openLockCallback gBusyMap len="..MyUtils.getTableLen(Consts.gBusyMap).." callback addr="..addr)
 
     local toRemove = {}
-    for key,saleTable in pairs(gBusyMap) do
+    for key,saleTable in pairs(Consts.gBusyMap) do
         if saleTable then
             seq = saleTable[CloudConsts.DEVICE_SEQ]
             loc = saleTable[CloudConsts.LOCATION]
             orderId = saleTable[CloudConsts.VM_ORDER_ID]
 
-            LogUtil.d(TAG,TAG.." openLockCallback handled orderId ="..orderId.." seq = "..seq.." loc = "..loc)
+            LogUtil.d(TAG,TAG.." try to handle orderId ="..orderId.." seq = "..seq.." loc = "..loc)
 
             if loc and seq and seq == addr  then
 
@@ -373,19 +377,19 @@ function  openLockCallback(addr,flagsTable)
     --删除已经出货的订单,需要从最大到最小删除，
     if MyUtils.getTableLen(toRemove)>0 then
         lastDeliverTime = os.time()
-        LogUtil.d(TAG,TAG.." to remove gBusyMap len="..MyUtils.getTableLen(gBusyMap))
+        LogUtil.d(TAG,TAG.." to remove gBusyMap len="..MyUtils.getTableLen(Consts.gBusyMap))
         for key,_ in pairs(toRemove) do
-            gBusyMap[key]=nil
+            Consts.gBusyMap[key]=nil
             LogUtil.d(TAG,TAG.." remove order with key = "..key)
         end
-        LogUtil.d(TAG,TAG.." after remove gBusyMap len="..MyUtils.getTableLen(gBusyMap))
+        LogUtil.d(TAG,TAG.." after remove gBusyMap len="..MyUtils.getTableLen(Consts.gBusyMap))
     end
 end
 
 function TimerFunc(id)
     local systemTime = os.time()
 
-    if 0 == MyUtils.getTableLen(gBusyMap) then
+    if 0 == MyUtils.getTableLen(Consts.gBusyMap) then
         LogUtil.d(TAG,TAG.." in TimerFunc empty gBusyMap")
         return
     end
@@ -398,7 +402,7 @@ function TimerFunc(id)
     --修改为下次同一弹仓出货时，移除这次的或者等待底层硬件上报出货成功后，移除
     local toRemove = {} 
 
-    for key,saleTable in pairs(gBusyMap) do
+    for key,saleTable in pairs(Consts.gBusyMap) do
         lastDeliverTime = systemTime
 
         if saleTable then
@@ -432,12 +436,12 @@ function TimerFunc(id)
     --删除已经出货的订单,需要从最大到最小删除，
     if MyUtils.getTableLen(toRemove)>0 then
         lastDeliverTime = os.time()
-        LogUtil.d(TAG,TAG.." in TimerFunc to remove gBusyMap len="..MyUtils.getTableLen(gBusyMap))
+        LogUtil.d(TAG,TAG.." in TimerFunc to remove gBusyMap len="..MyUtils.getTableLen(Consts.gBusyMap))
         for key,_ in pairs(toRemove) do
             gBusyMap[key]=nil
             LogUtil.d(TAG,TAG.." in TimerFunc  remove order with key = "..key)
         end
-        LogUtil.d(TAG,TAG.." in TimerFunc after remove gBusyMap len="..MyUtils.getTableLen(gBusyMap))
+        LogUtil.d(TAG,TAG.." in TimerFunc after remove gBusyMap len="..MyUtils.getTableLen(Consts.gBusyMap))
     end
 
     -- 有用户未扭，并且没有订单了，尝试重启板子，恢复下
