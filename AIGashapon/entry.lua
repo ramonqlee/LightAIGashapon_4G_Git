@@ -181,7 +181,7 @@ function loopTest()
 
 	--TODO 改成随机获取的方式？
 	-- 最大弹仓数如何达到
-	sys.timerLoopStart(testLockFunc,10*1000)
+	sys.timerLoopStart(testLockFunc,20*1000)
 
 end
 
