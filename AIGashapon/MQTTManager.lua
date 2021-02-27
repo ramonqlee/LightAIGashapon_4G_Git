@@ -36,10 +36,10 @@ local jsonex = require "jsonex"
 local MAX_MQTT_RETRY_COUNT = 3
 local MAX_FLY_MODE_RETRY_COUNT = 3
 local MAX_FLY_MODE_WAIT_TIME = 20*Consts.ONE_SEC_IN_MS--
-local MAX_HTTP_WAIT_TIME = 5*Consts.ONE_SEC_IN_MS--
 local IP_READY_NORMAL_WAIT_TIME = 5*60*Consts.ONE_SEC_IN_MS--实际7秒既可以
 
-local HTTP_WAIT_TIME=5*Consts.ONE_SEC_IN_MS
+local HTTP_WAIT_TIME=30*Consts.ONE_SEC_IN_MS
+local MQTT_WAIT_TIME=5*Consts.ONE_SEC_IN_MS
 
 local KEEPALIVE,CLEANSESSION=60,0
 local CLEANSESSION_TRUE=1
@@ -195,11 +195,12 @@ function checkMQTTUser()
     LogUtil.d(TAG,".............................checkMQTTUser ver=".._G.VERSION)
     username = MyUtils.getUserName(false)
     password = MyUtils.getPassword(false)
+    local nextHttpWaitTime = HTTP_WAIT_TIME
     while not username or 0==#username or not password or 0==#password do
          -- mywd.feed()--获取配置中，别忘了喂狗，否则会重启
         getNodeIdAndPasswordFromServer()
         
-        sys.wait(HTTP_WAIT_TIME)
+        sys.wait(nextHttpWaitTime)
         username = MyUtils.getUserName(false)
         password = MyUtils.getPassword(false)
 
@@ -207,6 +208,8 @@ function checkMQTTUser()
         if username and password and #username>0 and #password>0 then
             return username,password
         end
+
+        nextHttpWaitTime = nextHttpWaitTime + HTTP_WAIT_TIME
     end
     return username,password
 end
@@ -227,7 +230,7 @@ function connectMQTT()
         -- mywd.feed()--获取配置中，别忘了喂狗，否则会重启
         LogUtil.d(TAG,"fail to connect mqtt,mqttc:disconnect,try after 10s")
         mqttc:disconnect()
-        sys.wait(HTTP_WAIT_TIME)--等待一会，确保资源已经释放完毕，再进行后续操作
+        sys.wait(MQTT_WAIT_TIME)--等待一会，确保资源已经释放完毕，再进行后续操作
         
         checkNetwork()
 
@@ -564,7 +567,7 @@ function startmqtt()
             -- emptyMessageQueue()
             -- emptyExtraRequest()
             reconnectCount = 0
-            sys.wait(HTTP_WAIT_TIME)--等待一会，确保资源已经释放完毕，再进行后续操作
+            sys.wait(MQTT_WAIT_TIME)--等待一会，确保资源已经释放完毕，再进行后续操作
             LogUtil.d(TAG,".............................startmqtt CLEANSESSION all ".." reconnectCount = "..reconnectCount)
         end
 
