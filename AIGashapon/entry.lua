@@ -181,42 +181,46 @@ function loopTest()
 
 	--TODO 改成随机获取的方式？
 	-- 最大弹仓数如何达到
-	sys.timerLoopStart(testLockFunc,20*1000)
+	sys.timerLoopStart(testLockFunc,60*1000)
 
 end
 
 function testLockFunc(id)
-	if MyUtils.getTableLen(Consts.gBusyMap) > 0 then
-		LogUtil.d(TAG,TAG.." busy,wait for deliver")
+    local orderCount = MyUtils.getTableLen(Consts.gBusyMap)
+	if orderCount > 0 then
+		LogUtil.d(TAG,TAG.."testLockFunc:wait for deliver, busy order count="..orderCount)
 		return
-	end 
+	end
 
     UARTStatRep.setCallback(openLockCallbackInEntry)--设置开锁的回调函数
 
 	addrs = UARTAllInfoRep.getAllBoardIds(true)
+    local addrCount = MyUtils.getTableLen(addrs)
 
-	if not addrs or 0 == #addrs then
-		LogUtil.d(TAG,TAG.." no slaves found,ignore loopTest")
+	if 0 == addrCount then
+		LogUtil.d(TAG,TAG.." testLockFunc:no slaves found,ignore loopTest")
 		return
 	end
 
-	LogUtil.d(TAG,TAG.." loopTest count="..MyUtils.getTableLen(addrs))
+	LogUtil.d(TAG,TAG.." testLockFunc:loopTest count="..addrCount)
 
 	--是否已经超过了，否则的话，从头再来
-	if parallelCount > MyUtils.getTableLen(addrs) then
+	if parallelCount > addrCount then
 		parallelCount=1
         -- 切换弹仓
         
         location = (location==2 and 1 or 2);
+        LogUtil.d(TAG,TAG.." testLockFunc: switch cabinet")
 	end
 
     local pos = 1
 	for _,device_seq in pairs(addrs) do
 		if timeOutOrderFound then
-			LogUtil.d(TAG,TAG.." loopTest stopped")
+			LogUtil.d(TAG,TAG.." testLockFunc:loopTest stopped")
 			return
 		end
 
+        LogUtil.d(TAG,TAG.." testLockFunc:add pos = "..pos.." parallelCount = "..parallelCount)
         if pos == parallelCount then
             local addr = nil
             if "string" == type(device_seq) then
@@ -240,14 +244,14 @@ function testLockFunc(id)
 end
 
 function loopUnlock( addrArray ,baseOrderId)
-	LogUtil.d(TAG,TAG.." loopUnlock count="..MyUtils.getTableLen(addrArray))
+	LogUtil.d(TAG,TAG.." loopUnlock:loopUnlock count="..MyUtils.getTableLen(addrArray))
 
 	local orderCount=0
 	for _,addr in pairs(addrArray) do
 		-- for pos=1,2 do--两层弹仓
 			-- 开锁
 			if timeOutOrderFound then
-				LogUtil.d(TAG,TAG.." loopUnlock stopped")
+				LogUtil.d(TAG,TAG.." loopUnlock:loopUnlock stopped")
 				return
 			end
 
@@ -264,7 +268,7 @@ function loopUnlock( addrArray ,baseOrderId)
 
 		    local r = UARTControlInd.encode(addr,location,ORDER_EXPIRED_IN_SEC)
 		    UartMgr.publishMessage(r)
-		    LogUtil.d(TAG,TAG.." loopTest openLock,addr = "..string.toHex(addr).." location="..location)
+		    LogUtil.d(TAG,TAG.." loopUnlock:loopTest openLock,addr = "..string.toHex(addr).." location="..location)
 		    local key = addr.."_"..location
 		    Consts.gBusyMap[key]=saleLogMap
 		-- end
@@ -280,13 +284,16 @@ function  openLockCallbackInEntry(addr,flagsTable)
     -- 1. 订单过期了，现在是30分钟
     -- 2. 同一location，产生了新的订单
 
-   
     -- 从订单中查找，如果有的话，则上传相应的销售日志
     if not addr or not flagsTable then
         return
     end
 
-    LogUtil.d(TAG,TAG.." in openLockCallbackInEntry gBusyMap len="..MyUtils.getTableLen(Consts.gBusyMap).." callback addr="..addr)
+    local orderCount = MyUtils.getTableLen(Consts.gBusyMap)
+    LogUtil.d(TAG,TAG.." in openLockCallbackInEntry gBusyMap len="..orderCount.." callback addr="..addr)
+    if 0 == orderCount then
+        return
+    end
 
     local toRemove = {}
     for key,saleTable in pairs(Consts.gBusyMap) do

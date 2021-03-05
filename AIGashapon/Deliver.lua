@@ -367,7 +367,7 @@ function  openLockCallback(addr,flagsTable)
         return
     end
 
-    LogUtil.d(TAG,TAG.."in openLockCallback Consts.gBusyMap len="..getTableLen(gBusyMap).." addr="..addr)
+    LogUtil.d(TAG,TAG.."in openLockCallback Consts.gBusyMap len="..getTableLen(Consts.gBusyMap).." addr="..addr)
 
     local toRemove = {}
     for key,saleTable in pairs(Consts.gBusyMap) do
@@ -458,7 +458,7 @@ function  openLockCallback(addr,flagsTable)
     --删除已经出货的订单,需要从最大到最小删除，
     if getTableLen(toRemove)>0 then
         lastDeliverTime = os.time()
-        LogUtil.d(TAG,TAG.." to remove Consts.gBusyMap len="..getTableLen(gBusyMap))
+        LogUtil.d(TAG,TAG.." to remove Consts.gBusyMap len="..getTableLen(Consts.gBusyMap))
         for key,_ in pairs(toRemove) do
             Consts.gBusyMap[key]=nil
             LogUtil.d(TAG,TAG.." remove order with key = "..key)
