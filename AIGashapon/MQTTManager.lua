@@ -41,7 +41,7 @@ local IP_READY_NORMAL_WAIT_TIME = 5*60*Consts.ONE_SEC_IN_MS--实际7秒既可以
 local HTTP_WAIT_TIME=30*Consts.ONE_SEC_IN_MS
 local MQTT_WAIT_TIME=5*Consts.ONE_SEC_IN_MS
 
-local KEEPALIVE,CLEANSESSION=60,0
+local KEEPALIVE,CLEANSESSION=30,0
 local CLEANSESSION_TRUE=1
 local MAX_RETRY_SESSION_COUNT=2--重试n次后，如果还事变，则清理服务端的消息
 local PROT,ADDR,PORT =ConstsPrivate.MQTT_PROTOCOL,ConstsPrivate.MQTT_ADDR,ConstsPrivate.MQTT_PORT
@@ -226,14 +226,16 @@ end
 function connectMQTT()
     --有可能socket ready，但是确一直无法连接mqtt
     local netFailCount = 0
+    local waitTime = MQTT_WAIT_TIME
     while not mqttc:connect(ADDR,PORT) do
         -- mywd.feed()--获取配置中，别忘了喂狗，否则会重启
         LogUtil.d(TAG,"fail to connect mqtt,mqttc:disconnect,try after 10s")
         mqttc:disconnect()
-        sys.wait(MQTT_WAIT_TIME)--等待一会，确保资源已经释放完毕，再进行后续操作
+        sys.wait(waitTime)--等待一会，确保资源已经释放完毕，再进行后续操作
         
         checkNetwork()
 
+        waitTime = waitTime + MQTT_WAIT_TIME
         netFailCount = netFailCount+1
         if netFailCount>MAX_MQTT_RETRY_COUNT then
             sys.restart("mqttFailTooLong")--重启更新包生效
