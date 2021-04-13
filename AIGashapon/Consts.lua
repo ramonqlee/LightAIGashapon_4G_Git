@@ -6,7 +6,7 @@ module(...,package.seeall)
 
 DEVICE_ENV=true -- 是否设备环境
 LOG_ENABLED=true --是否关闭日志
-DEVICE_TEST_MODE=true--设备压测模式(正式版本，务必关闭)
+DEVICE_TEST_MODE=false--设备压测模式(正式版本，务必关闭)
 LOG_FILE_ENABLED=false--是否写入日志文件
 PRINT_LOG_FILE_ENABLED=false--是否将本地日志打印出来
 TEST_MODE=false--是否启用测试模式，启用代码中的点位id
