@@ -114,9 +114,9 @@ function Deliver:isDelivering()
         return true
     end
 
-    if os.time()-lastDeliverTime<Consts.TWINKLE_TIME_DELAY then
-        return true
-    end
+    -- if os.time()-lastDeliverTime<Consts.TWINKLE_TIME_DELAY then
+    --     return true
+    -- end
 
     return false
 end

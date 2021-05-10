@@ -171,7 +171,7 @@ function SetConfig:startRebootSchedule()
     rebootTimer = sys.timerLoopStart(function()
         LogUtil.d(TAG," checking reboot schedule")
 
-        if MQTTManager.hasMessage() or Deliver.isDelivering() then
+        if Deliver.isDelivering() then
             LogUtil.d(TAG," checking reboot schedule,but mqtt has message or is delivering")
             return
         end
