@@ -7,6 +7,7 @@
 
 require "CloudConsts"
 require "CRBase"
+require "sim"
 require "UARTAllInfoRep"
 
 local TAG = "RepMachVars"
@@ -35,6 +36,7 @@ function RepMachVars:addExtraPayloadContent( content )
 	-- FIXME 待赋值
 	content["mac"]= misc.getImei()
 	content["imei"]=misc.getImei()
+	content["iccid"]=sim.getIccid()--sim卡卡号
 
 	local t = Consts.LAST_REBOOT
 	if not t then
