@@ -58,6 +58,9 @@ function RepMachVars:addExtraPayloadContent( content )
 	-- FIXME 待赋值
 	content["signal_strength"]=net.getRssi()
 	content["app_version"]="NIUQUMCS-4G-".._G.VERSION
+	if TEST_SERVER then
+		content["app_version"]=content["app_version"].."-Test"
+	end
 	local devices={}
 
 	local CATEGORY = "sem"
@@ -98,6 +101,20 @@ function RepMachVars:addExtraPayloadContent( content )
 	end
 
 	content["devices"]=devices
+
+	--upload iccid by http
+	local nodeId = MyUtils.getUserName(false)
+    if not nodeId or 0 == #nodeId then
+        LogUtil.d(TAG,"return for unbound node")
+        return
+    end 
+	url = string.format(ConstsPrivate.API_UPLOAD_VM_MSG_URL_FORMATTER,nodeId,content["iccid"],content["mac"])
+    LogUtil.d(TAG,"upload_vm_msg url = "..url)
+    http.request("GET",url,nil,nil,nil,nil,function(result,prompt,head,body )
+        if result and body then
+            LogUtil.d(TAG,"upload_vm_msg http body="..body)
+        end
+    end)
 end  
 
 
