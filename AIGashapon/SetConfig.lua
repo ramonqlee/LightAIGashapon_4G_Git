@@ -224,6 +224,11 @@ function SetConfig:startRebootSchedule()
             end
         end
 
+         --本来应该处于关机状态的，结果开机了，则本次定时开关机失效
+        if os.time()>shutdownTimeInSec+CHECK_INTERVAL_IN_SEC*5 then
+            return
+        end
+
         --距离下次开机的时间：从当前时间开始计算才比较准确
         local delay = rebootTimeInSec - os.time()
         if delay < 0 then
